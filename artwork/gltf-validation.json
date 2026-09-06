@@ -1,0 +1,20 @@
+{
+  "originalBytes": 2462252,
+  "optimizedBytes": 791916,
+  "errors": 0,
+  "warnings": 0,
+  "messages": [
+    {
+      "code": "UNSUPPORTED_EXTENSION",
+      "message": "Cannot validate an extension as it is not supported by the validator: 'EXT_meshopt_compression'.",
+      "severity": 2,
+      "pointer": "/extensionsUsed/0"
+    },
+    {
+      "code": "UNUSED_OBJECT",
+      "message": "This object may be unused.",
+      "severity": 2,
+      "pointer": "/buffers/0"
+    }
+  ]
+}
