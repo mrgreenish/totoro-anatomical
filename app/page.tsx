@@ -65,7 +65,7 @@ export default function Home() {
         <div className="background-word" aria-hidden="true">TOTORO</div>
         <div className="edition"><span className="edition-line" />THE FOREST SPIRIT<span className="edition-number">01</span></div>
         <section className={`sculpture ${ready ? 'is-ready' : ''}`} aria-label="Interactive Totoro sculpture">
-          <img className="sculpture-poster" src="/totoro-poster.webp" alt="A soft grey Totoro with an ivory belly, seven chevrons, and a green leaf hat." fetchPriority="high" />
+          <img className="sculpture-poster" src="/totoro-poster.webp?v=grin-2" alt="A grey Totoro with a wide toothy grin, fluffy cheeks, an ivory belly, seven chevrons, and a green leaf hat." fetchPriority="high" />
           <canvas ref={canvasRef} tabIndex={0} aria-label="Rotate Totoro by dragging or using the arrow keys. Scroll, pinch, or use plus and minus to zoom. Press Home to reset." />
           {!ready && !error ? <div className="loading-status" role="status"><span className="loading-dot" />Waking the forest…</div> : null}
           {error ? <div className="render-error" role="status"><p>The interactive view couldn’t wake up.</p><button onClick={() => window.location.reload()}>Try again <ArrowUpRight size={14} /></button></div> : null}

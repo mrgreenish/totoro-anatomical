@@ -24,7 +24,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(30, 1, .1, 60);
-  const initialPosition = new THREE.Vector3(4.6, 4.4, 12);
+  const initialPosition = new THREE.Vector3(3.5, 4.0, 12.4);
   const initialTarget = new THREE.Vector3(0, 2.30, 0);
   camera.position.copy(initialPosition);
   const controls = new OrbitControls(camera, canvas);
@@ -210,7 +210,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   canvas.addEventListener('keydown', onKey); resize();
 
   try {
-    const response = await fetch('/models/totoro.glb', { signal: options.signal });
+    const response = await fetch('/models/totoro.glb?v=grin-2', { signal: options.signal });
     if (!response.ok) throw new Error('Model unavailable');
     const bytes = await response.arrayBuffer();
     if (options.signal.aborted) { controller.dispose(); return controller; }
@@ -253,8 +253,8 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       const group = new THREE.Group(); group.position.copy(position); model!.add(group);
       group.updateMatrixWorld(true); group.attach(object); return group;
     }
-    earLeft = pivot('Ear_L', new THREE.Vector3(-.69, 3.78, -.015));
-    earRight = pivot('Ear_R', new THREE.Vector3(.69, 3.78, -.015));
+    earLeft = pivot('Ear_L', new THREE.Vector3(-.72, 3.83, -.045));
+    earRight = pivot('Ear_R', new THREE.Vector3(.72, 3.83, -.045));
     armLeft = pivot('Arm_L', new THREE.Vector3(-1.2, 2.6, -.015));
     armRight = pivot('Arm_R', new THREE.Vector3(1.2, 2.6, -.015));
     leaf = model.getObjectByName('Leaf'); catchlights = model.getObjectByName('Eye_catchlights');

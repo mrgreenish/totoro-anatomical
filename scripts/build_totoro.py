@@ -7,6 +7,7 @@ import bpy
 import math
 import random
 import json
+import os
 from pathlib import Path
 from mathutils import Vector
 from mathutils.noise import noise_vector
@@ -37,20 +38,22 @@ def material(name, color, roughness=.8, sheen=0, noise=False):
         tex.inputs['Scale'].default_value = 145
         tex.inputs['Detail'].default_value = 2
         bump = nodes.new('ShaderNodeBump')
-        bump.inputs['Strength'].default_value = .17
-        bump.inputs['Distance'].default_value = .014
+        bump.inputs['Strength'].default_value = .11
+        bump.inputs['Distance'].default_value = .009
         mat.node_tree.links.new(tex.outputs['Fac'], bump.inputs['Height'])
         mat.node_tree.links.new(bump.outputs['Normal'], bsdf.inputs['Normal'])
     return mat
 
-fur = material('Fur • warm slate', (.145, .175, .169), .88, .5, True)
-belly = material('Belly • warm ivory', (.76, .715, .54), .93, .7, True)
-markings = material('Seven chevrons', (.103, .131, .12), .91, .3)
-inner_ear = material('Inner ears', (.20, .234, .216), .88, .4)
+fur = material('Fur • warm slate', (.135, .151, .147), .92, .5, True)
+belly = material('Belly • warm ivory', (.73, .69, .55), .95, .7, True)
+markings = material('Seven chevrons', (.095, .112, .103), .95, .3)
+inner_ear = material('Fur • ear folds', (.116, .132, .126), .94, .4)
 white = material('Eyes • ivory', (.94, .935, .845), .3)
 black = material('Eyes and nose • obsidian', (.011, .016, .014), .27)
+enamel = material('Teeth • warm enamel', (.90, .89, .81), .36)
+mouth_mat = material('Mouth • deep umber', (.019, .014, .012), .86)
 whisker_mat = material('Whiskers', (.027, .034, .026), .8)
-claw_mat = material('Claws • bone', (.62, .57, .41), .65)
+claw_mat = material('Claws • horn', (.20, .215, .19), .53)
 leaf_mat = material('Leaf • fresh green', (.125, .28, .065), .51, .12)
 vein_mat = material('Leaf veins', (.27, .42, .103), .7)
 
@@ -88,7 +91,7 @@ def sphere(name, loc, scale, mat, segments=32, rings=20):
 def tube(name, points, radius, mat, resolution=3, taper=True):
     curve = bpy.data.curves.new(name, 'CURVE')
     curve.dimensions = '3D'
-    curve.resolution_u = 10
+    curve.resolution_u = 3 if len(points)>10 else 8
     curve.bevel_depth = radius
     curve.bevel_resolution = resolution
     sp = curve.splines.new('BEZIER')
@@ -103,23 +106,61 @@ def tube(name, points, radius, mat, resolution=3, taper=True):
     ob.data.materials.append(mat)
     return ob
 
+# Smoothly lofted torso: a broad crown, cheek shelf, shoulder transition,
+# lower belly and tucked haunches. The same surface drives all attached details.
+BODY_PROFILE = [
+    (.155, .015, .02), (.24, .64, .49), (.46, 1.10, .80),
+    (.82, 1.40, 1.01), (1.28, 1.565, 1.125), (1.78, 1.59, 1.15),
+    (2.20, 1.52, 1.085), (2.60, 1.395, .965), (2.89, 1.305, .855),
+    (3.16, 1.30, .835), (3.39, 1.255, .81), (3.64, 1.10, .695),
+    (3.84, .935, .52), (3.98, .69, .34), (4.045, .32, .16),
+    (4.065, .008, .008),
+]
+
+def profile_value(profile, z, column):
+    if z <= profile[0][0]: return profile[0][column]
+    if z >= profile[-1][0]: return profile[-1][column]
+    for i in range(len(profile)-1):
+        a, b = profile[i], profile[i+1]
+        if a[0] <= z <= b[0]:
+            prev, nxt = profile[max(0,i-1)], profile[min(len(profile)-1,i+2)]
+            t = (z-a[0])/(b[0]-a[0]); d = b[0]-a[0]
+            m0 = (b[column]-prev[column])/(b[0]-prev[0])
+            m1 = (nxt[column]-a[column])/(nxt[0]-a[0])
+            return ((2*t**3-3*t*t+1)*a[column] + (t**3-2*t*t+t)*d*m0
+                    + (-2*t**3+3*t*t)*b[column] + (t**3-t*t)*d*m1)
+
+def facial_volume(x,z):
+    muzzle = .115*math.exp(-(x/.78)**4-((z-3.22)/.34)**4)
+    cheeks = .060*math.exp(-((abs(x)-.94)/.24)**2-((z-3.25)/.25)**2)
+    brow = .030*math.exp(-((abs(x)-.65)/.20)**2-((z-3.68)/.10)**2)
+    chin = .026*math.exp(-(x/.70)**4-((z-2.83)/.13)**2)
+    return muzzle+cheeks+brow+chin
+
+def body_surface(theta,phi):
+    z=2.11+1.955*math.cos(theta)
+    rx=profile_value(BODY_PROFILE,z,1); ry=profile_value(BODY_PROFILE,z,2)
+    x=rx*math.cos(phi); y=ry*math.sin(phi)
+    facing=max(0,-math.sin(phi))
+    y-=facial_volume(x,z)*facing**3
+    # Shallow, flowing variations in the haunches avoid a perfect lathed surface.
+    x*=1+.007*math.cos(phi*4)*math.exp(-((z-1.0)/.65)**2)
+    return Vector((x,y,z))
+
 def body_point(theta, phi, displacement=0):
-    c, s = math.cos(theta), math.sin(theta)
-    rx = 1.455 * s * (1 - .245*c)
-    ry = .975 * s * (1 - .13*c)
-    p = Vector((rx*math.cos(phi), ry*math.sin(phi), 2.11 + 1.955*c))
-    n = Vector((p.x/1.455**2, p.y/.975**2, (p.z-2.11)/1.955**2)).normalized()
-    return p+n*displacement, n
+    p=body_surface(theta,phi)
+    dt=body_surface(theta+.0001,phi)-body_surface(theta-.0001,phi)
+    dp=body_surface(theta,phi+.0001)-body_surface(theta,phi-.0001)
+    n=dt.cross(dp).normalized()
+    return p+n*displacement,n
 
 def front(x, z, extra=0):
-    c = max(-.998, min(.998, (z-2.11)/1.955))
-    s = math.sqrt(1-c*c)
-    rx = 1.455*s*(1-.245*c)
-    ry = .975*s*(1-.13*c)
-    return -ry*math.sqrt(max(.02, 1-(x/rx)**2))-extra
+    rx=profile_value(BODY_PROFILE,z,1); ry=profile_value(BODY_PROFILE,z,2)
+    f=math.sqrt(max(.001,1-(x/rx)**2))
+    return -ry*f-facial_volume(x,z)*f**3-extra
 
 verts, faces = [], []
-RINGS, SEGMENTS = 64, 112
+RINGS, SEGMENTS = 100, 128
 for j in range(RINGS+1):
     theta = .002 + (math.pi-.004)*j/RINGS
     for i in range(SEGMENTS):
@@ -139,10 +180,10 @@ for j in range(PATCH_RINGS+1):
     r = max(.0001, j/PATCH_RINGS)
     for i in range(PATCH_SEGMENTS):
         a = 2*math.pi*i/PATCH_SEGMENTS
-        z = 1.85 + 1.285*r*math.cos(a)
-        x = 1.095*r*math.sin(a)*(1-.045*math.cos(a))
+        z = 1.62 + 1.155*r*math.cos(a)
+        x = 1.205*r*math.sin(a)*(1-.065*math.cos(a))
         if j==PATCH_RINGS:
-            z += .003*math.sin(a*39)
+            z += .008*math.sin(a*39)+.003*math.sin(a*67)
         verts.append((x, front(x,z,.014), z))
 for j in range(PATCH_RINGS):
     for i in range(PATCH_SEGMENTS):
@@ -153,11 +194,15 @@ mesh_object('Cream belly', verts, faces, belly)
 # Ears taper from a narrow root, through a wide middle, into gently curved tips.
 def ear(side):
     verts, faces = [], []
-    profile=[(0,.14),(.13,.19),(.33,.245),(.58,.19),(.80,.10),(1,.006)]
+    profile=[(0,.17),(.12,.145),(.28,.205),(.46,.23),(.67,.165),(.85,.080),(1,.003)]
     for z,r in profile:
         for i in range(32):
             a=i/32*2*math.pi
-            verts.append((side*(.69+.14*z)+r*math.cos(a), .015+r*.58*math.sin(a), 3.78+1.25*z))
+            x=side*(.72+.17*z+.025*math.sin(z*math.pi))+r*math.cos(a)
+            y=.045+.06*z+r*.66*math.sin(a)
+            # A longitudinal fold is sculpted into the front face of the ear.
+            if math.sin(a)<0: y+=.027*math.sin(math.pi*z)*(-math.sin(a))**8
+            verts.append((x,y,3.83+1.16*z))
     for j in range(len(profile)-1):
         for i in range(32):
             a=j*32+i; b=j*32+(i+1)%32
@@ -167,72 +212,166 @@ def ear(side):
     bpy.context.view_layer.objects.active=ob
     bpy.ops.object.modifier_apply(modifier=mod.name)
     # Recenter origins at the roots for browser secondary animation.
-    pivot=Vector((side*.69,.015,3.78))
+    pivot=Vector((side*.72,.045,3.83))
     for v in ob.data.vertices: v.co -= pivot
     ob.location=pivot
     return ob
 ear(-1); ear(1)
 
+def attach(ob,parent):
+    bpy.context.view_layer.update()
+    ob.parent=parent; ob.matrix_parent_inverse=parent.matrix_world.inverted()
+    return ob
+
 for side in [-1,1]:
-    arm=sphere('Arm_L' if side<0 else 'Arm_R',(side*1.25,.01,1.97),(.32,.40,.86),fur,40,28)
-    arm.rotation_euler.y=side*-.19
+    label='L' if side<0 else 'R'
+    profile=[(1.17,1.52,-.30,.025,.04),(1.29,1.57,-.25,.20,.27),
+             (1.58,1.59,-.13,.255,.355),(1.99,1.51,-.015,.29,.40),
+             (2.37,1.37,.055,.29,.365),(2.67,1.20,.055,.25,.28),
+             (2.87,1.10,.055,.08,.10)]
+    v,f=[],[]
+    for j in range(45):
+        z=1.17+(2.87-1.17)*j/44
+        cx,cy,rx,ry=[profile_value(profile,z,k) for k in [1,2,3,4]]
+        for k in range(40):
+            a=k/40*2*math.pi
+            # Palm knuckles only affect the lower end of the continuous forearm.
+            knuckle=1+.025*math.cos(5*a)*math.exp(-((z-1.30)/.14)**2)
+            v.append((side*(cx+rx*math.cos(a)*knuckle),cy+ry*math.sin(a),z))
+    for j in range(44):
+        for k in range(40):
+            a=j*40+k;b=j*40+(k+1)%40
+            f.append((a,b,b+40,a+40) if side>0 else (b,a,a+40,b+40))
+    f.extend([tuple(reversed(range(40))),tuple(range(44*40,45*40))])
+    arm=mesh_object('Arm_'+label,v,f,fur)
     pivot=Vector((side*1.20,.015,2.6))
-    delta=arm.location-pivot
-    for v in arm.data.vertices: v.co += arm.rotation_euler.to_matrix().inverted()@delta
+    for vertex in arm.data.vertices: vertex.co-=pivot
     arm.location=pivot
-    sphere('Foot_L' if side<0 else 'Foot_R',(side*.68,-.26,.235),(.43,.63,.235),fur,40,20)
+    foot=sphere('Foot_'+label,(side*.70,-.30,.23),(.49,.69,.235),fur,48,28)
+    for vertex in foot.data.vertices:
+        p=vertex.co
+        p.z+=.018*math.cos(p.x*18)*max(0,-p.y/.69)**3
+        p.x*=1+.08*max(0,-p.y/.69)
     for c in range(3):
-        sphere('Toe claw',(side*.68+(c-1)*.16,-.79,.18),(.046,.14,.06),claw_mat,16,10)
-    for c in range(3):
-        sphere('Hand claw',(side*(1.45+(c-1)*.055),-.27-(c%2)*.035,1.16+(c-1)*.027),(.033,.08,.095),claw_mat,12,8)
+        x=side*.70+(c-1)*.19
+        tube('Toe claw',[(x,-.81,.21),(x,-.99,.16),(x,-1.055,.10)],.061,claw_mat,3)
+    for c in range(5):
+        x=side*(1.40+c*.078)
+        z=1.27+.05*abs(c-2)/2
+        claw=tube('Hand_'+label+'_claw',[(x,-.40,z),(x+side*.018,-.51,z-.09),(x+side*.014,-.52,z-.17)],.036,claw_mat,3)
+        attach(claw,arm)
 
 tail=sphere('Tail',(0,.91,.75),(.57,.77,.49),fur,40,24)
+for vertex in tail.data.vertices:
+    t=(vertex.co.y/.77+1)*.5
+    vertex.co.x*=1-.40*t
+    vertex.co.z=vertex.co.z*(1-.18*t)+.16*t*t
+    vertex.co.y+=.10*t*t
 tail.rotation_euler.x=-.30
 
 for side in [-1,1]:
-    x,z=side*.53,3.39
-    y=front(x,z,.02)
-    eye=sphere('Eye_L' if side<0 else 'Eye_R',(x,y,z),(.163,.060,.17),white,32,20)
-    eye.rotation_euler.z=side*-.22
-    pupil=sphere('Pupil_L' if side<0 else 'Pupil_R',(x-side*.018,y-.059,z+.003),(.068,.025,.077),black,24,16)
-    sphere('Eye catchlight',(x-side*.018-.019,y-.085,z+.030),(.016,.006,.018),white,12,8)
+    x,z=side*.65,3.55
+    y=front(x,z,.020)
+    normal=Vector(((front(x+.001,z)-front(x-.001,z))/.002,-1,(front(x,z+.001)-front(x,z-.001))/.002)).normalized()
+    rotation=normal.to_track_quat('-Y','Z')
+    eye=sphere('Eye_L' if side<0 else 'Eye_R',(x,y,z),(.132,.040,.139),white,40,24)
+    eye.rotation_mode='QUATERNION';eye.rotation_quaternion=rotation
+    pupil=sphere('Pupil_L' if side<0 else 'Pupil_R',Vector((x,y,z))+rotation@Vector((-side*.007,-.040,.004)),(.051,.018,.058),black,32,20)
+    pupil.rotation_mode='QUATERNION';pupil.rotation_quaternion=rotation
+    sphere('Eye catchlight',pupil.location+rotation@Vector((-.014,-.018,.019)),(.011,.005,.012),white,12,8)
+    brow=[]
+    for k in range(13):
+        a=.12+2.90*k/12
+        px=x+.146*math.cos(a);pz=z+.149*math.sin(a)
+        brow.append((px,front(px,pz,.015),pz))
+    tube('Upper eyelid',brow,.010,fur,2,False)
 
 # Broad, gently triangular nose, rounded with subdivision.
-verts=[(-.195,-.884,3.30),(.195,-.884,3.30),(0,-.91,3.157),(-.13,-1.00,3.286),(.13,-1.00,3.286),(0,-1.012,3.205),(0,-.855,3.26)]
-faces=[(0,1,4,3),(3,4,5),(0,3,5,2),(1,2,5,4),(0,6,1),(1,6,2),(2,6,0)]
+outline=[(-.28,3.425),(-.20,3.478),(0,3.490),(.20,3.478),(.28,3.425),(.14,3.383),(0,3.355),(-.14,3.383)]
+verts=[]
+for depth,scale in [(-.012,1),(.090,1),(.14,.58)]:
+    for x,z in outline:
+        x*=scale;z=3.425+(z-3.425)*scale
+        verts.append((x,front(x,z,depth),z))
+faces=[]
+for j in range(2):
+    for i in range(8):
+        a=j*8+i;b=j*8+(i+1)%8;faces.append((a,b,b+8,a+8))
+faces.extend([tuple(reversed(range(8))),tuple(range(16,24))])
 nose=mesh_object('Nose',verts,faces,black)
 sub=nose.modifiers.new('Rounded nose','SUBSURF');sub.levels=2
 bpy.context.view_layer.objects.active=nose;bpy.ops.object.modifier_apply(modifier=sub.name)
+for side in [-1,1]:
+    sphere('Nostril',(side*.125,front(side*.125,3.403,.126),3.403),(.034,.013,.017),mouth_mat,20,12)
 
-mouth_pts=[]
-for i in range(9):
-    x=-.32+i*.08
-    z=3.09-.045*(1-(x/.32)**2)
-    mouth_pts.append((x,front(x,z,.026),z))
-tube('Quiet smile',mouth_pts,.012,whisker_mat,2,False)
+# The closed crescent grin is a curved mouth inset with ten rounded enamel
+# crowns, not a white plane or cubes. Every crown follows the cheek in depth.
+def smile_bounds(x):
+    t=min(1,abs(x)/.99)
+    return 2.825+.438*t*t,3.190+.073*t*t
+
+def smile_surface(name,x0,x1,mat,offset,inset=0,crown=False):
+    v,f=[],[];cols=12 if crown else 80;rows=8
+    for j in range(rows+1):
+        t=j/rows
+        for i in range(cols+1):
+            u=i/cols
+            # Round crown corners in the surface itself, keeping broad tooth faces.
+            corner=.008*(abs(2*t-1)**10) if crown else 0
+            x=x0+corner+(x1-x0-2*corner)*u
+            bottom,top=smile_bounds(x)
+            z=bottom+inset+(top-bottom-2*inset)*t
+            bulge=.012*math.sin(math.pi*u)*math.sin(math.pi*t) if crown else 0
+            v.append((x,front(x,z,offset+bulge),z))
+    for j in range(rows):
+        for i in range(cols):
+            a=j*(cols+1)+i;f.append((a,a+1,a+cols+2,a+cols+1))
+    ob=mesh_object(name,v,f,mat)
+    sol=ob.modifiers.new('Enamel depth' if crown else 'Mouth inset thickness','SOLIDIFY');sol.thickness=.018 if crown else .006
+    bpy.context.view_layer.objects.active=ob;bpy.ops.object.modifier_apply(modifier=sol.name)
+    return ob
+smile_surface('Mouth_inset',-.991,.991,mouth_mat,.023)
+edges=[-.982,-.824,-.642,-.437,-.221,0,.221,.437,.642,.824,.982]
+for i in range(len(edges)-1):
+    smile_surface('Tooth_%02d'%(i+1),edges[i]+.0035,edges[i+1]-.0035,enamel,.039,.014,True)
+for row in [0,1]:
+    points=[]
+    for i in range(33):
+        x=-.99+1.98*i/32;z=smile_bounds(x)[row]
+        points.append((x,front(x,z,.028),z))
+    tube('Smile outline',points,.010,mouth_mat,2,False)
+for side in [-1,1]:
+    tube('Smile corner',[(side*.985,front(side*.985,3.264,.03),3.264),(side*1.015,front(side*1.015,3.287,.018),3.287),(side*1.006,front(side*1.006,3.316,.01),3.316)],.011,whisker_mat,2)
 
 # Seven softly raised herringbone belly markings.
-for row,(zs,xs) in enumerate([(2.70,[-.56,0,.56]),(2.20,[-.79,-.265,.265,.79])]):
+for row,(zs,xs) in enumerate([(2.40,[-.56,0,.56]),(1.99,[-.81,-.275,.275,.81])]):
     for k,x0 in enumerate(xs):
-        w=.30 if row==0 else .32
-        outline=[(-.5,-.04),(-.40,.015),(-.10,.13),(0,.15),(.13,.12),(.48,-.03),(.5,-.05),(.30,-.03),(.015,.070),(-.29,-.025)]
+        w=.39 if row==0 else .37
+        outline=[(-.5,-.09),(-.44,.012),(-.20,.14),(-.05,.18),(.13,.16),(.44,.01),(.5,-.075),(.32,-.055),(.012,.075),(-.31,-.075)]
         v=[(x0+u*w,front(x0+u*w,zs+v,.030),zs+v) for u,v in outline]
         center=Vector((x0,front(x0,zs+.075,.034),zs+.075));v.append(tuple(center))
         f=[(len(v)-1,i,(i+1)%len(outline)) for i in range(len(outline))]
         ob=mesh_object('Belly chevron',v,f,markings)
-        sol=ob.modifiers.new('Marking edge','SOLIDIFY');sol.thickness=.008
+        sol=ob.modifiers.new('Marking edge','SOLIDIFY');sol.thickness=.003
         bpy.context.view_layer.objects.active=ob;bpy.ops.object.modifier_apply(modifier=sol.name)
 
 for side in [-1,1]:
     for k in range(3):
-        z=3.19-k*.11
-        tube('Whisker',[(side*.91,front(side*.91,z,.02),z),(side*1.20,-.64,z+.03),(side*(1.69-.08*k),-.67,z+.18-.15*k)],.013,whisker_mat,2)
+        z=3.39-k*.13
+        x=side*(1.04+.035*k)
+        y=front(x,z,.018)
+        tube('Whisker',[(x,y,z),(side*1.35,y-.07,z+.07-.04*k),(side*(1.96-.035*k),y-.16,z+.27-.20*k)],.016,whisker_mat,3)
+        sphere('Whisker follicle',(x,y-.008,z),(.026,.013,.021),fur,16,10)
 
 # A slightly cupped, asymmetrical leaf with sculpted veins.
 leaf_verts, leaf_faces=[],[]
 def leaf_point(t,u):
-    width=.65*math.sin(math.pi*t)**.72
-    return Vector((-.58+1.56*t, -.25+u*width+.1*math.sin(t*math.pi), 4.12+.14*math.sin(t*math.pi)+.10*u*u+.06*t+.065*math.sin(u*3+t*4)))
+    envelope=math.sin(math.pi*t)
+    width=.52*envelope**.72
+    # Both tip cross-sections collapse to one point. The midrib rests on the
+    # crown and the outer lobes drape down, rather than forming a floating brim.
+    return Vector((-.80+1.62*t,-.08+u*width+.055*envelope,
+                   4.016+.010*envelope+.04*t+(-.13*u*u+.015*math.sin(u*3+t*4))*envelope))
 for j in range(25):
     for i in range(17):
         leaf_verts.append(tuple(leaf_point(.001+.998*j/24,-1+2*i/16)))
@@ -247,8 +386,8 @@ leaf_parts.append(tube('Leaf midrib',[tuple(leaf_point(t,0)+Vector((0,0,.016))) 
 for t in [.20,.35,.50,.65,.80]:
     for side in [-1,1]:
         leaf_parts.append(tube('Leaf vein',[tuple(leaf_point(t,0)+Vector((0,0,.016))),tuple(leaf_point(min(.99,t+.08),side*.5)+Vector((0,0,.016))),tuple(leaf_point(min(.99,t+.1),side*.9)+Vector((0,0,.017)))],.007,vein_mat,1))
-leaf_parts.append(tube('Leaf stem',[(-.59,-.25,4.16),(-.73,-.18,4.25),(-.81,-.13,4.43)],.023,vein_mat,2))
-leaf_rig=bpy.data.objects.new('Leaf',None);character.objects.link(leaf_rig);leaf_rig.location=(0,0,4.1)
+leaf_parts.append(tube('Leaf stem',[tuple(leaf_point(0,0)),(-.92,-.01,4.12),(-.96,.02,4.22)],.023,vein_mat,2))
+leaf_rig=bpy.data.objects.new('Leaf',None);character.objects.link(leaf_rig);leaf_rig.location=(0,0,4.06)
 bpy.context.view_layer.update()
 for ob in leaf_parts:
     ob.parent=leaf_rig;ob.matrix_parent_inverse=leaf_rig.matrix_world.inverted()
@@ -258,30 +397,63 @@ for ob in leaf_parts:
 def fibers(name, points, mat):
     verts,faces=[],[]
     for p,n in points:
-        length=random.uniform(.014,.030)
+        length=random.uniform(.008,.020)
         tangent=n.cross(Vector((0,0,1)))
         if tangent.length<.01:tangent=Vector((1,0,0))
         tangent.normalize()
         tangent=tangent*math.cos(random.random()*6.28)+n.cross(tangent)*math.sin(random.random()*6.28)
-        width=random.uniform(.002,.0045)
-        lean=Vector((0,0,-.008))
+        width=random.uniform(.0012,.0028)
+        lean=Vector((0,0,-.006))
         a=len(verts)
         verts.extend([tuple(p-tangent*width),tuple(p+tangent*width),tuple(p+n*length+lean)])
         faces.append((a,a+1,a+2))
     return mesh_object(name,verts,faces,mat)
 grey_points=[];cream_points=[]
-for _ in range(19000):
+for _ in range(26000):
     theta=math.acos(random.uniform(-.98,.98));phi=random.random()*2*math.pi
     p,n=body_point(theta,phi,.002)
-    is_belly=(p.y<0 and (p.x/1.095)**2+((p.z-1.85)/1.285)**2<1)
+    is_belly=(p.y<0 and (p.x/1.205)**2+((p.z-1.62)/1.155)**2<1)
     # Keep eyes, nose and smile free of protruding strands.
-    if p.y<0 and p.z>3.06 and abs(p.x)<.90: continue
+    if p.y<0 and p.z>2.80 and abs(p.x)<1.10: continue
     if is_belly:
         p.y=front(p.x,p.z,.017)
         cream_points.append((p,n))
     else: grey_points.append((p,n))
 fibers('Fine grey fibers',grey_points,fur)
 fibers('Fine ivory fibers',cream_points,belly)
+
+# Larger tapered locks interrupt the outline at cheeks and shoulders. Roots sit
+# inside the body; the locks point with the fur flow instead of radiating spikes.
+tuft_verts,tuft_faces=[],[]
+for side in [-1,1]:
+    for k in range(18):
+        z=2.77+k*.050
+        theta=math.acos((z-2.11)/1.955)
+        phi=(-.28 if side>0 else math.pi+.28)+random.uniform(-.12,.12)
+        p,n=body_point(theta,phi,-.020)
+        tangent=Vector((0,0,1));w=random.uniform(.028,.043)
+        tip=p+Vector((side*random.uniform(.055,.085),-.012,-.04))
+        a=len(tuft_verts)
+        tuft_verts.extend([tuple(p-tangent*w),tuple(p+tangent*w),tuple(p+n*.023),tuple(tip)])
+        tuft_faces.extend([(a,a+2,a+3),(a+2,a+1,a+3)])
+mesh_object('Cheek fur tufts',tuft_verts,tuft_faces,fur)
+
+# Small fibers follow each articulated appendage so the surface does not turn
+# abruptly smooth at the shoulders or ear roots.
+for name in ['Arm_L','Arm_R','Ear_L','Ear_R','Tail']:
+    ob=bpy.data.objects[name];bpy.context.view_layer.update()
+    samples=[]
+    for _ in range(900 if name.startswith('Arm') else 500):
+        poly=random.choice(list(ob.data.polygons))
+        ids=list(poly.vertices)
+        if len(ids)<3: continue
+        a,b,c=[ob.data.vertices[ids[k]].co for k in range(3)]
+        u,v=random.random(),random.random()
+        if u+v>1:u,v=1-u,1-v
+        p=ob.matrix_world@(a+(b-a)*u+(c-a)*v)
+        n=(ob.matrix_world.to_3x3()@poly.normal).normalized()
+        samples.append((p+n*.002,n))
+    attach(fibers(name+' fibers',samples,fur),ob)
 
 # Convert curves once; export only the sculpture, not the render stage.
 bpy.ops.object.select_all(action='DESELECT')
@@ -291,8 +463,9 @@ for ob in list(character.objects):
         bpy.ops.object.convert(target='MESH');ob.select_set(False)
 
 # Join repeated static details by material, preserving animated parts.
-for prefix in ['Whisker','Belly chevron','Toe claw','Hand claw','Eye catchlight']:
-    items=[o for o in character.objects if o.type=='MESH' and o.name.startswith(prefix)]
+for prefix in ['Whisker','Belly chevron','Toe claw','Hand_L_claw','Hand_R_claw','Eye catchlight']:
+    # Follicles remain fur; never merge them into the whisker material batch.
+    items=[o for o in character.objects if o.type=='MESH' and o.name.startswith(prefix) and not o.name.startswith('Whisker follicle')]
     if len(items)>1:
         bpy.ops.object.select_all(action='DESELECT')
         for o in items:o.select_set(True)
@@ -325,21 +498,21 @@ def area(name,loc,power,color,size):
 area('Large window',(-4,-5,8),850,(1,.92,.79),5)
 area('Cool fill',(4,-1,5),450,(.78,.88,1),4)
 area('Soft rim',(2,4,6),1100,(.93,1,.79),3)
-bpy.ops.object.camera_add(location=(6.8,-13.6,6.7))
+bpy.ops.object.camera_add(location=(4.4,-14.6,5.7))
 camera=studio_obj(bpy.context.object);camera.name='Portrait camera'
 camera.rotation_euler=(Vector((0,0,2.48))-camera.location).to_track_quat('-Z','Y').to_euler()
 camera.data.type='ORTHO';camera.data.ortho_scale=6.50;bpy.context.scene.camera=camera
 scene=bpy.context.scene
-scene.render.engine='CYCLES';scene.cycles.samples=48
+scene.render.engine='CYCLES';scene.cycles.samples=int(os.environ.get('TOTORO_SAMPLES','48'))
 scene.cycles.use_denoising=True
 scene.world.color=(.30,.30,.30)
 scene.view_settings.view_transform='AgX'
-scene.render.resolution_x=1100;scene.render.resolution_y=1100;scene.render.resolution_percentage=100
+scene.render.resolution_x=1100;scene.render.resolution_y=1100;scene.render.resolution_percentage=int(os.environ.get('TOTORO_RESOLUTION','100'))
 scene.render.image_settings.file_format='PNG';scene.render.image_settings.color_mode='RGBA';scene.render.film_transparent=True
 scene.render.filepath=str(SOURCE/'totoro-render.png')
 bpy.ops.wm.save_as_mainfile(filepath=str(SOURCE/'totoro.blend'))
 stats={'triangles':sum(len(o.data.loop_triangles) for o in character.objects if o.type=='MESH'),'objects':len(character.objects),'materials':len({m.name for o in character.objects if o.type=='MESH' for m in o.data.materials}),'file_bytes':(SOURCE/'totoro-raw.glb').stat().st_size}
 (SOURCE/'model-stats.json').write_text(json.dumps(stats,indent=2))
 print('MODEL_STATS',json.dumps(stats),flush=True)
-bpy.ops.render.render(write_still=True)
+if os.environ.get('TOTORO_SKIP_RENDER')!='1': bpy.ops.render.render(write_still=True)
 print('TOTORO_DONE',flush=True)

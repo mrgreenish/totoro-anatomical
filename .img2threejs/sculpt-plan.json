@@ -1,0 +1,265 @@
+{
+  "name": "Totoro smiling sculpture refinement",
+  "workflow": "Refine the existing editable Blender model and animated glTF; preserve the gallery architecture.",
+  "referenceUrls": [
+    "https://www.ghibli.jp/gallery/totoro030.jpg",
+    "https://www.ghibli.jp/gallery/totoro032.jpg",
+    "https://www.ghibli.jp/gallery/totoro034.jpg",
+    "https://www.ghibli.jp/gallery/totoro036.jpg"
+  ],
+  "referenceSuitability": {
+    "verdict": "conditional",
+    "reason": "Official drawings clearly establish the face and side profile; standing pose and concealed anatomy are inferred from the existing sculpture. This is a stylized three-dimensional adaptation, not a trace of one film frame."
+  },
+  "observations": {
+    "macro": "Continuous pear torso with a broad flattened crown, pronounced lateral cheeks, embedded pointed ears, hanging tapered arms, low broad feet and rear tail.",
+    "meso": "Wide shallow black nose, small circular separated eyes, raised muzzle, crescent grin wrapping around both cheeks, ivory belly, seven charcoal chevrons, three long whiskers on each cheek.",
+    "micro": "Broad ivory enamel panels with slender dark divisions, short fur tufts at cheeks and ears, tapered claws, whisker follicles, leaf midrib and veins.",
+    "materials": "Matte warm grey fur and cream belly, low gloss dark nose and pupils, satin ivory enamel and dark claws. Exact fur microstructure is inferred; retain physical studio lighting.",
+    "relationships": "Face details conform to a single continuous body surface. Ear roots overlap crown. Hand claws and fur belong to animated arms. Belly markings follow belly shell. All mouth panels wrap in depth rather than occupying a flat card."
+  },
+  "qualityContract": {
+    "definitionOfDone": [
+      "A broad grin with ten large individually shaped teeth is obvious at the initial gallery view.",
+      "Cheeks, muzzle, forehead, arms, paws, ears and fur have authored contours rather than unchanged primitive silhouettes.",
+      "Face and silhouette read as Totoro against official drawings in front and three-quarter renders, with attached geometry from side and rear views.",
+      "The optimized model, editable Blender source, loading poster and live gallery all contain the same refinement.",
+      "Existing orbit, lighting and animation contracts remain functional; model decodes, fits camera and validates."
+    ],
+    "criticalFeatures": [
+      "broad-toothed-grin",
+      "face-landmark-placement",
+      "continuous-organic-silhouette",
+      "attached-appendages",
+      "runtime-and-poster-consistency"
+    ],
+    "reviewViews": [
+      "front",
+      "three-quarter",
+      "profile",
+      "rear-three-quarter"
+    ],
+    "rejectIf": [
+      "teeth are hidden, needle-shaped, disconnected or a flat white rectangle",
+      "mouth floats in profile",
+      "large eyes and tiny nose still dominate",
+      "floating arms/ears or detached animated claws",
+      "stale poster or glTF"
+    ]
+  },
+  "anatomy": {
+    "coordinates": "Blender Z-up, face -Y",
+    "height": 5.0,
+    "bodyHeight": 4.065,
+    "maxBodyWidth": 3.18,
+    "eyeCenters": [
+      [
+        -0.65,
+        3.55
+      ],
+      [
+        0.65,
+        3.55
+      ]
+    ],
+    "noseWidth": 0.52,
+    "grinWidth": 1.97,
+    "centralToothHeight": 0.365,
+    "earRoot": [
+      0.72,
+      0.045,
+      3.83
+    ],
+    "shoulder": [
+      1.2,
+      0.015,
+      2.6
+    ],
+    "confidence": {
+      "face": 0.9,
+      "torso": 0.8,
+      "hiddenBack": 0.65
+    }
+  },
+  "components": [
+    {
+      "id": "Body",
+      "topologyClass": "continuous-sculpt",
+      "localFeatures": [
+        "lofted radius profile",
+        "cheek projection",
+        "muzzle projection",
+        "brow relief",
+        "chin transition"
+      ]
+    },
+    {
+      "id": "Grin",
+      "topologyClass": "conforming-shell",
+      "localFeatures": [
+        "crescent dark inset",
+        "curved enamel crowns",
+        "narrow inter-tooth divisions",
+        "tapered mouth corners"
+      ]
+    },
+    {
+      "id": "Nose",
+      "topologyClass": "continuous-sculpt",
+      "localFeatures": [
+        "broad triangular bridge",
+        "rounded lower lobes",
+        "two nostrils"
+      ]
+    },
+    {
+      "id": "Eyes",
+      "topologyClass": "conforming-shell",
+      "localFeatures": [
+        "small circular whites",
+        "dark pupils",
+        "subtle upper rims",
+        "catchlights"
+      ]
+    },
+    {
+      "id": "Ears",
+      "topologyClass": "continuous-sculpt",
+      "localFeatures": [
+        "narrow roots",
+        "outward curved tips",
+        "front fold",
+        "furred edges"
+      ]
+    },
+    {
+      "id": "Arms",
+      "topologyClass": "continuous-sculpt",
+      "localFeatures": [
+        "embedded shoulders",
+        "curved forearms",
+        "palm taper",
+        "five attached claws"
+      ]
+    },
+    {
+      "id": "Feet",
+      "topologyClass": "continuous-sculpt",
+      "localFeatures": [
+        "broad instep",
+        "toe lobes",
+        "three tapered claws"
+      ]
+    },
+    {
+      "id": "Belly",
+      "topologyClass": "conforming-shell",
+      "localFeatures": [
+        "lower cream patch",
+        "irregular soft edge",
+        "seven broad tapered chevrons"
+      ]
+    },
+    {
+      "id": "Fur",
+      "topologyClass": "fiber-strand",
+      "localFeatures": [
+        "short surface fibers",
+        "cheek tufts",
+        "ear tufts",
+        "shoulder tufts"
+      ]
+    },
+    {
+      "id": "Whiskers",
+      "topologyClass": "fiber-strand",
+      "localFeatures": [
+        "six curved tapered whiskers",
+        "embedded follicles"
+      ]
+    },
+    {
+      "id": "Leaf",
+      "topologyClass": "conforming-shell",
+      "localFeatures": [
+        "cupped hat",
+        "midrib",
+        "side veins",
+        "curved stem"
+      ]
+    },
+    {
+      "id": "Tail",
+      "topologyClass": "continuous-sculpt",
+      "localFeatures": [
+        "tapered rear mass",
+        "fur outline"
+      ]
+    }
+  ],
+  "projectionRoute": {
+    "required": false,
+    "reason": "Flat cel shading and line art are proportion references, not surface textures. Projecting a frame would bake night lighting, pose and the umbrella onto a freely orbitable sculpture."
+  },
+  "reviewHistory": [
+    {
+      "passId": "native-form",
+      "action": "refine-code",
+      "summary": "Ten large enamel crowns, broader face and articulated tapered arms match the enhancement intent. Front/profile/rear prove volume and attachment. Leaf has a visible crown gap and non-collapsed endpoints; correct it and reduce over-tessellated smile curves.",
+      "renderScreenshot": "artwork/totoro-render.png",
+      "orbitScreenshots": [
+        ".img2threejs/reviews/front.png",
+        ".img2threejs/reviews/profile.png",
+        ".img2threejs/reviews/rear.png"
+      ],
+      "fidelity": 0.78,
+      "features": {
+        "broad-toothed-grin": 0.86,
+        "face-landmark-placement": 0.82,
+        "continuous-organic-silhouette": 0.8,
+        "attached-appendages": 0.66
+      },
+      "diagnosticLimit": "IoU against the previous model is 0.8202 because changing its silhouette is the objective; matching the previous silhouette would defeat the task. Non-degenerate multi-angle gate passed."
+    },
+    {
+      "passId": "native-final",
+      "action": "continue",
+      "fidelity": 0.84,
+      "features": {
+        "broad-toothed-grin": 0.88,
+        "face-landmark-placement": 0.84,
+        "continuous-organic-silhouette": 0.84,
+        "attached-appendages": 0.88,
+        "runtime-and-poster-consistency": 0.87
+      },
+      "summary": "Reviewed reference comparison plus final front, three-quarter, profile and rear renders. The grin is broad and unmistakable, with individually curved crowns seated on the muzzle. Wider nose and smaller eyes correct the prior face; crown, cheek, forearm, palm, toe and tail profiles replace unmodified primitive contours. Leaf touches crown and tapers to collapsed tips. Claws and fur inherit appendage transforms. The result is a stylized sculpture, with inferred neutral stance, hidden anatomy and fur microstructure.",
+      "comparisonImage": ".img2threejs/reviews/comparison.png",
+      "renderScreenshot": "artwork/totoro-render.png",
+      "orbitScreenshots": [
+        ".img2threejs/reviews/front.png",
+        ".img2threejs/reviews/three-quarter.png",
+        ".img2threejs/reviews/profile.png",
+        ".img2threejs/reviews/rear.png"
+      ],
+      "modelVerification": "artwork/model-verification.json",
+      "limitations": [
+        "Not a photoreal character or exact replica of one drawn pose.",
+        "No browser GPU interaction test; compressed model, transform contracts, frame bounds and production build were verified.",
+        "Legacy pixel-IoU is advisory because the requested silhouette differs from the previous model and the cel reference has a different pose."
+      ]
+    }
+  ],
+  "nativeValidation": {
+    "modelSha256": "da1fa391a0db4a618b420b587d900f9093effc5cc4e7c3611c7e3b3178b424ce",
+    "posterSha256": "3ee45d8512253b55487a8089cd9316dcc0ad19e080c9b6ebc62cc997419df8ae",
+    "typescript": "passed",
+    "productionBuild": "passed",
+    "modifiedSceneAndVerificationLint": "passed",
+    "pageLint": "Five pre-existing page lint findings; the page changes are limited to poster text and cache version.",
+    "renderReview": "passed",
+    "gltfErrors": 0,
+    "gltfWarnings": 0,
+    "corrections": 1,
+    "publishing": "prepared, not yet deployed"
+  }
+}

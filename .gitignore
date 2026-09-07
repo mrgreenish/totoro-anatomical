@@ -38,3 +38,6 @@ next-env.d.ts
 /work/
 *.blend1
 *.tsbuildinfo
+__pycache__/
+/.img2threejs/references/
+/.img2threejs/reviews/*.png

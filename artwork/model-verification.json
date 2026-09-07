@@ -1,0 +1,480 @@
+{
+  "passed": true,
+  "sha256": "da1fa391a0db4a618b420b587d900f9093effc5cc4e7c3611c7e3b3178b424ce",
+  "compressedBytes": 1263984,
+  "triangles": 118734,
+  "meshDraws": 66,
+  "bounds": [
+    3.921605348587036,
+    4.995026761728072,
+    3.072708669412135
+  ],
+  "requiredParts": [
+    "Body",
+    "Cream_belly",
+    "Nose",
+    "Mouth_inset",
+    "Belly_chevrons",
+    "Whiskers",
+    "Ear_L",
+    "Ear_R",
+    "Arm_L",
+    "Arm_R",
+    "Foot_L",
+    "Foot_R",
+    "Tail",
+    "Leaf",
+    "Eye_L",
+    "Eye_R",
+    "Pupil_L",
+    "Pupil_R",
+    "Eye_catchlights",
+    "Tooth_01",
+    "Tooth_02",
+    "Tooth_03",
+    "Tooth_04",
+    "Tooth_05",
+    "Tooth_06",
+    "Tooth_07",
+    "Tooth_08",
+    "Tooth_09",
+    "Tooth_10"
+  ],
+  "teeth": [
+    {
+      "name": "Tooth_01",
+      "dimensions": [
+        0.17325818538665771,
+        0.11936186641799384,
+        0.11993292522782584
+      ],
+      "exposed": true
+    },
+    {
+      "name": "Tooth_02",
+      "dimensions": [
+        0.18222870398736313,
+        0.19531869888305664,
+        0.11553291487629025
+      ],
+      "exposed": true
+    },
+    {
+      "name": "Tooth_03",
+      "dimensions": [
+        0.20283051735059598,
+        0.2767152786254883,
+        0.1087454647316024
+      ],
+      "exposed": true
+    },
+    {
+      "name": "Tooth_04",
+      "dimensions": [
+        0.21047431077199555,
+        0.3263278007507324,
+        0.0875698218329779
+      ],
+      "exposed": true
+    },
+    {
+      "name": "Tooth_05",
+      "dimensions": [
+        0.2139874658931814,
+        0.3402099609375,
+        0.0681935796208839
+      ],
+      "exposed": true
+    },
+    {
+      "name": "Tooth_06",
+      "dimensions": [
+        0.2139874658931814,
+        0.3402099609375,
+        0.0681935796208839
+      ],
+      "exposed": true
+    },
+    {
+      "name": "Tooth_07",
+      "dimensions": [
+        0.21047431077199555,
+        0.3263278007507324,
+        0.0875698218329779
+      ],
+      "exposed": true
+    },
+    {
+      "name": "Tooth_08",
+      "dimensions": [
+        0.20283051735059598,
+        0.2767152786254883,
+        0.1087454647316024
+      ],
+      "exposed": true
+    },
+    {
+      "name": "Tooth_09",
+      "dimensions": [
+        0.18222870398736313,
+        0.19531869888305664,
+        0.11553291487629025
+      ],
+      "exposed": true
+    },
+    {
+      "name": "Tooth_10",
+      "dimensions": [
+        0.1732582449913025,
+        0.11936190748111386,
+        0.1199329664874027
+      ],
+      "exposed": true
+    }
+  ],
+  "attachments": [
+    {
+      "side": "L",
+      "clawsFollowArm": true,
+      "furFollowsAppendages": true
+    },
+    {
+      "side": "R",
+      "clawsFollowArm": true,
+      "furFollowsAppendages": true
+    }
+  ],
+  "parts": [
+    {
+      "name": "Body",
+      "parent": "Scene",
+      "triangles": 25600
+    },
+    {
+      "name": "Cream_belly",
+      "parent": "Scene",
+      "triangles": 6720
+    },
+    {
+      "name": "Ear_L_fibers",
+      "parent": "Ear_L",
+      "triangles": 500
+    },
+    {
+      "name": "Ear_L_1",
+      "parent": "Ear_L",
+      "triangles": 6144
+    },
+    {
+      "name": "Ear_R_fibers",
+      "parent": "Ear_R",
+      "triangles": 500
+    },
+    {
+      "name": "Ear_R_1",
+      "parent": "Ear_R",
+      "triangles": 6144
+    },
+    {
+      "name": "Arm_L_fibers",
+      "parent": "Arm_L",
+      "triangles": 900
+    },
+    {
+      "name": "Hand_L_claws",
+      "parent": "Arm_L",
+      "triangles": 1600
+    },
+    {
+      "name": "Arm_L_1",
+      "parent": "Arm_L",
+      "triangles": 3596
+    },
+    {
+      "name": "Foot_L",
+      "parent": "Scene",
+      "triangles": 2592
+    },
+    {
+      "name": "Toe_claws",
+      "parent": "Scene",
+      "triangles": 1920
+    },
+    {
+      "name": "Arm_R_fibers",
+      "parent": "Arm_R",
+      "triangles": 900
+    },
+    {
+      "name": "Hand_R_claws",
+      "parent": "Arm_R",
+      "triangles": 1600
+    },
+    {
+      "name": "Arm_R_1",
+      "parent": "Arm_R",
+      "triangles": 3596
+    },
+    {
+      "name": "Foot_R",
+      "parent": "Scene",
+      "triangles": 2592
+    },
+    {
+      "name": "Tail_fibers",
+      "parent": "Tail",
+      "triangles": 500
+    },
+    {
+      "name": "Sphere002",
+      "parent": "Tail",
+      "triangles": 1840
+    },
+    {
+      "name": "Eye_L",
+      "parent": "Scene",
+      "triangles": 1840
+    },
+    {
+      "name": "Pupil_L",
+      "parent": "Scene",
+      "triangles": 1216
+    },
+    {
+      "name": "Eye_catchlights",
+      "parent": "Scene",
+      "triangles": 336
+    },
+    {
+      "name": "Upper_eyelid",
+      "parent": "Scene",
+      "triangles": 576
+    },
+    {
+      "name": "Eye_R",
+      "parent": "Scene",
+      "triangles": 1840
+    },
+    {
+      "name": "Pupil_R",
+      "parent": "Scene",
+      "triangles": 1216
+    },
+    {
+      "name": "Upper_eyelid001",
+      "parent": "Scene",
+      "triangles": 576
+    },
+    {
+      "name": "Nose",
+      "parent": "Scene",
+      "triangles": 640
+    },
+    {
+      "name": "Nostril",
+      "parent": "Scene",
+      "triangles": 440
+    },
+    {
+      "name": "Nostril001",
+      "parent": "Scene",
+      "triangles": 440
+    },
+    {
+      "name": "Mouth_inset",
+      "parent": "Scene",
+      "triangles": 2912
+    },
+    {
+      "name": "Tooth_01",
+      "parent": "Scene",
+      "triangles": 464
+    },
+    {
+      "name": "Tooth_02",
+      "parent": "Scene",
+      "triangles": 464
+    },
+    {
+      "name": "Tooth_03",
+      "parent": "Scene",
+      "triangles": 464
+    },
+    {
+      "name": "Tooth_04",
+      "parent": "Scene",
+      "triangles": 464
+    },
+    {
+      "name": "Tooth_05",
+      "parent": "Scene",
+      "triangles": 464
+    },
+    {
+      "name": "Tooth_06",
+      "parent": "Scene",
+      "triangles": 464
+    },
+    {
+      "name": "Tooth_07",
+      "parent": "Scene",
+      "triangles": 464
+    },
+    {
+      "name": "Tooth_08",
+      "parent": "Scene",
+      "triangles": 464
+    },
+    {
+      "name": "Tooth_09",
+      "parent": "Scene",
+      "triangles": 464
+    },
+    {
+      "name": "Tooth_10",
+      "parent": "Scene",
+      "triangles": 464
+    },
+    {
+      "name": "Smile_outline",
+      "parent": "Scene",
+      "triangles": 1536
+    },
+    {
+      "name": "Smile_outline001",
+      "parent": "Scene",
+      "triangles": 1536
+    },
+    {
+      "name": "Smile_corner",
+      "parent": "Scene",
+      "triangles": 256
+    },
+    {
+      "name": "Smile_corner001",
+      "parent": "Scene",
+      "triangles": 256
+    },
+    {
+      "name": "Belly_chevrons",
+      "parent": "Scene",
+      "triangles": 280
+    },
+    {
+      "name": "Whiskers",
+      "parent": "Scene",
+      "triangles": 1920
+    },
+    {
+      "name": "Whisker_follicle",
+      "parent": "Scene",
+      "triangles": 288
+    },
+    {
+      "name": "Whisker_follicle001",
+      "parent": "Scene",
+      "triangles": 288
+    },
+    {
+      "name": "Whisker_follicle002",
+      "parent": "Scene",
+      "triangles": 288
+    },
+    {
+      "name": "Whisker_follicle003",
+      "parent": "Scene",
+      "triangles": 288
+    },
+    {
+      "name": "Whisker_follicle004",
+      "parent": "Scene",
+      "triangles": 288
+    },
+    {
+      "name": "Whisker_follicle005",
+      "parent": "Scene",
+      "triangles": 288
+    },
+    {
+      "name": "Leaf_midrib",
+      "parent": "Leaf",
+      "triangles": 640
+    },
+    {
+      "name": "Leaf_stem",
+      "parent": "Leaf",
+      "triangles": 256
+    },
+    {
+      "name": "Leaf_vein",
+      "parent": "Leaf",
+      "triangles": 192
+    },
+    {
+      "name": "Leaf_vein001",
+      "parent": "Leaf",
+      "triangles": 192
+    },
+    {
+      "name": "Leaf_vein002",
+      "parent": "Leaf",
+      "triangles": 192
+    },
+    {
+      "name": "Leaf_vein003",
+      "parent": "Leaf",
+      "triangles": 192
+    },
+    {
+      "name": "Leaf_vein004",
+      "parent": "Leaf",
+      "triangles": 192
+    },
+    {
+      "name": "Leaf_vein005",
+      "parent": "Leaf",
+      "triangles": 192
+    },
+    {
+      "name": "Leaf_vein006",
+      "parent": "Leaf",
+      "triangles": 192
+    },
+    {
+      "name": "Leaf_vein007",
+      "parent": "Leaf",
+      "triangles": 192
+    },
+    {
+      "name": "Leaf_vein008",
+      "parent": "Leaf",
+      "triangles": 192
+    },
+    {
+      "name": "Leaf_vein009",
+      "parent": "Leaf",
+      "triangles": 192
+    },
+    {
+      "name": "Leaf_hat",
+      "parent": "Leaf",
+      "triangles": 1696
+    },
+    {
+      "name": "Fine_grey_fibers",
+      "parent": "Scene",
+      "triangles": 19207
+    },
+    {
+      "name": "Fine_ivory_fibers",
+      "parent": "Scene",
+      "triangles": 3515
+    },
+    {
+      "name": "Cheek_fur_tufts",
+      "parent": "Scene",
+      "triangles": 72
+    }
+  ],
+  "scope": "Compressed glTF decoding, finite geometry, exposed curved teeth, animation attachment transforms and initial camera framing. GPU browser interaction is not covered."
+}
