@@ -8,6 +8,7 @@ import math
 import random
 import json
 import os
+from bisect import bisect_left
 from pathlib import Path
 from mathutils import Vector
 from mathutils.noise import noise_vector
@@ -35,11 +36,16 @@ def material(name, color, roughness=.8, sheen=0, noise=False):
     bsdf.inputs['Sheen Roughness'].default_value = .7
     if noise:
         tex = nodes.new('ShaderNodeTexNoise')
-        tex.inputs['Scale'].default_value = 145
+        tex.inputs['Scale'].default_value = 1
         tex.inputs['Detail'].default_value = 2
+        coordinates = nodes.new('ShaderNodeTexCoord')
+        groom = nodes.new('ShaderNodeVectorMath'); groom.operation = 'MULTIPLY'
+        groom.inputs[1].default_value = (210, 210, 38)
+        mat.node_tree.links.new(coordinates.outputs['Generated'], groom.inputs[0])
+        mat.node_tree.links.new(groom.outputs['Vector'], tex.inputs['Vector'])
         bump = nodes.new('ShaderNodeBump')
-        bump.inputs['Strength'].default_value = .11
-        bump.inputs['Distance'].default_value = .009
+        bump.inputs['Strength'].default_value = .10
+        bump.inputs['Distance'].default_value = .006
         mat.node_tree.links.new(tex.outputs['Fac'], bump.inputs['Height'])
         mat.node_tree.links.new(bump.outputs['Normal'], bsdf.inputs['Normal'])
     return mat
@@ -53,7 +59,7 @@ black = material('Eyes and nose • obsidian', (.011, .016, .014), .27)
 enamel = material('Teeth • warm enamel', (.90, .89, .81), .36)
 mouth_mat = material('Mouth • deep umber', (.019, .014, .012), .86)
 whisker_mat = material('Whiskers', (.027, .034, .026), .8)
-claw_mat = material('Claws • horn', (.20, .215, .19), .53)
+claw_mat = material('Claws • horn', (.062, .071, .058), .48)
 leaf_mat = material('Leaf • fresh green', (.125, .28, .065), .51, .12)
 vein_mat = material('Leaf veins', (.27, .42, .103), .7)
 
@@ -223,6 +229,37 @@ def attach(ob,parent):
     ob.parent=parent; ob.matrix_parent_inverse=parent.matrix_world.inverted()
     return ob
 
+def paw(side, label):
+    # A toe fan flows into a raised instep buried inside the haunch. The
+    # weight-bearing sole is flat, unlike the previous squashed ellipsoid.
+    profile=[(-1.015,.018,.145,.025),(-.92,.245,.185,.145),
+             (-.73,.370,.235,.205),(-.44,.350,.290,.255),
+             (-.10,.285,.325,.290),(.18,.195,.245,.210),(.31,.012,.18,.04)]
+    v,f=[],[]
+    for j in range(49):
+        y=-1.015+1.325*j/48
+        width,center,height=[profile_value(profile,y,k) for k in [1,2,3]]
+        for k in range(48):
+            angle=2*math.pi*k/48
+            x=width*math.cos(angle)
+            z=center+height*math.sin(angle)
+            # Very shallow toe knuckles; the paw remains one continuous form.
+            z+=.012*math.cos(x*31)*max(0,math.sin(angle))*math.exp(-((y+.82)/.17)**2)
+            z=max(.024,z)
+            v.append((side*.72+x+side*.045*max(0,-y),y,z))
+    for j in range(48):
+        for k in range(48):
+            a=j*48+k;b=j*48+(k+1)%48
+            f.append((b,a,a+48,b+48))
+    f.extend([tuple(range(48)),tuple(reversed(range(48*48,49*48)))])
+    ob=mesh_object('Foot_'+label,v,f,fur)
+    for c in range(3):
+        spread=c-1;x=side*.755+spread*.165
+        y=-.952+.042*abs(spread)
+        claw=tube('Toe_'+label+'_claw',[(x,y+.060,.195),(x+spread*.015,y-.037,.139),(x+spread*.019,y-.088,.079)],.045,claw_mat,2)
+        attach(claw,ob)
+    return ob
+
 for side in [-1,1]:
     label='L' if side<0 else 'R'
     profile=[(1.17,1.52,-.30,.025,.04),(1.29,1.57,-.25,.20,.27),
@@ -247,14 +284,7 @@ for side in [-1,1]:
     pivot=Vector((side*1.20,.015,2.6))
     for vertex in arm.data.vertices: vertex.co-=pivot
     arm.location=pivot
-    foot=sphere('Foot_'+label,(side*.70,-.30,.23),(.49,.69,.235),fur,48,28)
-    for vertex in foot.data.vertices:
-        p=vertex.co
-        p.z+=.018*math.cos(p.x*18)*max(0,-p.y/.69)**3
-        p.x*=1+.08*max(0,-p.y/.69)
-    for c in range(3):
-        x=side*.70+(c-1)*.19
-        tube('Toe claw',[(x,-.81,.21),(x,-.99,.16),(x,-1.055,.10)],.061,claw_mat,3)
+    paw(side,label)
     for c in range(5):
         x=side*(1.40+c*.078)
         z=1.27+.05*abs(c-2)/2
@@ -343,12 +373,14 @@ for row in [0,1]:
 for side in [-1,1]:
     tube('Smile corner',[(side*.985,front(side*.985,3.264,.03),3.264),(side*1.015,front(side*1.015,3.287,.018),3.287),(side*1.006,front(side*1.006,3.316,.01),3.316)],.011,whisker_mat,2)
 
-# Seven softly raised herringbone belly markings.
+# Seven markings stay shallow, with their own matching fur across the edges.
+chevron_outlines=[]
 for row,(zs,xs) in enumerate([(2.40,[-.56,0,.56]),(1.99,[-.81,-.275,.275,.81])]):
     for k,x0 in enumerate(xs):
         w=.39 if row==0 else .37
         outline=[(-.5,-.09),(-.44,.012),(-.20,.14),(-.05,.18),(.13,.16),(.44,.01),(.5,-.075),(.32,-.055),(.012,.075),(-.31,-.075)]
         v=[(x0+u*w,front(x0+u*w,zs+v,.030),zs+v) for u,v in outline]
+        chevron_outlines.append([(x0+u*w,zs+z) for u,z in outline])
         center=Vector((x0,front(x0,zs+.075,.034),zs+.075));v.append(tuple(center))
         f=[(len(v)-1,i,(i+1)%len(outline)) for i in range(len(outline))]
         ob=mesh_object('Belly chevron',v,f,markings)
@@ -392,35 +424,74 @@ bpy.context.view_layer.update()
 for ob in leaf_parts:
     ob.parent=leaf_rig;ob.matrix_parent_inverse=leaf_rig.matrix_world.inverted()
 
-# Short tapered triangular fibers provide a fuzzy silhouette without hair systems.
-# One merged mesh per color; 22k triangles total, no alpha overdraw.
-def fibers(name, points, mat):
-    verts,faces=[],[]
+# Groomed, bent ribbons give the coat real depth and a soft silhouette. Each
+# strand is three triangles with authored surface normals and root-to-tip color.
+# Opaque geometry avoids layers of alpha overdraw in the real-time renderer.
+def fibers(name, points, mat, length_scale=1):
+    verts,faces,normals,colors=[],[],[],[]
     for p,n in points:
-        length=random.uniform(.008,.020)
-        tangent=n.cross(Vector((0,0,1)))
-        if tangent.length<.01:tangent=Vector((1,0,0))
-        tangent.normalize()
-        tangent=tangent*math.cos(random.random()*6.28)+n.cross(tangent)*math.sin(random.random()*6.28)
-        width=random.uniform(.0012,.0028)
-        lean=Vector((0,0,-.006))
+        guard=random.random()<.12
+        length=random.uniform(.060,.085) if guard else random.uniform(.030,.052)
+        length*=length_scale
+        down=Vector((.12*math.sin(p.z*3+p.x*2),0,-1))
+        flow=down-n*down.dot(n)
+        if flow.length<.04: flow=Vector((0,-1,0))+n*n.y
+        flow.normalize()
+        across=n.cross(flow).normalized()
+        flow=(flow+across*random.uniform(-.35,.35)).normalized()
+        # A broad distribution of ribbon orientation reads as hairs at any orbit.
+        angle=random.uniform(-1.2,1.2)
+        width_axis=(across*math.cos(angle)+n*math.sin(angle)).normalized()
+        width=random.uniform(.0005,.0011)*(1.0 if guard else 1.20)
+        middle=p+n*length*.53+flow*length*.28
+        tip=p+n*length*.67+flow*length*.82
         a=len(verts)
-        verts.extend([tuple(p-tangent*width),tuple(p+tangent*width),tuple(p+n*length+lean)])
-        faces.append((a,a+1,a+2))
-    return mesh_object(name,verts,faces,mat)
-grey_points=[];cream_points=[]
-for _ in range(26000):
-    theta=math.acos(random.uniform(-.98,.98));phi=random.random()*2*math.pi
+        verts.extend([tuple(p-width_axis*width),tuple(p+width_axis*width),
+                      tuple(middle-width_axis*width*.48),tuple(middle+width_axis*width*.48),tuple(tip)])
+        faces.extend([(a,a+1,a+2),(a+1,a+3,a+2),(a+2,a+3,a+4)])
+        variation=random.uniform(.92,1.08)
+        for factor in [.88,.88,.97,.97,1.02]:
+            colors.append(tuple(channel*variation*factor for channel in mat.diffuse_color[:3])+(1,))
+        normals.extend([tuple(n)]*5)
+    fiber_material=mat.copy();fiber_material.name=mat.name+' fibers'
+    ob=mesh_object(name,verts,faces,fiber_material)
+    ob.visible_shadow=False
+    ob.data.normals_split_custom_set_from_vertices(normals)
+    color=ob.data.color_attributes.new(name='Coat tint',type='FLOAT_COLOR',domain='POINT')
+    for item,value in zip(color.data,colors): item.color=value
+    # Export and Cycles use the same subtle root shading.
+    tint=fiber_material.node_tree.nodes.new('ShaderNodeVertexColor');tint.name='Coat tint';tint.layer_name='Coat tint'
+    fiber_material.node_tree.links.new(tint.outputs['Color'],fiber_material.node_tree.nodes.get('Principled BSDF').inputs['Base Color'])
+    return ob
+
+def inside_polygon(x,z,polygon):
+    inside=False
+    for i,(ax,az) in enumerate(polygon):
+        bx,bz=polygon[i-1]
+        if (az>z)!=(bz>z) and x<(bx-ax)*(z-az)/(bz-az)+ax: inside=not inside
+    return inside
+
+grey_points=[];cream_points=[];mark_points=[];face_points=[]
+for _ in range(108000):
+    theta=math.acos(random.uniform(-.99,.99));phi=random.random()*2*math.pi
     p,n=body_point(theta,phi,.002)
-    is_belly=(p.y<0 and (p.x/1.205)**2+((p.z-1.62)/1.155)**2<1)
-    # Keep eyes, nose and smile free of protruding strands.
-    if p.y<0 and p.z>2.80 and abs(p.x)<1.10: continue
-    if is_belly:
-        p.y=front(p.x,p.z,.017)
-        cream_points.append((p,n))
+    belly_z=(p.z-1.62)/1.155
+    is_belly=(p.y<0 and (p.x/(1.205*(1-.065*belly_z)))**2+belly_z**2<1)
+    if p.y<0 and p.z>2.78 and abs(p.x)<1.10:
+        eyes=any(((p.x-side*.65)/.17)**2+((p.z-3.55)/.18)**2<1 for side in [-1,1])
+        nose=abs(p.x)<.32 and 3.33<p.z<3.51
+        bottom,top=smile_bounds(p.x)
+        mouth=abs(p.x)<1.025 and bottom-.035<p.z<top+.045
+        if not (eyes or nose or mouth):face_points.append((p,n))
+    elif is_belly:
+        marked=any(inside_polygon(p.x,p.z,polygon) for polygon in chevron_outlines)
+        p.y=front(p.x,p.z,.035 if marked else .017)
+        (mark_points if marked else cream_points).append((p,n))
     else: grey_points.append((p,n))
 fibers('Fine grey fibers',grey_points,fur)
-fibers('Fine ivory fibers',cream_points,belly)
+fibers('Fine ivory fibers',cream_points,belly,.72)
+fibers('Chevron fibers',mark_points,markings,.60)
+fibers('Face fibers',face_points,fur,.38)
 
 # Larger tapered locks interrupt the outline at cheeks and shoulders. Roots sit
 # inside the body; the locks point with the fur flow instead of radiating spikes.
@@ -431,29 +502,33 @@ for side in [-1,1]:
         theta=math.acos((z-2.11)/1.955)
         phi=(-.28 if side>0 else math.pi+.28)+random.uniform(-.12,.12)
         p,n=body_point(theta,phi,-.020)
-        tangent=Vector((0,0,1));w=random.uniform(.028,.043)
-        tip=p+Vector((side*random.uniform(.055,.085),-.012,-.04))
+        tangent=Vector((0,0,1));w=random.uniform(.018,.030)
+        tip=p+Vector((side*random.uniform(.040,.060),-.012,-.04))
         a=len(tuft_verts)
         tuft_verts.extend([tuple(p-tangent*w),tuple(p+tangent*w),tuple(p+n*.023),tuple(tip)])
         tuft_faces.extend([(a,a+2,a+3),(a+2,a+1,a+3)])
 mesh_object('Cheek fur tufts',tuft_verts,tuft_faces,fur)
 
-# Small fibers follow each articulated appendage so the surface does not turn
-# abruptly smooth at the shoulders or ear roots.
-for name in ['Arm_L','Arm_R','Ear_L','Ear_R','Tail']:
+# Sample triangles by surface area, using barycentric interpolated normals.
+# Uniform polygon sampling caused bare regions and clumps on the old appendages.
+for name in ['Arm_L','Arm_R','Ear_L','Ear_R','Tail','Foot_L','Foot_R']:
     ob=bpy.data.objects[name];bpy.context.view_layer.update()
+    ob.data.calc_loop_triangles()
+    triangles=list(ob.data.loop_triangles);cumulative=[];area=0
+    for triangle in triangles:
+        area+=triangle.area;cumulative.append(area)
     samples=[]
-    for _ in range(900 if name.startswith('Arm') else 500):
-        poly=random.choice(list(ob.data.polygons))
-        ids=list(poly.vertices)
-        if len(ids)<3: continue
-        a,b,c=[ob.data.vertices[ids[k]].co for k in range(3)]
+    count=4200 if name.startswith('Arm') else 2800 if name=='Tail' else 1800
+    for _ in range(count):
+        tri=triangles[min(len(triangles)-1,bisect_left(cumulative,random.random()*area))]
+        a,b,c=[ob.data.vertices[k] for k in tri.vertices]
         u,v=random.random(),random.random()
         if u+v>1:u,v=1-u,1-v
-        p=ob.matrix_world@(a+(b-a)*u+(c-a)*v)
-        n=(ob.matrix_world.to_3x3()@poly.normal).normalized()
-        samples.append((p+n*.002,n))
-    attach(fibers(name+' fibers',samples,fur),ob)
+        p=ob.matrix_world@(a.co*(1-u-v)+b.co*u+c.co*v)
+        n=(ob.matrix_world.to_3x3()@(a.normal*(1-u-v)+b.normal*u+c.normal*v)).normalized()
+        if name.startswith('Foot') and (p.z<.07 or n.z<-.25):continue
+        samples.append((p+n*.001,n))
+    attach(fibers(name+' fibers',samples,fur,.65 if name.startswith('Foot') else .8),ob)
 
 # Convert curves once; export only the sculpture, not the render stage.
 bpy.ops.object.select_all(action='DESELECT')
@@ -463,7 +538,7 @@ for ob in list(character.objects):
         bpy.ops.object.convert(target='MESH');ob.select_set(False)
 
 # Join repeated static details by material, preserving animated parts.
-for prefix in ['Whisker','Belly chevron','Toe claw','Hand_L_claw','Hand_R_claw','Eye catchlight']:
+for prefix in ['Whisker','Belly chevron','Toe_L_claw','Toe_R_claw','Hand_L_claw','Hand_R_claw','Eye catchlight']:
     # Follicles remain fur; never merge them into the whisker material batch.
     items=[o for o in character.objects if o.type=='MESH' and o.name.startswith(prefix) and not o.name.startswith('Whisker follicle')]
     if len(items)>1:
@@ -479,7 +554,7 @@ for ob in character.objects:
 
 bpy.ops.object.select_all(action='DESELECT')
 for ob in character.objects:ob.select_set(True)
-bpy.ops.export_scene.gltf(filepath=str(SOURCE/'totoro-raw.glb'),export_format='GLB',use_selection=True,export_apply=True,export_yup=True,export_animations=False,export_cameras=False,export_lights=False)
+bpy.ops.export_scene.gltf(filepath=str(SOURCE/'totoro-raw.glb'),export_format='GLB',use_selection=True,export_apply=True,export_yup=True,export_animations=False,export_cameras=False,export_lights=False,export_vertex_color='ACTIVE',export_all_vertex_colors=False)
 
 # A studio remains in the editable .blend for high-resolution offline rendering.
 studio=bpy.data.collections.new('STUDIO • render only');bpy.context.scene.collection.children.link(studio)
@@ -496,8 +571,8 @@ def area(name,loc,power,color,size):
     ob=bpy.data.objects.new(name,data);studio.objects.link(ob);ob.location=loc
     ob.rotation_euler=(Vector((0,0,2))-ob.location).to_track_quat('-Z','Y').to_euler()
 area('Large window',(-4,-5,8),850,(1,.92,.79),5)
-area('Cool fill',(4,-1,5),450,(.78,.88,1),4)
-area('Soft rim',(2,4,6),1100,(.93,1,.79),3)
+area('Cool fill',(4,-1,5),260,(.82,.90,1),4)
+area('Soft rim',(2,4,6),950,(.95,1,.88),3)
 bpy.ops.object.camera_add(location=(4.4,-14.6,5.7))
 camera=studio_obj(bpy.context.object);camera.name='Portrait camera'
 camera.rotation_euler=(Vector((0,0,2.48))-camera.location).to_track_quat('-Z','Y').to_euler()
@@ -505,7 +580,7 @@ camera.data.type='ORTHO';camera.data.ortho_scale=6.50;bpy.context.scene.camera=c
 scene=bpy.context.scene
 scene.render.engine='CYCLES';scene.cycles.samples=int(os.environ.get('TOTORO_SAMPLES','48'))
 scene.cycles.use_denoising=True
-scene.world.color=(.30,.30,.30)
+scene.world.color=(.20,.20,.20)
 scene.view_settings.view_transform='AgX'
 scene.render.resolution_x=1100;scene.render.resolution_y=1100;scene.render.resolution_percentage=int(os.environ.get('TOTORO_RESOLUTION','100'))
 scene.render.image_settings.file_format='PNG';scene.render.image_settings.color_mode='RGBA';scene.render.film_transparent=True

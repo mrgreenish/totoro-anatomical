@@ -247,19 +247,87 @@
         "No browser GPU interaction test; compressed model, transform contracts, frame bounds and production build were verified.",
         "Legacy pixel-IoU is advisory because the requested silhouette differs from the previous model and the cel reference has a different pose."
       ]
+    },
+    {
+      "passId": "native-coat-paws-motion",
+      "action": "refine-code",
+      "summary": "First native render exposes missing vertex colors on base surfaces after sharing the fiber shader. Separate fiber materials, explicitly export strand colors, restore ivory belly, and reduce root contrast. Paw instep and smaller footprint improve the slipper shape.",
+      "renderScreenshot": "artwork/totoro-render.png",
+      "fidelity": 0.65
+    },
+    {
+      "passId": "native-coat-paws-motion",
+      "action": "refine-code",
+      "summary": "Opaque silhouette gate passes at IoU .9897, front/profile/rear hold and paws are grounded. Short sparse fibers still read as surface scratches on the back. Increase groom density and length modestly, reduce undercoat bump and replace sharp cheek chips with smaller tufts. Keep face and silhouette unchanged.",
+      "fidelity": 0.8,
+      "comparisonImage": ".img2threejs/reviews/coat-comparison.png",
+      "renderScreenshot": "artwork/totoro-render.png"
+    },
+    {
+      "passId": "native-coat-paws-motion",
+      "action": "continue",
+      "fidelity": 0.85,
+      "features": {
+        "drawing-identity": 0.86,
+        "paws-and-attachments": 0.86,
+        "groomed-coat": 0.83,
+        "studio-materials": 0.85,
+        "motion-contract": 0.88
+      },
+      "layerScores": {
+        "silhouette": 0.87,
+        "geometry": 0.86,
+        "materials": 0.83,
+        "lighting": 0.85,
+        "interaction": 0.85
+      },
+      "summary": "Final front, three-quarter and rear views retain the broad pear silhouette, small eyes, ten-tooth grin, ivory belly and leaf. Paws are narrower with embedded insteps and planted soles. Dense swept fibers read as a short soft coat with a fine fuzzy outline; the face has shorter fur and remains readable. Damped torso and appendage motion retains release momentum, settles and passes frequency/reversal/reset checks.",
+      "renderScreenshot": "artwork/totoro-render.png",
+      "comparisonImage": ".img2threejs/reviews/coat-comparison.png",
+      "orbitScreenshots": [
+        ".img2threejs/reviews/front.png",
+        ".img2threejs/reviews/three-quarter.png",
+        ".img2threejs/reviews/profile.png",
+        ".img2threejs/reviews/rear.png"
+      ],
+      "tier1": ".img2threejs/reviews/coat-tier1-opaque.json",
+      "multiAngle": ".img2threejs/reviews/coat-multi-angle.json",
+      "limitations": [
+        "Stylized short fur, not a physically simulated hair groom.",
+        "Native offline rendering is visually reviewed; live GPU shader appearance and pointer feel are not browser-tested.",
+        "Higher coat density increases the optimized model to 6.61 MB and 460408 triangles."
+      ],
+      "diagnosticNotes": "Raw-alpha bounds include changed translucent stage shadows. The opaque comparison excludes these shadows at alpha >250 for both old and new views without reframing; IoU .9896 and scale delta .0056 pass."
     }
   ],
   "nativeValidation": {
-    "modelSha256": "da1fa391a0db4a618b420b587d900f9093effc5cc4e7c3611c7e3b3178b424ce",
-    "posterSha256": "3ee45d8512253b55487a8089cd9316dcc0ad19e080c9b6ebc62cc997419df8ae",
+    "modelSha256": "66dfcbeebea08358576526e2333274e471fc036f9b7d419a9110b39b4b16d6e5",
     "typescript": "passed",
-    "productionBuild": "passed",
     "modifiedSceneAndVerificationLint": "passed",
-    "pageLint": "Five pre-existing page lint findings; the page changes are limited to poster text and cache version.",
     "renderReview": "passed",
     "gltfErrors": 0,
     "gltfWarnings": 0,
-    "corrections": 1,
-    "publishing": "prepared, not yet deployed"
+    "motion": "passed at 30/60/120 Hz",
+    "productionBuild": "passed",
+    "publishing": "not requested in this task",
+    "corrections": 2,
+    "posterSha256": "081719835d4fb46df67feadef485dfd88dfd24504a4f04fbface139cb8437ed6"
+  },
+  "refinement": {
+    "request": "Refine paws, realistic short fur, render quality and rotational inertia while preserving cel drawing identity.",
+    "passId": "native-coat-paws-motion",
+    "qualityContract": [
+      "Preserve torso profile, small eyes, wide grin, seven chevrons and leaf.",
+      "Short rounded paws tuck under haunches with planted soles and three embedded dark claws.",
+      "Dense swept tapered fur with directional undercoat, longer guard hairs and soft belly/marking boundaries; no shaggy outline or spikes.",
+      "Frame-rate independent angular momentum and damped body/ear/leaf follow-through, respecting reduced motion and pause.",
+      "Native front/profile/rear review, decoded geometry, dynamics checks, TypeScript and production build."
+    ],
+    "geometry": {
+      "paws": "Lofted instep and toe fan, .74 width, approximately 1.2 depth, .025 sole height, rear overlaps haunch.",
+      "fur": "Deterministic three-triangle bent ribbons; short face and belly fur, longer outer coat; surface-normal shading and area-weighted appendage coverage."
+    },
+    "rendering": "Neutral warm slate/ivory palette, rough sheen, groomed micro-normal, soft studio shadow and balanced fill.",
+    "motion": "Analytically integrated underdamped springs driven by angular velocity, with separate ear, leaf and arm lag. Paw subtrees remain attached to the stationary root."
   }
 }

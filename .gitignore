@@ -1,5 +1,6 @@
 # dependencies
 /node_modules
+/.pnpm-store/
 /.pnp
 .pnp.*
 .yarn/*
@@ -41,3 +42,4 @@ next-env.d.ts
 __pycache__/
 /.img2threejs/references/
 /.img2threejs/reviews/*.png
+/.img2threejs/reviews/before-fur/

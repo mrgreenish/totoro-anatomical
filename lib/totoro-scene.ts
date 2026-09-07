@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { createTotoroMotion } from './totoro-motion';
 
 export type SculptureController = {
   setRotate(value: boolean): void;
@@ -18,10 +19,10 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'high-performance' });
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMapping = THREE.AgXToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.VSMShadowMap;
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(30, 1, .1, 60);
   const initialPosition = new THREE.Vector3(3.5, 4.0, 12.4);
@@ -30,7 +31,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   const controls = new OrbitControls(camera, canvas);
   controls.target.copy(initialTarget);
   controls.enableDamping = true;
-  controls.dampingFactor = .065;
+  controls.dampingFactor = .052;
   controls.rotateSpeed = .65;
   controls.zoomSpeed = .65;
   controls.enablePan = false;
@@ -46,22 +47,23 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   const room = new RoomEnvironment();
   const environment = pmrem.fromScene(room, .04);
   scene.environment = environment.texture;
-  scene.environmentIntensity = .7;
+  scene.environmentIntensity = .48;
   room.dispose(); pmrem.dispose();
-  const ambient = new THREE.HemisphereLight(0xf8ffe9, 0x778371, .9);
+  const ambient = new THREE.HemisphereLight(0xf8ffe9, 0x778371, .65);
   scene.add(ambient);
   const key = new THREE.DirectionalLight(0xfff4de, 2.7);
   key.position.set(-3.5, 7, 5); key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048);
   Object.assign(key.shadow.camera, { left: -4, right: 4, top: 6, bottom: -3, near: .5, far: 20 });
-  key.shadow.bias = -.0004; key.shadow.normalBias = .025;
+  key.shadow.bias = -.00015; key.shadow.normalBias = .018;
+  key.shadow.radius = 4; key.shadow.blurSamples = 8;
   key.target.position.set(0, 2, 0); scene.add(key, key.target);
-  const fill = new THREE.DirectionalLight(0xc7deef, .9);
+  const fill = new THREE.DirectionalLight(0xc7deef, .65);
   fill.position.set(5, 4, 2); scene.add(fill);
   const rim = new THREE.DirectionalLight(0xe8ffc3, 2.5);
   rim.position.set(2, 5, -4); scene.add(rim);
 
-  const plinthMaterial = new THREE.MeshPhysicalMaterial({ color: 0xdbdfcf, roughness: .62, metalness: .03, clearcoat: .2, clearcoatRoughness: .6 });
+  const plinthMaterial = new THREE.MeshPhysicalMaterial({ color: 0xdbdfcf, roughness: .82, metalness: 0, clearcoat: .08, clearcoatRoughness: .7 });
   const plinth = new THREE.Mesh(new THREE.CylinderGeometry(2.13, 2.13, .13, 112), plinthMaterial);
   plinth.position.y = -.095; plinth.receiveShadow = true; scene.add(plinth);
   const edgeMaterial = new THREE.MeshStandardMaterial({ color: 0xd6ddc9, roughness: .6 });
@@ -101,8 +103,10 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   const root = new THREE.Group(); scene.add(root);
   let model: THREE.Group | null = null;
   let animated = options.animate, rotating = false, disposed = false, running = false;
-  let night = 0, nightTarget = 0, frame = 0, lastTime = 0, elapsed = 0, tilt = 0;
+  let night = 0, nightTarget = 0, frame = 0, lastTime = 0, elapsed = 0;
   let lastAzimuth = controls.getAzimuthalAngle(), interactionUntil = 0, resetting = false;
+  let lastPolar = controls.getPolarAngle();
+  const motion = createTotoroMotion();
   let earLeft: THREE.Object3D | undefined, earRight: THREE.Object3D | undefined, leaf: THREE.Object3D | undefined;
   let armLeft: THREE.Object3D | undefined, armRight: THREE.Object3D | undefined;
   let catchlights: THREE.Object3D | undefined;
@@ -134,18 +138,26 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       controls.target.lerp(initialTarget, 1 - Math.exp(-8 * dt));
       if (camera.position.distanceToSquared(initialPosition) < .00005) resetting = false;
     }
+    // OrbitControls' damping factor is per update; normalize the render updates
+    // to elapsed time so release glide does not speed up on high-refresh screens.
+    controls.dampingFactor = 1 - Math.exp(-3.2 * Math.max(dt, .001));
     controls.autoRotate = rotating && now > interactionUntil && !resetting;
     const changed = controls.update(dt);
     const angle = controls.getAzimuthalAngle();
     const delta = Math.atan2(Math.sin(angle - lastAzimuth), Math.cos(angle - lastAzimuth)); lastAzimuth = angle;
-    tilt = damp(tilt, animated ? THREE.MathUtils.clamp(delta * 2.7, -.11, .11) : 0, 6, dt);
+    const polar = controls.getPolarAngle(), polarDelta = polar - lastPolar; lastPolar = polar;
+    if (animated && !resetting) motion.update(delta / Math.max(dt, .001), polarDelta / Math.max(dt, .001), dt);
+    else motion.update(0, 0, dt);
     const breath = animated ? Math.sin(elapsed * 1.45) : 0;
-    root.scale.set(1 + breath * .003, 1 + breath * .005, 1 + breath * .004); root.rotation.z = tilt * .5;
-    if (earLeft) earLeft.rotation.z = damp(earLeft.rotation.z, -tilt * 1.8 + (animated ? Math.sin(elapsed * 1.8) * .011 : 0), 8, dt);
-    if (earRight) earRight.rotation.z = damp(earRight.rotation.z, -tilt * 2 + (animated ? Math.sin(elapsed * 1.8 + .6) * .012 : 0), 7, dt);
-    if (leaf) { leaf.rotation.z = -tilt * 1.6 + (animated ? Math.sin(elapsed * 1.6) * .015 : 0); leaf.rotation.x = animated ? Math.sin(elapsed * 1.2) * .016 : 0; }
-    if (armLeft) armLeft.rotation.z = (animated ? Math.sin(elapsed * 1.45) * .012 : 0) - tilt * .3;
-    if (armRight) armRight.rotation.z = (animated ? -Math.sin(elapsed * 1.45 + .4) * .012 : 0) - tilt * .3;
+    if (model) {
+      model.scale.set(1 + breath * .003, 1 + breath * .005, 1 + breath * .004);
+      model.rotation.set(motion.pitch.position, motion.yaw.position, motion.lean.position);
+    }
+    if (earLeft) earLeft.rotation.z = motion.ears.position + (animated ? Math.sin(elapsed * 1.8) * .011 : 0);
+    if (earRight) earRight.rotation.z = motion.ears.position * 1.13 + (animated ? Math.sin(elapsed * 1.8 + .6) * .012 : 0);
+    if (leaf) { leaf.rotation.z = motion.leaf.position + (animated ? Math.sin(elapsed * 1.6) * .015 : 0); leaf.rotation.x = -motion.pitch.position * 1.3 + (animated ? Math.sin(elapsed * 1.2) * .016 : 0); }
+    if (armLeft) armLeft.rotation.z = (animated ? Math.sin(elapsed * 1.45) * .012 : 0) + motion.arms.position;
+    if (armRight) armRight.rotation.z = (animated ? -Math.sin(elapsed * 1.45 + .4) * .012 : 0) + motion.arms.position;
     if (animated && elapsed > nextBlink) { blinkStart = elapsed; nextBlink = elapsed + 3.3 + random() * 4; }
     const blinkTime = elapsed - blinkStart;
     const blink = animated && blinkTime < .22 ? 1 - Math.sin(blinkTime / .22 * Math.PI) * .94 : 1;
@@ -154,16 +166,16 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     particleMaterial.uniforms.time.value = elapsed;
     night = damp(night, nightTarget, 3, dt);
     key.color.copy(dayKey).lerp(nightKey, night); key.intensity = THREE.MathUtils.lerp(2.7, 2.2, night);
-    ambient.intensity = THREE.MathUtils.lerp(.9, .3, night);
+    ambient.intensity = THREE.MathUtils.lerp(.65, .25, night);
     rim.color.copy(dayRim).lerp(nightRim, night); rim.intensity = THREE.MathUtils.lerp(2.5, 4.5, night);
-    fill.intensity = THREE.MathUtils.lerp(.9, .5, night); scene.environmentIntensity = THREE.MathUtils.lerp(.7, .35, night);
+    fill.intensity = THREE.MathUtils.lerp(.65, .4, night); scene.environmentIntensity = THREE.MathUtils.lerp(.48, .28, night);
     plinthMaterial.color.copy(dayStage).lerp(nightStage, night); edgeMaterial.color.copy(plinthMaterial.color);
     particleMaterial.uniforms.opacity.value = THREE.MathUtils.lerp(.15, .62, night);
     renderer.render(scene, camera);
     // Adapt only after sustained slow frames, preserving crispness on capable devices.
     if (rawDt > .025 && rawDt < .2 && model) slowFrames++; else slowFrames = Math.max(0, slowFrames - 1);
     if (slowFrames > 100 && pixelRatio > 1.1) { pixelRatio = Math.max(1, pixelRatio - .25); slowFrames = 0; resize(); }
-    const settling = Math.abs(night - nightTarget) > .001 || Math.abs(tilt) > .0001 || resetting;
+    const settling = Math.abs(night - nightTarget) > .001 || motion.settling || resetting;
     if (animated || rotating || changed || settling) frame = requestAnimationFrame(tick); else running = false;
   }
   const onStart = () => { interactionUntil = Infinity; resetting = false; wake(); };
@@ -176,9 +188,9 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
 
   const controller: SculptureController = {
     setRotate(value) { rotating = value; interactionUntil = 0; wake(); },
-    setAnimate(value) { animated = value; wake(); },
+    setAnimate(value) { animated = value; if (!value) motion.reset(); wake(); },
     setNight(value) { nightTarget = value ? 1 : 0; wake(); },
-    reset() { rotating = false; resetting = true; wake(); },
+    reset() { rotating = false; resetting = true; motion.reset(); wake(); },
     dispose() {
       if (disposed) return;
       disposed = true; cancelAnimationFrame(frame); resizeObserver.disconnect(); controls.dispose();
@@ -210,7 +222,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   canvas.addEventListener('keydown', onKey); resize();
 
   try {
-    const response = await fetch('/models/totoro.glb?v=grin-2', { signal: options.signal });
+    const response = await fetch('/models/totoro.glb?v=coat-paws-3', { signal: options.signal });
     if (!response.ok) throw new Error('Model unavailable');
     const bytes = await response.arrayBuffer();
     if (options.signal.aborted) { controller.dispose(); return controller; }
@@ -223,11 +235,17 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       const fibers = object.name.includes('fibers');
       object.castShadow = !fibers; object.receiveShadow = !fibers;
       const old = object.material as THREE.MeshStandardMaterial;
-      if (/Fur|Belly/.test(old.name)) {
+      if (/Fur|Belly|Seven chevrons/.test(old.name)) {
         const cacheKey = `${old.uuid}-${fibers}`;
         let material = materialCache.get(cacheKey);
         if (!material) {
-          material = new THREE.MeshPhysicalMaterial({ color: old.color, roughness: .94, sheen: .75, sheenColor: 0xa0ad93, sheenRoughness: .85, side: fibers ? THREE.DoubleSide : THREE.FrontSide });
+          const ivory = old.name.includes('Belly');
+          material = new THREE.MeshPhysicalMaterial({
+            color: old.color, vertexColors: object.geometry.hasAttribute('color'),
+            roughness: fibers ? .86 : .96, metalness: 0,
+            sheen: fibers ? .65 : .38, sheenColor: ivory ? 0xd6ceac : 0x8e9a94,
+            sheenRoughness: .9, side: fibers ? THREE.DoubleSide : THREE.FrontSide,
+          });
           material.name = old.name;
           material.onBeforeCompile = shader => {
             shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vFurPosition;');
@@ -237,16 +255,36 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
               float furHash(vec3 p) { p=fract(p*.3183099+vec3(.1,.2,.3)); p*=17.; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }
               float furNoise(vec3 p) { vec3 i=floor(p),f=fract(p); f=f*f*(3.-2.*f); return mix(mix(mix(furHash(i),furHash(i+vec3(1,0,0)),f.x),mix(furHash(i+vec3(0,1,0)),furHash(i+vec3(1,1,0)),f.x),f.y),mix(mix(furHash(i+vec3(0,0,1)),furHash(i+vec3(1,0,1)),f.x),mix(furHash(i+vec3(0,1,1)),furHash(i+vec3(1,1,1)),f.x),f.y),f.z); }
             `);
-            shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\nfloat fuzz=furNoise(vFurPosition*115.); diffuseColor.rgb *= .93+.13*fuzz;');
-            shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\nnormal=normalize(normal+vec3(dFdx(fuzz),dFdy(fuzz),0.)*.13);');
+            shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
+              // Elongated detail follows the short downward groom. Fade fine
+              // frequencies below a pixel to avoid crawling noise when orbiting.
+              vec3 groom = vFurPosition * vec3(185., 38., 185.);
+              float resolve = 1. - smoothstep(.45, 1.8, length(fwidth(groom)));
+              float strands = furNoise(groom + vec3(0., 0., furNoise(vFurPosition * 9.) * 1.4));
+              float clumps = furNoise(vFurPosition * vec3(24., 9., 24.));
+              float fuzz = mix(.5, strands, resolve);
+              diffuseColor.rgb *= .97 + .045 * clumps + .04 * (fuzz - .5);
+            `);
+            if (!fibers) shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+              vec3 sigmaX = normalize(dFdx(-vViewPosition));
+              vec3 sigmaY = normalize(dFdy(-vViewPosition));
+              vec3 r1 = cross(sigmaY, normal), r2 = cross(normal, sigmaX);
+              float determinant = dot(sigmaX, r1) * faceDirection;
+              vec3 gradient = sign(determinant) * (dFdx(fuzz) * r1 + dFdy(fuzz) * r2);
+              normal = normalize(max(abs(determinant), .00001) * normal - gradient * .19);
+            `);
           };
-          material.customProgramCacheKey = () => 'soft-fur-v1'; materialCache.set(cacheKey, material);
+          material.customProgramCacheKey = () => `groomed-fur-v3-${fibers}`; materialCache.set(cacheKey, material);
         }
         object.material = material; replacedMaterials.add(old);
       }
     });
     replacedMaterials.forEach(material => material.dispose());
     root.add(model); root.updateMatrixWorld(true);
+    // Paws and their claws/fur stay on the plinth while the heavy torso settles.
+    for (const name of ['Foot_L', 'Foot_R']) {
+      const foot = model.getObjectByName(name); if (foot) root.attach(foot);
+    }
     // Compression recenters meshes; explicit pivots retain natural ear/shoulder motion.
     function pivot(name: string, position: THREE.Vector3) {
       const object = model!.getObjectByName(name); if (!object) return undefined;
