@@ -23,7 +23,7 @@ scene = bpy.context.scene
 
 def replace(pid, pieces):
     old = next(o for o in collection.objects if o.get('partId') == pid)
-    props = {k: old[k] for k in old.keys()}
+    props = old.id_properties_ensure().to_dict()
     bpy.ops.object.select_all(action='DESELECT')
     for ob in pieces: ob.select_set(True)
     bpy.context.view_layer.objects.active = pieces[0]
@@ -149,70 +149,6 @@ for ob in collection.objects:
     bpy.ops.uv.smart_project(angle_limit=1.15,island_margin=.015)
     bpy.ops.object.mode_set(mode='OBJECT');ob['realismUV']=True
 
-# Albedo colors are linear values; each tissue has its own morphology, pore
-# scale, capillary density, roughness and dielectric coat.
-profiles={
- 'brain':((.55,.33,.25),(.80,.60,.48),.47,18,0.05),
- 'myocardium':((.14,.018,.022),(.40,.095,.073),.31,29,.12),
- 'lungs':((.34,.12,.135),(.67,.34,.32),.44,53,.20),
- 'liver':((.12,.022,.022),(.29,.070,.052),.29,82,.10),
- 'stomach':((.50,.24,.20),(.77,.47,.36),.37,34,.13),
- 'intestine':((.48,.22,.20),(.76,.44,.35),.35,45,.17),
- 'kidney':((.17,.027,.025),(.38,.090,.068),.30,66,.10),
- 'spleen':((.11,.025,.045),(.27,.075,.105),.36,75,.10),
- 'glands':((.46,.26,.13),(.74,.51,.30),.49,28,.05),
-}
-scene.render.engine='CYCLES';scene.cycles.samples=1
-scene.render.bake.use_selected_to_active=False;scene.render.bake.margin=8
-scene.render.bake.use_clear=True
-for kind,(dark,light,rough,scale,vascular) in profiles.items():
-    material=bpy.data.materials['Anatomy_'+kind]
-    if material.get('realismRevision')==2:continue
-    bpy.ops.object.select_all(action='DESELECT');bpy.ops.mesh.primitive_plane_add(size=2)
-    proxy=bpy.context.object
-    bake=bpy.data.materials.new('Tissue_bake_'+kind);bake.use_nodes=True;proxy.data.materials.append(bake)
-    n=bake.node_tree.nodes;l=bake.node_tree.links;n.clear()
-    output=n.new('ShaderNodeOutputMaterial');bsdf=n.new('ShaderNodeBsdfPrincipled')
-    coord=n.new('ShaderNodeTexCoord')
-    def noise(freq,detail=3):
-        node=n.new('ShaderNodeTexNoise');node.inputs['Scale'].default_value=freq;node.inputs['Detail'].default_value=detail;node.inputs['Roughness'].default_value=.68;l.new(coord.outputs['UV'],node.inputs['Vector']);return node
-    broad=noise(6);fine=noise(scale);micro=noise(210,2)
-    warp=n.new('ShaderNodeVectorMath');warp.operation='SCALE';warp.inputs[3].default_value=.07;l.new(broad.outputs['Color'],warp.inputs[0])
-    add=n.new('ShaderNodeVectorMath');add.operation='ADD';l.new(warp.outputs[0],add.inputs[0]);l.new(coord.outputs['UV'],add.inputs[1])
-    vessels=n.new('ShaderNodeTexVoronoi');vessels.feature='DISTANCE_TO_EDGE';vessels.inputs['Scale'].default_value=scale*.55;l.new(add.outputs[0],vessels.inputs['Vector'])
-    vr=n.new('ShaderNodeValToRGB');vr.color_ramp.elements[0].position=.007;vr.color_ramp.elements[0].color=(1-vascular,1-vascular*.7,1-vascular*.5,1)
-    vr.color_ramp.elements[1].position=.043;vr.color_ramp.elements[1].color=(1,1,1,1);l.new(vessels.outputs['Distance'],vr.inputs[0])
-    blend=n.new('ShaderNodeMixRGB');blend.blend_type='MIX';blend.inputs[0].default_value=.40;l.new(broad.outputs['Fac'],blend.inputs[1]);l.new(fine.outputs['Fac'],blend.inputs[2])
-    ramp=n.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].position=.18;ramp.color_ramp.elements[0].color=(*dark,1);ramp.color_ramp.elements[1].position=.82;ramp.color_ramp.elements[1].color=(*light,1);l.new(blend.outputs[0],ramp.inputs[0])
-    multiply=n.new('ShaderNodeMixRGB');multiply.blend_type='MULTIPLY';multiply.inputs[0].default_value=1;l.new(ramp.outputs[0],multiply.inputs[1]);l.new(vr.outputs[0],multiply.inputs[2])
-    emission=n.new('ShaderNodeEmission');l.new(multiply.outputs[0],emission.inputs[0]);l.new(emission.outputs[0],output.inputs[0])
-    target=n.new('ShaderNodeTexImage');n.active=target
-    def bake_map(suffix,channel,size):
-        img=bpy.data.images.new(kind+'-'+suffix,width=size,height=size,alpha=False)
-        if suffix!='albedo':img.colorspace_settings.name='Non-Color'
-        target.image=img;n.active=target;bpy.ops.object.bake(type=channel)
-        img.filepath_raw=str(OUT/'textures'/(kind+'-'+suffix+'.png'));img.file_format='PNG';img.save();img.pack();return img
-    albedo=bake_map('albedo','EMIT',1024)
-    rr=n.new('ShaderNodeMapRange');rr.inputs['From Min'].default_value=0;rr.inputs['From Max'].default_value=1;rr.inputs['To Min'].default_value=rough-.075;rr.inputs['To Max'].default_value=rough+.095;l.new(fine.outputs['Fac'],rr.inputs[0]);l.new(rr.outputs[0],emission.inputs[0])
-    roughmap=bake_map('roughness','EMIT',512)
-    bump=n.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.22;bump.inputs['Distance'].default_value=.0012 if kind!='lungs' else .0028;l.new(micro.outputs['Fac'],bump.inputs['Height']);l.new(bump.outputs['Normal'],bsdf.inputs['Normal']);l.new(bsdf.outputs[0],output.inputs[0])
-    normal=bake_map('normal','NORMAL',512)
-    bpy.data.objects.remove(proxy,do_unlink=True);bpy.data.materials.remove(bake)
-    # Keep the simple glTF-compatible graph in the editable source; the same
-    # baked maps and physical parameters are used by offline and browser renderers.
-    nodes=material.node_tree.nodes;links=material.node_tree.links;nodes.clear()
-    out=nodes.new('ShaderNodeOutputMaterial');p=nodes.new('ShaderNodeBsdfPrincipled');p.name='Principled BSDF';links.new(p.outputs[0],out.inputs[0])
-    tex=nodes.new('ShaderNodeTexImage');tex.image=albedo;links.new(tex.outputs[0],p.inputs['Base Color'])
-    # The existing exporter temporarily removes this identity multiplier.
-    tint=nodes.new('ShaderNodeMixRGB');tint.blend_type='MULTIPLY';tint.inputs[0].default_value=1;tint.inputs[2].default_value=(1,1,1,1);links.new(tex.outputs[0],tint.inputs[1]);links.new(tint.outputs[0],p.inputs['Base Color'])
-    rt=nodes.new('ShaderNodeTexImage');rt.image=roughmap;links.new(rt.outputs[0],p.inputs['Roughness'])
-    nt=nodes.new('ShaderNodeTexImage');nt.image=normal;nm=nodes.new('ShaderNodeNormalMap');nm.inputs['Strength'].default_value=.6;links.new(nt.outputs[0],nm.inputs['Color']);links.new(nm.outputs[0],p.inputs['Normal'])
-    p.inputs['IOR'].default_value=1.38;p.inputs['Coat Weight'].default_value=.18 if kind not in ('brain','glands') else .07;p.inputs['Coat Roughness'].default_value=.30
-    p.inputs['Subsurface Weight'].default_value=.07;p.inputs['Subsurface Radius'].default_value=(1,.35,.20);p.inputs['Subsurface Scale'].default_value=.025
-    material['tint']=[1,1,1];material['textureSource']=kind+'-albedo.png';material['realismRevision']=2
-    material.diffuse_color=(*[(a+b)/2 for a,b in zip(dark,light)],1)
-    print('TISSUE_BAKED',kind,flush=True)
-
 # Neutral studio light, broad reflections, and a quieter fill reveal wet
 # capsules and fine folds without the former orange plastic appearance.
 for name,energy,color,size,location in [
@@ -227,8 +163,6 @@ scene.cycles.use_denoising=True
 scene.view_settings.view_transform='AgX'
 scene.view_settings.look='AgX - Medium High Contrast'
 scene.view_settings.exposure=0
-bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'totoro-anatomy.blend'))
-helpers['finish']()
-check=ROOT/'scripts/verify_anatomy_blender.py'
-exec(compile(check.read_text(),str(check),'exec'),{'__file__':str(check)})
+baker=ROOT/'scripts/bake_organ_tissues.py'
+exec(compile(baker.read_text(),str(baker),'exec'),{'__file__':str(baker)})
 print('REALISM_REFINEMENT_COMPLETE',flush=True)

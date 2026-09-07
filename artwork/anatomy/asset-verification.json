@@ -1,8 +1,8 @@
 {
   "passed": true,
   "parts": 264,
-  "triangles": 442604,
-  "bytes": 7929248,
+  "triangles": 484316,
+  "bytes": 11077760,
   "textures": [
     {
       "name": "bone-normal",
@@ -35,24 +35,180 @@
       "format": "png"
     },
     {
-      "name": "organ-normal",
+      "name": "brain-normal",
       "width": 512,
       "height": 512,
       "format": "png"
     },
     {
-      "name": "organ-albedo",
+      "name": "brain-albedo",
       "width": 1024,
       "height": 1024,
       "format": "webp"
     },
     {
-      "name": "organ-roughness",
+      "name": "brain-roughness",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "glands-normal",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "glands-albedo",
+      "width": 1024,
+      "height": 1024,
+      "format": "webp"
+    },
+    {
+      "name": "glands-roughness",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "lungs-normal",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "lungs-albedo",
+      "width": 1024,
+      "height": 1024,
+      "format": "webp"
+    },
+    {
+      "name": "lungs-roughness",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "myocardium-normal",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "myocardium-albedo",
+      "width": 1024,
+      "height": 1024,
+      "format": "webp"
+    },
+    {
+      "name": "myocardium-roughness",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "stomach-normal",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "stomach-albedo",
+      "width": 1024,
+      "height": 1024,
+      "format": "webp"
+    },
+    {
+      "name": "stomach-roughness",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "spleen-normal",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "spleen-albedo",
+      "width": 1024,
+      "height": 1024,
+      "format": "webp"
+    },
+    {
+      "name": "spleen-roughness",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "intestine-normal",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "intestine-albedo",
+      "width": 1024,
+      "height": 1024,
+      "format": "webp"
+    },
+    {
+      "name": "intestine-roughness",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "kidney-normal",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "kidney-albedo",
+      "width": 1024,
+      "height": 1024,
+      "format": "webp"
+    },
+    {
+      "name": "kidney-roughness",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "liver-normal",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "liver-albedo",
+      "width": 1024,
+      "height": 1024,
+      "format": "webp"
+    },
+    {
+      "name": "liver-roughness",
       "width": 512,
       "height": 512,
       "format": "png"
     }
   ],
+  "tissueAtlases": [
+    "brain",
+    "myocardium",
+    "lungs",
+    "liver",
+    "stomach",
+    "intestine",
+    "kidney",
+    "spleen",
+    "glands"
+  ],
+  "physicalCoatsPresent": true,
   "metadataPreserved": true,
   "tangentsPresent": true
 }

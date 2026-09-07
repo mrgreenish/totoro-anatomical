@@ -53,7 +53,7 @@ Fan-made tribute to the character from *My Neighbor Totoro*. Not affiliated with
 
 Exterior remains the initial view. Split uses one model-space cutting plane, with three directions, reversal, an on-model drag handle and a keyboard slider. Stencil passes create tissue-colored section surfaces from closed volumes, including inward cavity walls. Only visible volumes intersecting the plane participate. Exploded interpolates captured original transforms toward authored diagram offsets; bones stay central, skin and muscles move aside, organs fan forward, and the vascular and nervous trees move into layers. Click a part or choose its name to focus it. The seven system filters persist across anatomy modes. Character deformation pauses while anatomy is active, preserving the previous motion preference. Reset clears the anatomy controls and returns to Exterior.
 
-The additional anatomy contains 264 identifiable parts and 442,604 triangles. The optimized asset is about 7.93 MB. This is an imagined, human-inspired anatomical model fitted to Totoro, with major visible structures, simplified branching networks and attachment regions. It is not a medical reference. Microscopic structures, reproductive anatomy and a complete lymphatic network are outside its scope.
+The additional anatomy contains 264 identifiable parts and 484,316 triangles. The optimized asset is about 11.08 MB. This is an imagined, human-inspired anatomical model fitted to Totoro, with major visible structures, simplified branching networks and attachment regions. It is not a medical reference. Microscopic structures, reproductive anatomy and a complete lymphatic network are outside its scope.
 
 The editable source is `artwork/anatomy/totoro-anatomy.blend`; the previous exterior file remains separate. Geometry and original transforms are stored alongside `partId`, label, system membership, assembly group, cavity flags and explosion offsets. Blender uses Z up / front −Y; metadata offsets and the browser use glTF Y up / front +Z. The manifest, exported validation reports, texture maps and review renders are under `artwork/anatomy/`.
 
@@ -78,3 +78,21 @@ node scripts/verify-anatomy-runtime.mjs
 `BLENDER_MCP_SOURCE` can point to a checkout of the integration. Each geometry stage is reproducible; the skeleton stage starts a fresh anatomy collection. The final pass fits superficial parts to the source envelope, preserves the tissue topology, triangulates only for export, and restores editable geometry afterward. Albedo textures were generated with Image Gen. Normal and roughness maps were independently baked in Blender; the web export keeps these channels lossless and optimizes the albedo maps to WebP. The optimization scripts use the installed `sharp` encoder.
 
 Anatomical cavity placement follows [OpenStax Anatomy and Physiology 2e, anatomical terminology](https://openstax.org/books/anatomy-and-physiology-2e/pages/1-6-anatomical-terminology). Runtime section passes follow the [Three.js clipping stencil example](https://threejs.org/examples/webgl_clipping_stencil.html). Blender Boolean review sections and browser stencil sections use different algorithms; the browser is the final reference for interactive cuts.
+
+### Organ realism refinement
+
+The organs now use nine separate tissue atlases, with albedo at 1024 pixels and normal/roughness channels at 512 pixels. These maps are baked in Blender from continuous model-space tissue shaders onto the actual geometry. Fine surface mottling, restrained capillary variation, and local cavity shading remain continuous across UV seams. Physical dielectric coats and distinct roughness values separate the liver, kidneys, myocardium, lungs, digestive walls, glands, and cortex. The runtime uses neutral studio illumination and organ contact shadows; section surfaces retain the appropriate tissue color even when a texture uses a white base-color multiplier.
+
+The heart has surface-projected coronary branches, auricles and hollow great-vessel roots. The liver has asymmetric lobes and a recessed fissure. The cortex has rounded sulci, and the small bowel and haustrated colon have smoother cross-sections with preserved lumen walls. Part IDs, filtering, selection, explosion offsets, and existing cavity structure remain available.
+
+Run the refinement on the existing Blender source, then optimize and validate:
+
+```sh
+blender -b artwork/anatomy/totoro-anatomy.blend --python scripts/refine_anatomy.py
+node scripts/optimize-anatomy.mjs
+node scripts/verify-anatomy-asset.mjs
+node scripts/verify-anatomy-runtime.mjs
+blender -b artwork/anatomy/totoro-anatomy.blend --python scripts/render_organ_studies.py
+```
+
+`bake_organ_tissues.py` can rebake the organ atlases independently. The four `*-realistic.png` studies under `artwork/anatomy/reviews/` show the assembly, heart, brain, and abdomen with 48-sample denoised Cycles rendering. These are offline render checks; they do not establish browser frame rates or pixel-identical GPU shading. The asset checks verify closed finite volumes, all 264 stable IDs, independent tissue textures, normal tangents, physical coats, and the existing 12 MB / 500,000 triangle limits. Runtime integration checks exercise filtering, clipping controls, explosion/reassembly, selection, reset and resource cleanup.

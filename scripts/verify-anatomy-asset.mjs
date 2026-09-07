@@ -9,7 +9,8 @@ const manifest=JSON.parse(await readFile('artwork/anatomy/manifest.json','utf8')
 const nodes=doc.getRoot().listNodes().filter(n=>n.getExtras().partId);
 const ids=nodes.map(n=>n.getExtras().partId);
 assert.equal(ids.length,new Set(ids).size);
-assert.deepEqual([...ids].sort(),manifest.parts.map(p=>p.id).sort());
+const byId=(a,b)=>a.localeCompare(b);
+assert.deepEqual([...ids].sort(byId),manifest.parts.map(p=>p.id).sort(byId));
 let triangles=0;
 for(const node of nodes){
   const e=node.getExtras();assert(e.label&&e.assemblyGroup&&e.systems.length&&e.explodeOffset.length===3);
@@ -27,6 +28,16 @@ for(const t of doc.getRoot().listTextures()){
   textures.push({name:t.getName(),width:m.width,height:m.height,format:m.format});
 }
 const materials=doc.getRoot().listMaterials();assert(materials.some(m=>m.getNormalTexture()));assert(materials.some(m=>m.getMetallicRoughnessTexture()));
+const tissueNames=['brain','myocardium','lungs','liver','stomach','intestine','kidney','spleen','glands'];
+const tissueAlbedos=new Set();
+for(const name of tissueNames){
+  const m=materials.find(m=>m.getName()===`Anatomy_${name}`);
+  assert(m,`Missing tissue material: ${name}`);
+  assert(m.getBaseColorTexture()&&m.getNormalTexture()&&m.getMetallicRoughnessTexture(),`Incomplete PBR channels: ${name}`);
+  assert(m.getExtension('KHR_materials_clearcoat')?.getClearcoatFactor()>0,`Missing tissue surface coat: ${name}`);
+  tissueAlbedos.add(m.getBaseColorTexture());
+}
+assert.equal(tissueAlbedos.size,tissueNames.length,'Each tissue must retain its own baked albedo atlas');
 const bytes=(await readFile('public/models/totoro-anatomy.glb')).length;assert(bytes<=12_000_000);
-const report={passed:true,parts:ids.length,triangles,bytes,textures,metadataPreserved:true,tangentsPresent:true};
+const report={passed:true,parts:ids.length,triangles,bytes,textures,tissueAtlases:tissueNames,physicalCoatsPresent:true,metadataPreserved:true,tangentsPresent:true};
 await writeFile('artwork/anatomy/asset-verification.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));

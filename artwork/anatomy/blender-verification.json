@@ -1,7 +1,7 @@
 {
   "passed": true,
   "parts": 264,
-  "triangles": 442604,
+  "triangles": 484316,
   "systems": [
     "arteries",
     "bones",
@@ -2562,20 +2562,6 @@
       "cavity": false
     },
     {
-      "id": "brain",
-      "systems": [
-        "organs",
-        "nerves"
-      ],
-      "triangles": 36352,
-      "nonmanifoldEdges": 0,
-      "degenerateFaces": 0,
-      "volume": 0.46362343,
-      "components": 2,
-      "inwardCavities": 0,
-      "cavity": false
-    },
-    {
       "id": "cerebellum",
       "systems": [
         "organs",
@@ -2754,7 +2740,7 @@
       "triangles": 3380,
       "nonmanifoldEdges": 0,
       "degenerateFaces": 0,
-      "volume": 0.36673099,
+      "volume": 0.36678838,
       "components": 2,
       "inwardCavities": 0,
       "cavity": false
@@ -2767,7 +2753,7 @@
       "triangles": 3408,
       "nonmanifoldEdges": 0,
       "degenerateFaces": 0,
-      "volume": 0.37862011,
+      "volume": 0.37818925,
       "components": 3,
       "inwardCavities": 0,
       "cavity": false
@@ -2777,26 +2763,13 @@
       "systems": [
         "organs"
       ],
-      "triangles": 8658,
+      "triangles": 14222,
       "nonmanifoldEdges": 0,
       "degenerateFaces": 0,
-      "volume": 0.06642842,
-      "components": 10,
+      "volume": 0.07610521,
+      "components": 23,
       "inwardCavities": 1,
       "cavity": true
-    },
-    {
-      "id": "liver",
-      "systems": [
-        "organs"
-      ],
-      "triangles": 1680,
-      "nonmanifoldEdges": 0,
-      "degenerateFaces": 0,
-      "volume": 0.20403071,
-      "components": 1,
-      "inwardCavities": 0,
-      "cavity": false
     },
     {
       "id": "gallbladder",
@@ -2845,7 +2818,7 @@
       "triangles": 1680,
       "nonmanifoldEdges": 0,
       "degenerateFaces": 0,
-      "volume": 0.01732435,
+      "volume": 0.01732867,
       "components": 1,
       "inwardCavities": 0,
       "cavity": false
@@ -2858,36 +2831,10 @@
       "triangles": 1680,
       "nonmanifoldEdges": 0,
       "degenerateFaces": 0,
-      "volume": 0.05416213,
+      "volume": 0.05414694,
       "components": 1,
       "inwardCavities": 0,
       "cavity": false
-    },
-    {
-      "id": "small_intestine",
-      "systems": [
-        "organs"
-      ],
-      "triangles": 14796,
-      "nonmanifoldEdges": 0,
-      "degenerateFaces": 0,
-      "volume": 0.0614663,
-      "components": 1,
-      "inwardCavities": 0,
-      "cavity": true
-    },
-    {
-      "id": "large_intestine",
-      "systems": [
-        "organs"
-      ],
-      "triangles": 5656,
-      "nonmanifoldEdges": 0,
-      "degenerateFaces": 0,
-      "volume": 0.06119181,
-      "components": 1,
-      "inwardCavities": 0,
-      "cavity": true
     },
     {
       "id": "appendix",
@@ -2910,7 +2857,7 @@
       "triangles": 3360,
       "nonmanifoldEdges": 0,
       "degenerateFaces": 0,
-      "volume": 0.03565572,
+      "volume": 0.03569085,
       "components": 2,
       "inwardCavities": 1,
       "cavity": true
@@ -2962,7 +2909,7 @@
       "triangles": 3360,
       "nonmanifoldEdges": 0,
       "degenerateFaces": 0,
-      "volume": 0.03565572,
+      "volume": 0.03570176,
       "components": 2,
       "inwardCavities": 1,
       "cavity": true
@@ -3448,6 +3395,59 @@
       "components": 2,
       "inwardCavities": 1,
       "cavity": true
+    },
+    {
+      "id": "liver",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 5616,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.31206247,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "small_intestine",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 24064,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.05579399,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "large_intestine",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 17352,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.06838556,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "brain",
+      "systems": [
+        "organs",
+        "nerves"
+      ],
+      "triangles": 47600,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.44700844,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
     }
   ],
   "scope": "Manifold edges, finite vertices, connected-shell winding, required major parts, and cavity bounds. Intersections and recognizability are also reviewed visually."

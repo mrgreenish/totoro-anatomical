@@ -1767,16 +1767,6 @@
       "cavity": false
     },
     {
-      "id": "brain",
-      "label": "Brain \u00b7 cerebral hemispheres",
-      "systems": [
-        "organs",
-        "nerves"
-      ],
-      "triangles": 36352,
-      "cavity": false
-    },
-    {
       "id": "cerebellum",
       "label": "Cerebellum",
       "systems": [
@@ -1919,17 +1909,8 @@
       "systems": [
         "organs"
       ],
-      "triangles": 8658,
+      "triangles": 14222,
       "cavity": true
-    },
-    {
-      "id": "liver",
-      "label": "Liver",
-      "systems": [
-        "organs"
-      ],
-      "triangles": 1680,
-      "cavity": false
     },
     {
       "id": "gallbladder",
@@ -1975,24 +1956,6 @@
       ],
       "triangles": 1680,
       "cavity": false
-    },
-    {
-      "id": "small_intestine",
-      "label": "Small intestine & duodenum",
-      "systems": [
-        "organs"
-      ],
-      "triangles": 14796,
-      "cavity": true
-    },
-    {
-      "id": "large_intestine",
-      "label": "Colon & rectum",
-      "systems": [
-        "organs"
-      ],
-      "triangles": 5656,
-      "cavity": true
     },
     {
       "id": "appendix",
@@ -2381,9 +2344,46 @@
       ],
       "triangles": 1028,
       "cavity": true
+    },
+    {
+      "id": "liver",
+      "label": "Liver",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 5616,
+      "cavity": false
+    },
+    {
+      "id": "small_intestine",
+      "label": "Small intestine & duodenum",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 24064,
+      "cavity": true
+    },
+    {
+      "id": "large_intestine",
+      "label": "Colon & rectum",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 17352,
+      "cavity": true
+    },
+    {
+      "id": "brain",
+      "label": "Brain \u00b7 cerebral hemispheres",
+      "systems": [
+        "organs",
+        "nerves"
+      ],
+      "triangles": 47600,
+      "cavity": false
     }
   ],
-  "triangles": 442604,
+  "triangles": 484316,
   "materials": {
     "Anatomy_airway": {
       "tint": [
@@ -2403,13 +2403,21 @@
     },
     "Anatomy_brain": {
       "tint": [
-        0.95,
-        0.8,
-        0.65
+        1,
+        1,
+        1
       ],
-      "texture": "organ-albedo.png"
+      "texture": "brain-albedo.png"
     },
     "Anatomy_cartilage": {
+      "tint": [
+        1,
+        1,
+        1
+      ],
+      "texture": null
+    },
+    "Anatomy_coronary_vessels": {
       "tint": [
         1,
         1,
@@ -2451,43 +2459,43 @@
     },
     "Anatomy_glands": {
       "tint": [
-        0.87,
-        0.67,
-        0.3
+        1,
+        1,
+        1
       ],
-      "texture": "organ-albedo.png"
+      "texture": "glands-albedo.png"
     },
     "Anatomy_intestine": {
       "tint": [
-        0.99,
-        0.7,
-        0.48
+        1,
+        1,
+        1
       ],
-      "texture": "organ-albedo.png"
+      "texture": "intestine-albedo.png"
     },
     "Anatomy_kidney": {
       "tint": [
-        0.61,
-        0.22,
-        0.21
+        1,
+        1,
+        1
       ],
-      "texture": "organ-albedo.png"
+      "texture": "kidney-albedo.png"
     },
     "Anatomy_liver": {
       "tint": [
-        0.47,
-        0.24,
-        0.2
+        1,
+        1,
+        1
       ],
-      "texture": "organ-albedo.png"
+      "texture": "liver-albedo.png"
     },
     "Anatomy_lungs": {
       "tint": [
-        0.91,
-        0.59,
-        0.59
+        1,
+        1,
+        1
       ],
-      "texture": "organ-albedo.png"
+      "texture": "lungs-albedo.png"
     },
     "Anatomy_marrow": {
       "tint": [
@@ -2507,11 +2515,11 @@
     },
     "Anatomy_myocardium": {
       "tint": [
-        0.64,
-        0.25,
-        0.25
+        1,
+        1,
+        1
       ],
-      "texture": "organ-albedo.png"
+      "texture": "myocardium-albedo.png"
     },
     "Anatomy_nerves": {
       "tint": [
@@ -2531,19 +2539,19 @@
     },
     "Anatomy_spleen": {
       "tint": [
-        0.38,
-        0.22,
-        0.34
+        1,
+        1,
+        1
       ],
-      "texture": "organ-albedo.png"
+      "texture": "spleen-albedo.png"
     },
     "Anatomy_stomach": {
       "tint": [
-        0.95,
-        0.64,
-        0.42
+        1,
+        1,
+        1
       ],
-      "texture": "organ-albedo.png"
+      "texture": "stomach-albedo.png"
     },
     "Anatomy_tendon": {
       "tint": [
