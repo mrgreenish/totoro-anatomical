@@ -1,10 +1,15 @@
 'use client';
 
+/* eslint-disable next/no-img-element -- The Blender render is already encoded as an optimized WebP loading poster. */
+
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { ArrowUpRight, Expand, Hand, Leaf, Moon, Pause, Play, RotateCcw, Rotate3D, Sun, X } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { SculptureController } from '@/lib/totoro-scene';
+import { AnatomyControls } from '@/components/anatomy-controls';
+import { defaultAnatomyState } from '@/lib/anatomy-state';
 
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -16,22 +21,29 @@ export default function Home() {
   const [animated, setAnimated] = useState(true);
   const [night, setNight] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  const [anatomy, setAnatomy] = useState(defaultAnatomyState);
 
   useEffect(() => {
     const abort = new AbortController();
     let controller: SculptureController | undefined;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) setAnimated(false);
     import('@/lib/totoro-scene').then(async ({ createSculpture }) => {
       if (abort.signal.aborted || !canvasRef.current) return;
+      if (reduced) setAnimated(false);
       controller = await createSculpture(canvasRef.current, {
         signal: abort.signal, animate: !reduced,
         onReady: () => setReady(true),
+        onAnatomyState: state => { if (!abort.signal.aborted) setAnatomy(state); },
         onError: () => { if (!abort.signal.aborted) { setError(true); setReady(false); } },
       });
       if (abort.signal.aborted) controller.dispose();
       else sculptureRef.current = controller;
-    }).catch(() => { if (!abort.signal.aborted) setError(true); });
+    }).catch(error => {
+      if (!abort.signal.aborted) {
+        if (process.env.NODE_ENV !== 'production') console.error('Sculpture initialization failed', error);
+        setError(true);
+      }
+    });
     return () => { abort.abort(); controller?.dispose(); sculptureRef.current = null; };
   }, []);
 
@@ -51,12 +63,12 @@ export default function Home() {
 
   return (
     <TooltipProvider delay={350}>
-      <main ref={mainRef} className={`gallery ${night ? 'is-night' : ''} ${fullscreen ? 'is-fullscreen' : ''}`}>
+      <main ref={mainRef} className={`gallery ${night ? 'is-night' : ''} ${fullscreen ? 'is-fullscreen' : ''} ${anatomy.mode !== 'exterior' ? 'is-anatomy' : ''}`}>
         <header className="gallery-header">
-          <a className="wordmark" href="/" aria-label="Quiet Forest home">
+          <Link className="wordmark" href="/" aria-label="Quiet Forest home">
             <span className="brand-icon"><Leaf size={20} strokeWidth={1.6} /></span>
             <span>quiet forest<span className="wordmark-dot">.</span></span>
-          </a>
+          </Link>
           <span className="header-note">A STUDY IN LITTLE WONDERS</span>
           <Toggle className="light-button" pressed={night} disabled={!ready} onPressedChange={value => { setNight(value); sculptureRef.current?.setNight(value); }} aria-label="Moonlight lighting">
             {night ? <Moon size={16} /> : <Sun size={16} />}<span>{night ? 'Moonlight' : 'Daylight'}</span>
@@ -65,11 +77,12 @@ export default function Home() {
         <div className="background-word" aria-hidden="true">TOTORO</div>
         <div className="edition"><span className="edition-line" />THE FOREST SPIRIT<span className="edition-number">01</span></div>
         <section className={`sculpture ${ready ? 'is-ready' : ''}`} aria-label="Interactive Totoro sculpture">
-          <img className="sculpture-poster" src="/totoro-poster.webp?v=coat-paws-3" alt="A grey Totoro with a wide toothy grin, soft groomed fur, small rounded paws, an ivory belly, seven chevrons, and a green leaf hat." fetchPriority="high" />
+          <img className="sculpture-poster" src="/totoro-poster.webp?v=refinement-1" alt="A grey Totoro with a wide toothy grin, soft groomed fur, small rounded paws, an ivory belly, seven chevrons, and a green leaf hat." fetchPriority="high" />
           <canvas ref={canvasRef} tabIndex={0} aria-label="Rotate Totoro by dragging or using the arrow keys. Scroll, pinch, or use plus and minus to zoom. Press Home to reset." />
-          {!ready && !error ? <div className="loading-status" role="status"><span className="loading-dot" />Waking the forest…</div> : null}
-          {error ? <div className="render-error" role="status"><p>The interactive view couldn’t wake up.</p><button onClick={() => window.location.reload()}>Try again <ArrowUpRight size={14} /></button></div> : null}
+          {!ready && !error ? <output className="loading-status"><span className="loading-dot" />Waking the forest…</output> : null}
+          {error ? <output className="render-error"><p>The interactive view couldn’t wake up.</p><button onClick={() => window.location.reload()}>Try again <ArrowUpRight size={14} /></button></output> : null}
         </section>
+        <AnatomyControls state={anatomy} ready={ready} controller={sculptureRef}/>
         <div className="sculpture-title">
           <div className="eyebrow"><span className="tiny-dot" />THE QUIET COLLECTION</div>
           <h1>Totoro<span>.</span></h1>
@@ -81,11 +94,11 @@ export default function Home() {
         <div className="interaction-area">
           <div className="interaction-hint"><Hand size={14} strokeWidth={1.5} /><span>Drag to explore<span className="hint-separator">·</span>Scroll to get closer</span></div>
           <div className="controls" aria-label="Sculpture controls">
-            <Toggle className="rotate-button" pressed={rotating} disabled={!ready} onPressedChange={value => { setRotating(value); sculptureRef.current?.setRotate(value); }} aria-label="Auto-rotate">
+            <Toggle className="rotate-button" pressed={rotating} disabled={!ready || anatomy.mode !== 'exterior'} onPressedChange={value => { setRotating(value); sculptureRef.current?.setRotate(value); }} aria-label="Auto-rotate">
               <Rotate3D size={18} strokeWidth={1.6} /><span>Auto-rotate</span><span className={`toggle-led ${rotating ? 'active' : ''}`} />
             </Toggle>
             <span className="control-divider" />
-            <Tooltip><TooltipTrigger className="icon-button" aria-label={animated ? 'Pause animation' : 'Play animation'} disabled={!ready} onClick={() => { const next = !animated; setAnimated(next); sculptureRef.current?.setAnimate(next); }}>
+            <Tooltip><TooltipTrigger className="icon-button" aria-label={animated ? 'Pause animation' : 'Play animation'} disabled={!ready || anatomy.mode !== 'exterior'} onClick={() => { const next = !animated; setAnimated(next); sculptureRef.current?.setAnimate(next); }}>
               {animated ? <Pause size={17} strokeWidth={1.6} /> : <Play size={17} strokeWidth={1.6} />}
             </TooltipTrigger><TooltipContent>{animated ? 'Pause the moment' : 'Bring to life'}</TooltipContent></Tooltip>
             <Tooltip><TooltipTrigger className="icon-button" aria-label="Reset view" disabled={!ready} onClick={() => { setRotating(false); sculptureRef.current?.reset(); }}><RotateCcw size={17} strokeWidth={1.6} /></TooltipTrigger><TooltipContent>Back to the beginning</TooltipContent></Tooltip>

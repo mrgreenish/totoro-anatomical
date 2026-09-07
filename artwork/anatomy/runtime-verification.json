@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "assertions": 37,
+  "coverage": [
+    "cut coordinates and reverse",
+    "system membership",
+    "GLTF metadata loading",
+    "visibility",
+    "exact reassembly",
+    "selection",
+    "reset",
+    "keyboard handle",
+    "failed loading and retry",
+    "stale load cancellation",
+    "resource cleanup",
+    "desktop/mobile framing"
+  ],
+  "scope": "Node integration with the real Three.js GLTF loader and a DOM event fixture. GPU rendering and browser layout are separate checks."
+}

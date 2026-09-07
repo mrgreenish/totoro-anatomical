@@ -1,0 +1,43 @@
+{
+  "date": "2026-09-07",
+  "passed": true,
+  "scope": "Local in-app browser; desktop hardware with a narrow viewport check, not a physical mobile device benchmark.",
+  "modelSha256": "5f4f933e6955149b63a42399df196597d698eea8d3ad98fcbbabf0e8b3f439ea",
+  "modelBytes": 4844876,
+  "checks": {
+    "model loaded with two eyelid morphs and skeleton": true,
+    "pointer orbit": true,
+    "keyboard orbit and zoom": true,
+    "daylight and moonlight": true,
+    "auto-rotate": true,
+    "pause and reset": true,
+    "fullscreen enter and exit": true,
+    "390x844 layout with no horizontal overflow": true
+  },
+  "narrowViewport": {
+    "width": 390,
+    "height": 844,
+    "documentWidth": 390,
+    "scrollWidth": 390
+  },
+  "desktopObservation": {
+    "pixelRatio": 1,
+    "canvasWidth": 877,
+    "canvasHeight": 830,
+    "medianFrameMs": 10,
+    "p95FrameMs": 11,
+    "trianglesIncludingStage": 327211,
+    "drawCallsIncludingStage": 62
+  },
+  "baselineObservation": {
+    "pixelRatio": 1,
+    "medianFrameMs": 10,
+    "p95FrameMs": 10.9,
+    "trianglesIncludingStage": 462652,
+    "drawCallsIncludingStage": 76
+  },
+  "limitations": [
+    "Frame intervals are a short stable observation, not GPU render-time measurements or a cross-device benchmark.",
+    "An earlier development tab suffered WebGL context loss during repeated reloads and offline rendering; a fresh tab loaded successfully and passed the interactions."
+  ]
+}

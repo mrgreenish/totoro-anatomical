@@ -1,0 +1,36 @@
+{
+  "passed": true,
+  "browser": "Codex in-app Chromium",
+  "date": "2026-09-07",
+  "desktopViewport": [
+    930,
+    1013
+  ],
+  "mobileViewport": [
+    390,
+    844
+  ],
+  "checks": [
+    "Exterior initial view and preserved fur/paws",
+    "All seven filters and Only actions",
+    "Visible handle drag changed slice from 51% to 62%",
+    "Keyboard slider increment from 50% to 51%",
+    "Sagittal, frontal and horizontal sections",
+    "Reverse retained side",
+    "Tissue-colored sections and hollow heart/digestive/urinary passages",
+    "Exploded layout and keyboard spacing to 100%",
+    "Click on heart selected stable ID heart and focused the camera",
+    "Selecting a hidden system clears the prior selection",
+    "Named selection status stays visible above the viewer",
+    "Reset returns Exterior, every system and central 50% cut",
+    "Motion preference restored in Exterior",
+    "Mobile panel begins below canvas (624px vs canvas bottom 620px)",
+    "No mobile horizontal overflow (document 375px, viewport 390px)",
+    "No browser console errors"
+  ],
+  "limitations": [
+    "A desktop browser viewport is used for mobile verification; physical touch devices were not tested.",
+    "Geometry is a human-inspired fictional anatomical model, with simplified vascular branching and muscle attachments."
+  ],
+  "sourceEvidence": "Live browser screenshots and accessibility/DOM checks in the implementation session; numerical evidence is stored in runtime-verification.json and asset-verification.json."
+}
