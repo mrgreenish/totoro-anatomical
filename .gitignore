@@ -1,5 +1,6 @@
 # dependencies
 /node_modules
+/.pnpm-store/
 /.pnp
 .pnp.*
 .yarn/*
@@ -41,3 +42,8 @@ next-env.d.ts
 __pycache__/
 /.img2threejs/references/
 /.img2threejs/reviews/*.png
+/.img2threejs/reviews/before-fur/
+
+# Offline authoring outputs are regenerated; the complete editable files remain in the local project.
+/artwork/totoro.blend
+/artwork/totoro-raw.glb

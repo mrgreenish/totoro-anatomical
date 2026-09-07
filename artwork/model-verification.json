@@ -1,13 +1,13 @@
 {
   "passed": true,
-  "sha256": "da1fa391a0db4a618b420b587d900f9093effc5cc4e7c3611c7e3b3178b424ce",
-  "compressedBytes": 1263984,
-  "triangles": 118734,
-  "meshDraws": 66,
+  "sha256": "66dfcbeebea08358576526e2333274e471fc036f9b7d419a9110b39b4b16d6e5",
+  "compressedBytes": 6608872,
+  "triangles": 460408,
+  "meshDraws": 71,
   "bounds": [
     3.921605348587036,
-    4.995026761728072,
-    3.072708669412135
+    4.965649210421888,
+    3.0924874239259563
   ],
   "requiredParts": [
     "Body",
@@ -144,6 +144,29 @@
       "furFollowsAppendages": true
     }
   ],
+  "paws": [
+    {
+      "side": "L",
+      "dimensions": [
+        0.8097520243184015,
+        0.6192558339884815,
+        1.3776417213261616
+      ],
+      "soleHeight": 0.024351514370592242,
+      "attachedClaws": true
+    },
+    {
+      "side": "R",
+      "dimensions": [
+        0.8255768464206574,
+        0.6227434863704088,
+        1.387127264100362
+      ],
+      "soleHeight": 0.024351514370592242,
+      "attachedClaws": true
+    }
+  ],
+  "fiberTriangles": 363864,
   "parts": [
     {
       "name": "Body",
@@ -158,7 +181,7 @@
     {
       "name": "Ear_L_fibers",
       "parent": "Ear_L",
-      "triangles": 500
+      "triangles": 5400
     },
     {
       "name": "Ear_L_1",
@@ -168,7 +191,7 @@
     {
       "name": "Ear_R_fibers",
       "parent": "Ear_R",
-      "triangles": 500
+      "triangles": 5400
     },
     {
       "name": "Ear_R_1",
@@ -178,7 +201,7 @@
     {
       "name": "Arm_L_fibers",
       "parent": "Arm_L",
-      "triangles": 900
+      "triangles": 12600
     },
     {
       "name": "Hand_L_claws",
@@ -191,19 +214,24 @@
       "triangles": 3596
     },
     {
-      "name": "Foot_L",
-      "parent": "Scene",
-      "triangles": 2592
+      "name": "Foot_L_fibers",
+      "parent": "Foot_L",
+      "triangles": 3192
     },
     {
-      "name": "Toe_claws",
-      "parent": "Scene",
-      "triangles": 1920
+      "name": "Toe_L_claws",
+      "parent": "Foot_L",
+      "triangles": 768
+    },
+    {
+      "name": "Foot_L_1",
+      "parent": "Foot_L",
+      "triangles": 4700
     },
     {
       "name": "Arm_R_fibers",
       "parent": "Arm_R",
-      "triangles": 900
+      "triangles": 12600
     },
     {
       "name": "Hand_R_claws",
@@ -216,17 +244,27 @@
       "triangles": 3596
     },
     {
-      "name": "Foot_R",
-      "parent": "Scene",
-      "triangles": 2592
+      "name": "Foot_R_fibers",
+      "parent": "Foot_R",
+      "triangles": 3291
+    },
+    {
+      "name": "Toe_R_claws",
+      "parent": "Foot_R",
+      "triangles": 768
+    },
+    {
+      "name": "Foot_R_1",
+      "parent": "Foot_R",
+      "triangles": 4700
     },
     {
       "name": "Tail_fibers",
       "parent": "Tail",
-      "triangles": 500
+      "triangles": 8400
     },
     {
-      "name": "Sphere002",
+      "name": "Sphere",
       "parent": "Tail",
       "triangles": 1840
     },
@@ -463,12 +501,22 @@
     {
       "name": "Fine_grey_fibers",
       "parent": "Scene",
-      "triangles": 19207
+      "triangles": 239457
     },
     {
       "name": "Fine_ivory_fibers",
       "parent": "Scene",
-      "triangles": 3515
+      "triangles": 40194
+    },
+    {
+      "name": "Chevron_fibers",
+      "parent": "Scene",
+      "triangles": 3027
+    },
+    {
+      "name": "Face_fibers",
+      "parent": "Scene",
+      "triangles": 30303
     },
     {
       "name": "Cheek_fur_tufts",

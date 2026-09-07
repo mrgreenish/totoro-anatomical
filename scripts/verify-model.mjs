@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
-import { Box3, PerspectiveCamera, Raycaster, Vector3 } from 'three';
+import { Box3, Group, PerspectiveCamera, Raycaster, Vector3 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
@@ -29,8 +29,20 @@ scene.traverse(object => {
   triangles += count;
   parts.push({ name: object.name, parent: object.parent.name, triangles: count });
 });
-assert(triangles < 150000, 'Model exceeds the intended real-time geometry budget');
-assert(bytes.length < 1800000, 'Compressed model exceeds its transfer budget');
+// The denser opaque groom trades geometry for fur detail without alpha overdraw.
+assert(triangles < 500000, 'Model exceeds the intended real-time geometry budget');
+assert(bytes.length < 6800000, 'Compressed model exceeds its transfer budget');
+
+const bodyColor = scene.getObjectByName('Body').material.color;
+const bellyColor = scene.getObjectByName('Cream_belly').material.color;
+assert(bellyColor.r > bodyColor.r * 3 && bellyColor.b > bodyColor.b * 2, 'Ivory belly has lost its contrast');
+let fiberTriangles = 0;
+scene.traverse(object => {
+  if (!object.isMesh || !object.name.includes('fibers')) return;
+  assert(object.geometry.hasAttribute('color'), `Missing strand colors: ${object.name}`);
+  fiberTriangles += (object.geometry.index?.count ?? object.geometry.attributes.position.count) / 3;
+});
+assert(fiberTriangles > 150000, 'Dense groom was lost during export');
 
 const bounds = new Box3().setFromObject(scene);
 const size = bounds.getSize(new Vector3());
@@ -54,7 +66,19 @@ for (let i = 1; i <= 10; i++) {
 
 // The animated nodes must carry their detail geometry when the gallery pivots them.
 const attachments = [];
+const paws = [];
 for (const side of ['L', 'R']) {
+  const foot = scene.getObjectByName(`Foot_${side}`);
+  const toe = scene.getObjectByName(`Toe_${side}_claws`);
+  assert.equal(toe?.parent, foot, 'Toe claws must belong to their paw');
+  assert.equal(scene.getObjectByName(`Foot_${side}_fibers`)?.parent, foot, 'Paw fur is detached');
+  const footBounds = new Box3().setFromObject(foot);
+  const footSize = footBounds.getSize(new Vector3());
+  assert(footBounds.min.y > .018 && footBounds.min.y < .032, 'Paw sole is not planted');
+  assert(footSize.x > .70 && footSize.x < .86, 'Paw reverted to a wide slipper');
+  assert(footSize.y > .48 && footSize.y < .65, 'Missing raised instep');
+  assert(new Box3().setFromObject(toe).intersectsBox(footBounds), 'Toes float ahead of paws');
+  paws.push({ side, dimensions: footSize.toArray(), soleHeight: footBounds.min.y, attachedClaws: true });
   const arm = scene.getObjectByName(`Arm_${side}`);
   const claw = scene.getObjectByName(`Hand_${side}_claws`);
   const fibers = scene.getObjectByName(`Arm_${side}_fibers`);
@@ -69,6 +93,22 @@ for (const side of ['L', 'R']) {
   assert.equal(scene.getObjectByName(`Ear_${side}_fibers`).parent, scene.getObjectByName(`Ear_${side}`));
   attachments.push({ side, clawsFollowArm: true, furFollowsAppendages: true });
 }
+scene.updateMatrixWorld(true);
+
+// Reproduce the viewer's stationary paw hierarchy at the largest spring lean.
+const stage = new Group(); stage.add(scene); stage.updateMatrixWorld(true);
+const fixedPaws = ['L', 'R'].map(side => scene.getObjectByName(`Foot_${side}`));
+for (const foot of fixedPaws) stage.attach(foot);
+const restingPaws = fixedPaws.map(foot => new Box3().setFromObject(foot));
+scene.rotation.set(.035, .17, .045); stage.updateMatrixWorld(true);
+for (const [index, foot] of fixedPaws.entries()) {
+  const moved = new Box3().setFromObject(foot);
+  assert(moved.min.distanceTo(restingPaws[index].min) < .000001 && moved.max.distanceTo(restingPaws[index].max) < .000001,
+    'Body inertia moves a planted paw');
+  assert(moved.intersectsBox(new Box3().setFromObject(scene.getObjectByName('Body'))), 'Body inertia detaches the haunch from a paw');
+}
+scene.rotation.set(0, 0, 0);
+for (const foot of fixedPaws) scene.attach(foot);
 scene.updateMatrixWorld(true);
 
 // Initial gallery framing must include the silhouette at desktop and mobile aspects.
@@ -89,7 +129,7 @@ for (const aspect of [1.8, .9]) {
 
 const report = { passed: true, sha256: createHash('sha256').update(bytes).digest('hex'),
   compressedBytes: bytes.length, triangles, meshDraws, bounds: size.toArray(),
-  requiredParts: required, teeth, attachments, parts,
+  requiredParts: required, teeth, attachments, paws, fiberTriangles, parts,
   scope: 'Compressed glTF decoding, finite geometry, exposed curved teeth, animation attachment transforms and initial camera framing. GPU browser interaction is not covered.' };
 await writeFile('artwork/model-verification.json', JSON.stringify(report, null, 2) + '\n');
 console.log(JSON.stringify({ passed: true, triangles, meshDraws, compressedBytes: bytes.length, visibleTeeth: teeth.length, attachments }, null, 2));

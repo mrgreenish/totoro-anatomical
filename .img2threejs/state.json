@@ -130,65 +130,83 @@
     {
       "id": "build-current-pass",
       "scope": "pass",
-      "status": "pending",
-      "evidence": [],
+      "status": "done",
+      "evidence": [
+        "scripts/build_totoro.py",
+        "lib/totoro-scene.ts",
+        "artwork/model-verification.json"
+      ],
       "reason": "",
       "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
     },
     {
       "id": "render-capture",
       "scope": "pass",
-      "status": "pending",
-      "evidence": [],
+      "status": "done",
+      "evidence": [
+        "artwork/totoro-render.png",
+        ".img2threejs/reviews/front.png",
+        ".img2threejs/reviews/profile.png",
+        ".img2threejs/reviews/rear.png"
+      ],
       "reason": "",
       "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
     },
     {
       "id": "review-contract-read",
       "scope": "pass",
-      "status": "pending",
-      "evidence": [],
+      "status": "done",
+      "evidence": [
+        ".img2threejs/sculpt-plan.json"
+      ],
       "reason": "",
       "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
     },
     {
       "id": "tier1-diagnostics",
       "scope": "pass",
-      "status": "pending",
-      "evidence": [],
+      "status": "done",
+      "evidence": [
+        ".img2threejs/reviews/coat-tier1-opaque.json"
+      ],
       "reason": "",
       "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
     },
     {
       "id": "multi-angle-review",
       "scope": "pass",
-      "status": "pending",
-      "evidence": [],
+      "status": "done",
+      "evidence": [
+        ".img2threejs/reviews/coat-multi-angle.json"
+      ],
       "reason": "",
       "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
     },
     {
       "id": "pass-gate-check",
       "scope": "pass",
-      "status": "pending",
+      "status": "skipped",
       "evidence": [],
-      "reason": "",
+      "reason": "Existing native Blender/glTF refinement: sculpt-plan review and decoded model/rig checks are the applicable gates; no generated Three.js factory spec exists.",
       "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
     },
     {
       "id": "ai-review-recorded",
       "scope": "pass",
-      "status": "pending",
-      "evidence": [],
+      "status": "done",
+      "evidence": [
+        ".img2threejs/sculpt-plan.json",
+        ".img2threejs/reviews/coat-comparison.png"
+      ],
       "reason": "",
       "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
     },
     {
       "id": "pipeline-sync",
       "scope": "pass",
-      "status": "pending",
+      "status": "skipped",
       "evidence": [],
-      "reason": "",
+      "reason": "Existing native Blender/glTF refinement: sculpt-plan review and decoded model/rig checks are the applicable gates; no generated Three.js factory spec exists.",
       "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
     },
     {
@@ -198,7 +216,7 @@
       "evidence": [
         "artwork/model-verification.json"
       ],
-      "reason": "Native decoder manifest verifies every named sculpture feature, ten exposed curved crowns, and all animation nodes.",
+      "reason": "Decoded model confirms every identity feature, all fur meshes with vertex colors, paws and parented claws.",
       "command": "python3 forge/stage4_review/check_part_coverage.py --spec {spec} --manifest parts.json"
     },
     {
@@ -206,17 +224,19 @@
       "scope": "final",
       "status": "done",
       "evidence": [
-        "artwork/model-verification.json"
+        "artwork/model-verification.json",
+        "artwork/motion-verification.json"
       ],
-      "reason": "Existing animation pivots and child attachments are verified. Preserve the requested gallery interaction rather than add speculative explosion or picking controls.",
+      "reason": "Paw subtrees remain planted under maximum torso motion; appendage attachments and spring response verified. Existing gallery interaction preserved.",
       "command": "Verify explodable/clickable hierarchy, pivots, sockets, and root.userData.sculptRuntime"
     }
   ],
   "loops": {
     "perPass": {
-      "native-form": 1
+      "native-form": 1,
+      "native-coat-paws-motion": 2
     },
-    "total": 1,
+    "total": 3,
     "maxPerPass": 3,
     "maxTotal": 6
   },
@@ -310,9 +330,96 @@
           "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
         }
       ]
+    },
+    {
+      "passId": "native-coat-paws-motion",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "scripts/build_totoro.py",
+            "lib/totoro-scene.ts",
+            "artwork/model-verification.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "artwork/totoro-render.png",
+            ".img2threejs/reviews/front.png",
+            ".img2threejs/reviews/profile.png",
+            ".img2threejs/reviews/rear.png"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/sculpt-plan.json"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/reviews/coat-tier1-opaque.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/reviews/coat-multi-angle.json"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "skipped",
+          "evidence": [],
+          "reason": "Existing native Blender/glTF refinement: sculpt-plan review and decoded model/rig checks are the applicable gates; no generated Three.js factory spec exists.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            ".img2threejs/sculpt-plan.json",
+            ".img2threejs/reviews/coat-comparison.png"
+          ],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "skipped",
+          "evidence": [],
+          "reason": "Existing native Blender/glTF refinement: sculpt-plan review and decoded model/rig checks are the applicable gates; no generated Three.js factory spec exists.",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
     }
   ],
-  "reviewCursor": 2,
+  "reviewCursor": 5,
   "iterationAction": "new-pass",
   "stopReason": "",
   "nativeWorkflow": "Existing Blender/glTF refinement; final native render review and decoded geometry contracts passed. Generated factory-only steps have explicit scope reasons."
