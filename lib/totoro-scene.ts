@@ -194,7 +194,16 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     plinthMaterial.color.copy(dayStage).lerp(nightStage, night); edgeMaterial.color.copy(plinthMaterial.color);
     particleMaterial.uniforms.opacity.value = anatomy?.active ? 0 : THREE.MathUtils.lerp(.15, .62, night);
     const anatomySettling = anatomy?.update(dt) ?? false;
-    if (anatomy?.active) { key.color.set(0xfff6eb); fill.intensity = .95; ambient.intensity = .7; scene.environmentIntensity = .55; }
+    if (anatomy?.active) {
+      // Neutral studio light preserves red/brown tissue separation. A lower
+      // fill keeps fissures and overlapping organs dimensional; the environment
+      // supplies broad, restrained reflections on the moist capsules.
+      key.color.set(0xfff4ed); key.intensity = 2.6;
+      fill.intensity = .48; ambient.intensity = .30;
+      rim.color.set(0xf0f4ff); rim.intensity = 1.25;
+      scene.environmentIntensity = .38;
+      key.shadow.normalBias = .006;
+    } else key.shadow.normalBias = .018;
     renderer.render(scene, camera);
     if (process.env.NODE_ENV !== 'production' && model && rawDt > 0 && rawDt < .2) {
       frameSamples.push(rawDt * 1000);
