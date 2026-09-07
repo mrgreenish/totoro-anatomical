@@ -1,0 +1,31 @@
+{
+  "revision": "tissue-realism-2",
+  "parts": 264,
+  "triangles": 484316,
+  "bytes": 11077760,
+  "tissueAtlases": [
+    "brain",
+    "myocardium",
+    "lungs",
+    "liver",
+    "stomach",
+    "intestine",
+    "kidney",
+    "spleen",
+    "glands"
+  ],
+  "geometry": true,
+  "asset": true,
+  "runtimeAssertions": 37,
+  "typecheck": "passed",
+  "changedFileLint": "passed",
+  "productionBuild": "passed",
+  "offlineRenders": [
+    "reviews/organs-realistic.png",
+    "reviews/heart-realistic.png",
+    "reviews/brain-realistic.png",
+    "reviews/abdomen-realistic.png"
+  ],
+  "visualReview": "Inspected 48-sample denoised Cycles studies. Corrected UV color seams and cortical subpixel islands.",
+  "browserQA": "Not performed in this pass; runtime checks use Node with the real Three.js loader."
+}

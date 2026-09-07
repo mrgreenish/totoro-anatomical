@@ -6,6 +6,14 @@ import { clamp01, cutCoordinate, CUT_BOUNDS, defaultAnatomyState, fitDistance, s
 import type { AnatomyMode, AnatomyPart, AnatomyState, AnatomySystem } from './anatomy-state';
 
 type Part = AnatomyPart & { node: THREE.Object3D; rest: THREE.Vector3; offset: THREE.Vector3; meshes: THREE.Mesh[] };
+// Textured glTF materials use a white color factor. Section faces need the
+// underlying tissue color instead of that multiplier to avoid white cut walls.
+const tissueSectionColors: Record<string, number> = {
+  brain: 0xbc9180, myocardium: 0x8c3538, lungs: 0xb57076,
+  liver: 0x74332e, stomach: 0xd79986, intestine: 0xd39480,
+  kidney: 0x843b34, spleen: 0x69384d, glands: 0xc79b65,
+  muscle: 0x9e4740,
+};
 type Cap = { source: THREE.Mesh; part: Part; back: THREE.Mesh; front: THREE.Mesh; cap: THREE.Mesh; box: THREE.Box3 };
 type Options = {
   canvas: HTMLCanvasElement; renderer: THREE.WebGLRenderer; scene: THREE.Scene; camera: THREE.PerspectiveCamera;
@@ -80,7 +88,8 @@ export function createAnatomyExplorer(o: Options) {
     frontMat.stencilFail = frontMat.stencilZFail = frontMat.stencilZPass = THREE.DecrementWrapStencilOp;
     base.dispose();
     const sourceMaterial = (Array.isArray(mesh.material) ? mesh.material[0] : mesh.material) as THREE.MeshStandardMaterial;
-    const capMat = new THREE.MeshStandardMaterial({ color: sourceMaterial.color, roughness: .68, side: THREE.DoubleSide,
+    const tissue = sourceMaterial.name.replace(/^Anatomy_/, '');
+    const capMat = new THREE.MeshStandardMaterial({ color: tissueSectionColors[tissue] ?? sourceMaterial.color, roughness: .64, side: THREE.DoubleSide,
       stencilWrite: true, stencilRef: 0, stencilFunc: THREE.NotEqualStencilFunc,
       stencilFail: THREE.ReplaceStencilOp, stencilZFail: THREE.ReplaceStencilOp, stencilZPass: THREE.ReplaceStencilOp,
       polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
@@ -101,7 +110,7 @@ export function createAnatomyExplorer(o: Options) {
     if (model || loadPromise) return loadPromise;
     state.status = 'loading'; emit();
     loadPromise = (async () => {
-      const response = await fetch('/models/totoro-anatomy.glb?v=anatomy-1', { signal: loadAbort.signal });
+      const response = await fetch('/models/totoro-anatomy.glb?v=tissue-realism-2', { signal: loadAbort.signal });
       if (!response.ok) throw new Error('Anatomy unavailable');
       const bytes = await response.arrayBuffer();
       if (disposed || o.signal.aborted) return;
@@ -115,10 +124,18 @@ export function createAnatomyExplorer(o: Options) {
           rest: node.position.clone(), offset: new THREE.Vector3().fromArray(node.userData.explodeOffset), meshes: [] };
         node.traverse(child => {
           if (!(child instanceof THREE.Mesh)) return;
-          part.meshes.push(child); child.castShadow = false; child.receiveShadow = false;
+          part.meshes.push(child);
+          child.castShadow = true; child.receiveShadow = true;
           const multiple = Array.isArray(child.material);
           const clones = (multiple ? child.material as THREE.Material[] : [child.material as THREE.Material]).map(m => {
-            const clone = m.clone(); materials.add(clone); return clone;
+            const clone = m.clone();
+            if (clone instanceof THREE.MeshStandardMaterial) {
+              clone.envMapIntensity = .8;
+              for (const texture of [clone.map, clone.normalMap, clone.roughnessMap]) {
+                if (texture) texture.anisotropy = Math.min(8, o.renderer.capabilities?.getMaxAnisotropy() ?? 1);
+              }
+            }
+            materials.add(clone); return clone;
           });
           child.material = multiple ? clones : clones[0];
         });
