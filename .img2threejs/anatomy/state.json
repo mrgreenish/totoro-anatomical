@@ -1,0 +1,268 @@
+{
+  "schemaVersion": 1,
+  "status": "complete",
+  "profile": "character",
+  "currentStep": "complete",
+  "currentPass": "final",
+  "checklist": [
+    {
+      "id": "image-analysis",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [],
+      "reason": "The user supplied and explicitly approved the complete native Blender anatomy plan; this extends the existing reviewed character instead of reconstructing a new character from an image. Anatomy-specific evidence and review gates are tracked in sculpt-plan.json and artwork/anatomy.",
+      "command": "Read grimoire/intake/image_analysis.md and analyze {reference}"
+    },
+    {
+      "id": "reference-suitability",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [],
+      "reason": "The user supplied and explicitly approved the complete native Blender anatomy plan; this extends the existing reviewed character instead of reconstructing a new character from an image. Anatomy-specific evidence and review gates are tracked in sculpt-plan.json and artwork/anatomy.",
+      "command": "Read grimoire/intake/validation_rubric.md and record a pass, conditional, or reject verdict for {reference}"
+    },
+    {
+      "id": "reference-admission",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [],
+      "reason": "The user supplied and explicitly approved the complete native Blender anatomy plan; this extends the existing reviewed character instead of reconstructing a new character from an image. Anatomy-specific evidence and review gates are tracked in sculpt-plan.json and artwork/anatomy.",
+      "command": "python3 forge/stage1_intake/check_reference_admission.py {reference}"
+    },
+    {
+      "id": "character-contract-read",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [],
+      "reason": "The user supplied and explicitly approved the complete native Blender anatomy plan; this extends the existing reviewed character instead of reconstructing a new character from an image. Anatomy-specific evidence and review gates are tracked in sculpt-plan.json and artwork/anatomy.",
+      "command": "Read grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md completely"
+    },
+    {
+      "id": "character-landmarks",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [],
+      "reason": "The user supplied and explicitly approved the complete native Blender anatomy plan; this extends the existing reviewed character instead of reconstructing a new character from an image. Anatomy-specific evidence and review gates are tracked in sculpt-plan.json and artwork/anatomy.",
+      "command": "python3 forge/stage1_intake/extract_landmarks.py {reference} --out anatomy.json --overlay landmarks.png"
+    },
+    {
+      "id": "local-spec-search",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [],
+      "reason": "The user supplied and explicitly approved the complete native Blender anatomy plan; this extends the existing reviewed character instead of reconstructing a new character from an image. Anatomy-specific evidence and review gates are tracked in sculpt-plan.json and artwork/anatomy.",
+      "command": "Run the local evidence search before authoring the assessment"
+    },
+    {
+      "id": "pre-spec-assessment",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [],
+      "reason": "The user supplied and explicitly approved the complete native Blender anatomy plan; this extends the existing reviewed character instead of reconstructing a new character from an image. Anatomy-specific evidence and review gates are tracked in sculpt-plan.json and artwork/anatomy.",
+      "command": "python3 forge/stage2_spec/new_pre_spec_assessment.py \"<name>\" --image {reference} --out assessment.json"
+    },
+    {
+      "id": "detail-inventory",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [],
+      "reason": "The user supplied and explicitly approved the complete native Blender anatomy plan; this extends the existing reviewed character instead of reconstructing a new character from an image. Anatomy-specific evidence and review gates are tracked in sculpt-plan.json and artwork/anatomy.",
+      "command": "python3 forge/stage1_intake/build_detail_inventory.py {reference} --mode grid-3x3 --out-dir detail-inventory --out di.json"
+    },
+    {
+      "id": "projection-route",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [],
+      "reason": "The user supplied and explicitly approved the complete native Blender anatomy plan; this extends the existing reviewed character instead of reconstructing a new character from an image. Anatomy-specific evidence and review gates are tracked in sculpt-plan.json and artwork/anatomy.",
+      "command": "Record whether projection is required; if required run solve_camera_pose.py, delight_albedo.py, and bake_projected_texture.py, otherwise skip with a reason"
+    },
+    {
+      "id": "spec-authoring",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [],
+      "reason": "The user supplied and explicitly approved the complete native Blender anatomy plan; this extends the existing reviewed character instead of reconstructing a new character from an image. Anatomy-specific evidence and review gates are tracked in sculpt-plan.json and artwork/anatomy.",
+      "command": "python3 forge/stage2_spec/new_sculpt_spec.py \"<name>\" --image {reference} --assessment assessment.json --out object-sculpt-spec.json"
+    },
+    {
+      "id": "material-evidence",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [],
+      "reason": "The user supplied and explicitly approved the complete native Blender anatomy plan; this extends the existing reviewed character instead of reconstructing a new character from an image. Anatomy-specific evidence and review gates are tracked in sculpt-plan.json and artwork/anatomy.",
+      "command": "When material fidelity matters, run analyze_texture.py and extract_pbr_evidence.py per verified crop; otherwise skip with a reason"
+    },
+    {
+      "id": "strict-validation",
+      "scope": "setup",
+      "status": "skipped",
+      "evidence": [],
+      "reason": "The user supplied and explicitly approved the complete native Blender anatomy plan; this extends the existing reviewed character instead of reconstructing a new character from an image. Anatomy-specific evidence and review gates are tracked in sculpt-plan.json and artwork/anatomy.",
+      "command": "python3 forge/stage2_spec/validate_sculpt_spec.py {spec} --strict-quality"
+    },
+    {
+      "id": "build-current-pass",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        "scripts/build_anatomy.py"
+      ],
+      "reason": "User-approved native Blender route; equivalent modeling, review and runtime checks are recorded in the linked evidence.",
+      "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+    },
+    {
+      "id": "render-capture",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        "artwork/anatomy/reviews/skin.png"
+      ],
+      "reason": "User-approved native Blender route; equivalent modeling, review and runtime checks are recorded in the linked evidence.",
+      "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+    },
+    {
+      "id": "review-contract-read",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/anatomy/sculpt-plan.json"
+      ],
+      "reason": "User-approved native Blender route; equivalent modeling, review and runtime checks are recorded in the linked evidence.",
+      "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+    },
+    {
+      "id": "tier1-diagnostics",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        "artwork/anatomy/blender-verification.json"
+      ],
+      "reason": "User-approved native Blender route; equivalent modeling, review and runtime checks are recorded in the linked evidence.",
+      "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+    },
+    {
+      "id": "multi-angle-review",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        "artwork/anatomy/browser-verification.json"
+      ],
+      "reason": "User-approved native Blender route; equivalent modeling, review and runtime checks are recorded in the linked evidence.",
+      "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+    },
+    {
+      "id": "pass-gate-check",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        "artwork/anatomy/asset-verification.json"
+      ],
+      "reason": "User-approved native Blender route; equivalent modeling, review and runtime checks are recorded in the linked evidence.",
+      "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+    },
+    {
+      "id": "ai-review-recorded",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/anatomy/sculpt-plan.json"
+      ],
+      "reason": "User-approved native Blender route; equivalent modeling, review and runtime checks are recorded in the linked evidence.",
+      "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+    },
+    {
+      "id": "pipeline-sync",
+      "scope": "pass",
+      "status": "done",
+      "evidence": [
+        ".img2threejs/anatomy/sculpt-plan.json"
+      ],
+      "reason": "User-approved native Blender route; equivalent modeling, review and runtime checks are recorded in the linked evidence.",
+      "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+    },
+    {
+      "id": "part-coverage",
+      "scope": "final",
+      "status": "done",
+      "evidence": [
+        "artwork/anatomy/manifest.json"
+      ],
+      "reason": "User-approved native Blender route; equivalent modeling, review and runtime checks are recorded in the linked evidence.",
+      "command": "python3 forge/stage4_review/check_part_coverage.py --spec {spec} --manifest parts.json"
+    },
+    {
+      "id": "action-ready",
+      "scope": "final",
+      "status": "done",
+      "evidence": [
+        "artwork/anatomy/runtime-verification.json"
+      ],
+      "reason": "User-approved native Blender route; equivalent modeling, review and runtime checks are recorded in the linked evidence.",
+      "command": "Verify explodable/clickable hierarchy, pivots, sockets, and root.userData.sculptRuntime"
+    }
+  ],
+  "loops": {
+    "perPass": {
+      "skeleton": 1,
+      "organs": 1,
+      "finish": 2,
+      "interaction": 2
+    },
+    "total": 6,
+    "maxPerPass": 3,
+    "maxTotal": 6
+  },
+  "artifacts": {
+    "reference": "artwork/totoro-render.png",
+    "spec": ".img2threejs/anatomy/sculpt-plan.json"
+  },
+  "passHistory": [
+    {
+      "pass": "skeleton",
+      "action": "refine-code",
+      "reason": "First curved tubes used an unstable moving frame. Corrected parallel transport; added rounded epiphyses and costal cartilage. The proportion review shows a broad skull and thorax, low pelvis, short limbs, matching the existing shape.",
+      "evidence": "artwork/anatomy/reviews/bones.png",
+      "remaining": "Final multi-angle and exported-volume checks follow with the complete assembly."
+    },
+    {
+      "pass": "organs",
+      "action": "refine-code",
+      "reason": "Replaced primitive brain folds, balloon-like lungs and oval stomach with sculpted cortical grooves, tapered lobes, a four-chamber myocardial volume and a hollow J-shaped stomach.",
+      "evidence": "artwork/anatomy/reviews/organs.png"
+    },
+    {
+      "pass": "finish",
+      "action": "refine-code",
+      "reason": "Aligned hand anatomy with the source paws and recessed superficial tissues beneath the exterior envelope.",
+      "evidence": "artwork/anatomy/containment-adjustments.json"
+    },
+    {
+      "pass": "finish",
+      "action": "refine-code",
+      "reason": "Used proportional skin inset and disabled even-thickness amplification at narrow ear tips; final skin envelope is smooth and contained.",
+      "evidence": "artwork/anatomy/reviews/skin.png"
+    },
+    {
+      "pass": "interaction",
+      "action": "refine-code",
+      "reason": "Preserved single primitive materials so intact organ surfaces render alongside stencil caps; retained intended camera direction through layout resize.",
+      "evidence": "artwork/anatomy/runtime-verification.json"
+    },
+    {
+      "pass": "interaction",
+      "action": "refine-code",
+      "reason": "Placed the panel after the viewer on mobile, eliminated horizontal overflow, and made selected names visible above the viewer.",
+      "evidence": "artwork/anatomy/browser-verification.json"
+    },
+    {
+      "pass": "final",
+      "action": "accept",
+      "reason": "Named coverage, manifold volumes, texture decoding, metadata, transfer and triangle budgets, interactive cuts, exploded selection, desktop/mobile controls and production checks pass. The anatomy is an imagined study with simplified major structures.",
+      "evidence": "artwork/anatomy/asset-verification.json"
+    }
+  ],
+  "reviewCursor": 7,
+  "iterationAction": "accept",
+  "stopReason": ""
+}

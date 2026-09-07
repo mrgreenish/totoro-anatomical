@@ -1,0 +1,15 @@
+{
+  "bytes": 7929248,
+  "triangles": 442604,
+  "parts": 264,
+  "errors": 0,
+  "warnings": 0,
+  "messages": [
+    {
+      "code": "UNSUPPORTED_EXTENSION",
+      "message": "Cannot validate an extension as it is not supported by the validator: 'EXT_meshopt_compression'.",
+      "severity": 2,
+      "pointer": "/extensionsUsed/0"
+    }
+  ]
+}

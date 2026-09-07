@@ -1,0 +1,2573 @@
+{
+  "version": 1,
+  "coordinates": "glTF Y up, front +Z",
+  "parts": [
+    {
+      "id": "skull",
+      "label": "Skull \u00b7 cranial vault & cheek arches",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 8820,
+      "cavity": true
+    },
+    {
+      "id": "mandible",
+      "label": "Mandible",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 696,
+      "cavity": false
+    },
+    {
+      "id": "tooth_roots",
+      "label": "Tooth roots",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 600,
+      "cavity": false
+    },
+    {
+      "id": "vertebra_01",
+      "label": "Vertebra 1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_01",
+      "label": "Intervertebral disc 1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_02",
+      "label": "Vertebra 2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_02",
+      "label": "Intervertebral disc 2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_03",
+      "label": "Vertebra 3",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_03",
+      "label": "Intervertebral disc 3",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_04",
+      "label": "Vertebra 4",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_04",
+      "label": "Intervertebral disc 4",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_05",
+      "label": "Vertebra 5",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_05",
+      "label": "Intervertebral disc 5",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_06",
+      "label": "Vertebra 6",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_06",
+      "label": "Intervertebral disc 6",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_07",
+      "label": "Vertebra 7",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_07",
+      "label": "Intervertebral disc 7",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_08",
+      "label": "Vertebra 8",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_08",
+      "label": "Intervertebral disc 8",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_09",
+      "label": "Vertebra 9",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_09",
+      "label": "Intervertebral disc 9",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_10",
+      "label": "Vertebra 10",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_10",
+      "label": "Intervertebral disc 10",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_11",
+      "label": "Vertebra 11",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_11",
+      "label": "Intervertebral disc 11",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_12",
+      "label": "Vertebra 12",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_12",
+      "label": "Intervertebral disc 12",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_13",
+      "label": "Vertebra 13",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_13",
+      "label": "Intervertebral disc 13",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_14",
+      "label": "Vertebra 14",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_14",
+      "label": "Intervertebral disc 14",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_15",
+      "label": "Vertebra 15",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_15",
+      "label": "Intervertebral disc 15",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_16",
+      "label": "Vertebra 16",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_16",
+      "label": "Intervertebral disc 16",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_17",
+      "label": "Vertebra 17",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_17",
+      "label": "Intervertebral disc 17",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_18",
+      "label": "Vertebra 18",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_18",
+      "label": "Intervertebral disc 18",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_19",
+      "label": "Vertebra 19",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_19",
+      "label": "Intervertebral disc 19",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_20",
+      "label": "Vertebra 20",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_20",
+      "label": "Intervertebral disc 20",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_21",
+      "label": "Vertebra 21",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_21",
+      "label": "Intervertebral disc 21",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_22",
+      "label": "Vertebra 22",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_22",
+      "label": "Intervertebral disc 22",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_23",
+      "label": "Vertebra 23",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_23",
+      "label": "Intervertebral disc 23",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_24",
+      "label": "Vertebra 24",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "cavity": true
+    },
+    {
+      "id": "disc_24",
+      "label": "Intervertebral disc 24",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "cavity": true
+    },
+    {
+      "id": "rib_L_01",
+      "label": "L rib 1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_02",
+      "label": "L rib 2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_03",
+      "label": "L rib 3",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_04",
+      "label": "L rib 4",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_05",
+      "label": "L rib 5",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_06",
+      "label": "L rib 6",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_07",
+      "label": "L rib 7",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_08",
+      "label": "L rib 8",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_09",
+      "label": "L rib 9",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_10",
+      "label": "L rib 10",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_11",
+      "label": "L rib 11",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_12",
+      "label": "L rib 12",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "cavity": false
+    },
+    {
+      "id": "clavicle_L",
+      "label": "L clavicle",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 308,
+      "cavity": false
+    },
+    {
+      "id": "scapula_L",
+      "label": "L scapula",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1680,
+      "cavity": false
+    },
+    {
+      "id": "pelvis_L",
+      "label": "L pelvis",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 2944,
+      "cavity": true
+    },
+    {
+      "id": "humerus_L",
+      "label": "L humerus",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "radius_L",
+      "label": "L radius",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "ulna_L",
+      "label": "L ulna",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "carpals_L",
+      "label": "L wrist bones",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1008,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_L_0",
+      "label": "L metacarpal 1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "finger_L_0",
+      "label": "L finger 1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_L_1",
+      "label": "L metacarpal 2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "finger_L_1",
+      "label": "L finger 2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_L_2",
+      "label": "L metacarpal 3",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "finger_L_2",
+      "label": "L finger 3",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_L_3",
+      "label": "L metacarpal 4",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "finger_L_3",
+      "label": "L finger 4",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_L_4",
+      "label": "L metacarpal 5",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "finger_L_4",
+      "label": "L finger 5",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "cavity": false
+    },
+    {
+      "id": "femur_L",
+      "label": "L femur",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "tibia_L",
+      "label": "L tibia",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "fibula_L",
+      "label": "L fibula",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "patella_L",
+      "label": "L patella",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 440,
+      "cavity": false
+    },
+    {
+      "id": "metatarsal_L_0",
+      "label": "L metatarsal 1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "toe_L_0",
+      "label": "L toe bones 1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 176,
+      "cavity": false
+    },
+    {
+      "id": "metatarsal_L_1",
+      "label": "L metatarsal 2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "toe_L_1",
+      "label": "L toe bones 2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 176,
+      "cavity": false
+    },
+    {
+      "id": "metatarsal_L_2",
+      "label": "L metatarsal 3",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "toe_L_2",
+      "label": "L toe bones 3",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 176,
+      "cavity": false
+    },
+    {
+      "id": "ear_cartilage_L",
+      "label": "L ear cartilage",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 308,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_01",
+      "label": "R rib 1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_02",
+      "label": "R rib 2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_03",
+      "label": "R rib 3",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_04",
+      "label": "R rib 4",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_05",
+      "label": "R rib 5",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_06",
+      "label": "R rib 6",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_07",
+      "label": "R rib 7",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_08",
+      "label": "R rib 8",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_09",
+      "label": "R rib 9",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_10",
+      "label": "R rib 10",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_11",
+      "label": "R rib 11",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_12",
+      "label": "R rib 12",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "cavity": false
+    },
+    {
+      "id": "clavicle_R",
+      "label": "R clavicle",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 308,
+      "cavity": false
+    },
+    {
+      "id": "scapula_R",
+      "label": "R scapula",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1680,
+      "cavity": false
+    },
+    {
+      "id": "pelvis_R",
+      "label": "R pelvis",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 2942,
+      "cavity": true
+    },
+    {
+      "id": "humerus_R",
+      "label": "R humerus",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "radius_R",
+      "label": "R radius",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "ulna_R",
+      "label": "R ulna",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "carpals_R",
+      "label": "R wrist bones",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1008,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_R_0",
+      "label": "R metacarpal 1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "finger_R_0",
+      "label": "R finger 1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_R_1",
+      "label": "R metacarpal 2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "finger_R_1",
+      "label": "R finger 2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_R_2",
+      "label": "R metacarpal 3",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "finger_R_2",
+      "label": "R finger 3",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_R_3",
+      "label": "R metacarpal 4",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "finger_R_3",
+      "label": "R finger 4",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_R_4",
+      "label": "R metacarpal 5",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "finger_R_4",
+      "label": "R finger 5",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "cavity": false
+    },
+    {
+      "id": "femur_R",
+      "label": "R femur",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "tibia_R",
+      "label": "R tibia",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "fibula_R",
+      "label": "R fibula",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "patella_R",
+      "label": "R patella",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 440,
+      "cavity": false
+    },
+    {
+      "id": "metatarsal_R_0",
+      "label": "R metatarsal 1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "toe_R_0",
+      "label": "R toe bones 1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 176,
+      "cavity": false
+    },
+    {
+      "id": "metatarsal_R_1",
+      "label": "R metatarsal 2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "toe_R_1",
+      "label": "R toe bones 2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 176,
+      "cavity": false
+    },
+    {
+      "id": "metatarsal_R_2",
+      "label": "R metatarsal 3",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "cavity": true
+    },
+    {
+      "id": "toe_R_2",
+      "label": "R toe bones 3",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 176,
+      "cavity": false
+    },
+    {
+      "id": "ear_cartilage_R",
+      "label": "R ear cartilage",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 308,
+      "cavity": false
+    },
+    {
+      "id": "sternum",
+      "label": "Sternum",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 260,
+      "cavity": false
+    },
+    {
+      "id": "sacrum",
+      "label": "Sacrum",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 780,
+      "cavity": false
+    },
+    {
+      "id": "tail_vertebra_1",
+      "label": "Tail vertebra 1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 288,
+      "cavity": false
+    },
+    {
+      "id": "tail_vertebra_2",
+      "label": "Tail vertebra 2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 288,
+      "cavity": false
+    },
+    {
+      "id": "tail_vertebra_3",
+      "label": "Tail vertebra 3",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 288,
+      "cavity": false
+    },
+    {
+      "id": "tail_vertebra_4",
+      "label": "Tail vertebra 4",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 288,
+      "cavity": false
+    },
+    {
+      "id": "tail_vertebra_5",
+      "label": "Tail vertebra 5",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 288,
+      "cavity": false
+    },
+    {
+      "id": "tail_vertebra_6",
+      "label": "Tail vertebra 6",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 288,
+      "cavity": false
+    },
+    {
+      "id": "tail_vertebra_7",
+      "label": "Tail vertebra 7",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 288,
+      "cavity": false
+    },
+    {
+      "id": "tail_vertebra_8",
+      "label": "Tail vertebra 8",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 288,
+      "cavity": false
+    },
+    {
+      "id": "tail_vertebra_9",
+      "label": "Tail vertebra 9",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 288,
+      "cavity": false
+    },
+    {
+      "id": "temporalis_L",
+      "label": "L temporalis",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "masseter_L",
+      "label": "L masseter",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "trapezius_L",
+      "label": "L trapezius",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "deltoid_L",
+      "label": "L deltoid",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "biceps_L",
+      "label": "L biceps",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "triceps_L",
+      "label": "L triceps",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "forearm_L_0",
+      "label": "L forearm flexors",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "forearm_L_1",
+      "label": "L forearm extensors",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "forearm_L_2",
+      "label": "L forearm brachioradialis",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "pectoralis_L_0",
+      "label": "L pectoralis bundle 1",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "pectoralis_L_1",
+      "label": "L pectoralis bundle 2",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "pectoralis_L_2",
+      "label": "L pectoralis bundle 3",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "abdominis_L_0",
+      "label": "L rectus abdominis segment 1",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "abdominis_L_1",
+      "label": "L rectus abdominis segment 2",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "abdominis_L_2",
+      "label": "L rectus abdominis segment 3",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "abdominis_L_3",
+      "label": "L rectus abdominis segment 4",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "oblique_L_0",
+      "label": "L external oblique bundle 1",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "oblique_L_1",
+      "label": "L external oblique bundle 2",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "oblique_L_2",
+      "label": "L external oblique bundle 3",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "oblique_L_3",
+      "label": "L external oblique bundle 4",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "latissimus_L",
+      "label": "L latissimus dorsi",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "erector_L",
+      "label": "L erector spinae",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "gluteus_L",
+      "label": "L gluteal muscles",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "quadriceps_L",
+      "label": "L quadriceps",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "hamstrings_L",
+      "label": "L hamstrings",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "calf_L",
+      "label": "L calf & Achilles tendon",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "temporalis_R",
+      "label": "R temporalis",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "masseter_R",
+      "label": "R masseter",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "trapezius_R",
+      "label": "R trapezius",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "deltoid_R",
+      "label": "R deltoid",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "biceps_R",
+      "label": "R biceps",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "triceps_R",
+      "label": "R triceps",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "forearm_R_0",
+      "label": "R forearm flexors",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "forearm_R_1",
+      "label": "R forearm extensors",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "forearm_R_2",
+      "label": "R forearm brachioradialis",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "pectoralis_R_0",
+      "label": "R pectoralis bundle 1",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "pectoralis_R_1",
+      "label": "R pectoralis bundle 2",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "pectoralis_R_2",
+      "label": "R pectoralis bundle 3",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "abdominis_R_0",
+      "label": "R rectus abdominis segment 1",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "abdominis_R_1",
+      "label": "R rectus abdominis segment 2",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "abdominis_R_2",
+      "label": "R rectus abdominis segment 3",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "abdominis_R_3",
+      "label": "R rectus abdominis segment 4",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "oblique_R_0",
+      "label": "R external oblique bundle 1",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "oblique_R_1",
+      "label": "R external oblique bundle 2",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "oblique_R_2",
+      "label": "R external oblique bundle 3",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "oblique_R_3",
+      "label": "R external oblique bundle 4",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "latissimus_R",
+      "label": "R latissimus dorsi",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "erector_R",
+      "label": "R erector spinae",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "gluteus_R",
+      "label": "R gluteal muscles",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "quadriceps_R",
+      "label": "R quadriceps",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "hamstrings_R",
+      "label": "R hamstrings",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "calf_R",
+      "label": "R calf & Achilles tendon",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "diaphragm",
+      "label": "Diaphragm",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 2640,
+      "cavity": true
+    },
+    {
+      "id": "tail_muscles",
+      "label": "Tail muscles",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "cavity": false
+    },
+    {
+      "id": "brain",
+      "label": "Brain \u00b7 cerebral hemispheres",
+      "systems": [
+        "organs",
+        "nerves"
+      ],
+      "triangles": 36352,
+      "cavity": false
+    },
+    {
+      "id": "cerebellum",
+      "label": "Cerebellum",
+      "systems": [
+        "organs",
+        "nerves"
+      ],
+      "triangles": 8688,
+      "cavity": false
+    },
+    {
+      "id": "brainstem",
+      "label": "Brainstem",
+      "systems": [
+        "organs",
+        "nerves"
+      ],
+      "triangles": 304,
+      "cavity": false
+    },
+    {
+      "id": "eye_L",
+      "label": "L eyeball",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3360,
+      "cavity": true
+    },
+    {
+      "id": "inner_ear_L",
+      "label": "L inner ear",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1606,
+      "cavity": false
+    },
+    {
+      "id": "eye_R",
+      "label": "R eyeball",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3360,
+      "cavity": true
+    },
+    {
+      "id": "inner_ear_R",
+      "label": "R inner ear",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1606,
+      "cavity": false
+    },
+    {
+      "id": "tongue",
+      "label": "Tongue",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "cavity": false
+    },
+    {
+      "id": "salivary_L",
+      "label": "L salivary glands",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "cavity": false
+    },
+    {
+      "id": "salivary_R",
+      "label": "R salivary glands",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "cavity": false
+    },
+    {
+      "id": "pituitary",
+      "label": "Pituitary gland",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "cavity": false
+    },
+    {
+      "id": "thyroid",
+      "label": "Thyroid gland",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "cavity": false
+    },
+    {
+      "id": "parathyroids",
+      "label": "Parathyroid glands",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 672,
+      "cavity": false
+    },
+    {
+      "id": "airways",
+      "label": "Trachea & bronchial tree",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 6600,
+      "cavity": true
+    },
+    {
+      "id": "lung_L",
+      "label": "L lung \u00b7 two lobes",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3380,
+      "cavity": false
+    },
+    {
+      "id": "lung_R",
+      "label": "R lung \u00b7 three lobes",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3408,
+      "cavity": false
+    },
+    {
+      "id": "heart",
+      "label": "Heart \u00b7 four chambers & valves",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 8658,
+      "cavity": true
+    },
+    {
+      "id": "liver",
+      "label": "Liver",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "cavity": false
+    },
+    {
+      "id": "gallbladder",
+      "label": "Gallbladder",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3360,
+      "cavity": true
+    },
+    {
+      "id": "esophagus",
+      "label": "Esophagus",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1056,
+      "cavity": true
+    },
+    {
+      "id": "stomach",
+      "label": "Stomach",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 4592,
+      "cavity": true
+    },
+    {
+      "id": "pancreas",
+      "label": "Pancreas",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "cavity": false
+    },
+    {
+      "id": "spleen",
+      "label": "Spleen",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "cavity": false
+    },
+    {
+      "id": "small_intestine",
+      "label": "Small intestine & duodenum",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 14796,
+      "cavity": true
+    },
+    {
+      "id": "large_intestine",
+      "label": "Colon & rectum",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 5656,
+      "cavity": true
+    },
+    {
+      "id": "appendix",
+      "label": "Appendix",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 140,
+      "cavity": false
+    },
+    {
+      "id": "kidney_L",
+      "label": "L kidney",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3360,
+      "cavity": true
+    },
+    {
+      "id": "kidney_medulla_L",
+      "label": "L renal medulla",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 308,
+      "cavity": false
+    },
+    {
+      "id": "adrenal_L",
+      "label": "L adrenal gland",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "cavity": false
+    },
+    {
+      "id": "ureter_L",
+      "label": "L ureter",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 468,
+      "cavity": true
+    },
+    {
+      "id": "kidney_R",
+      "label": "R kidney",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3360,
+      "cavity": true
+    },
+    {
+      "id": "kidney_medulla_R",
+      "label": "R renal medulla",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 308,
+      "cavity": false
+    },
+    {
+      "id": "adrenal_R",
+      "label": "R adrenal gland",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "cavity": false
+    },
+    {
+      "id": "ureter_R",
+      "label": "R ureter",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 468,
+      "cavity": true
+    },
+    {
+      "id": "bladder",
+      "label": "Urinary bladder",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3360,
+      "cavity": true
+    },
+    {
+      "id": "urethra",
+      "label": "Urethra",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 180,
+      "cavity": true
+    },
+    {
+      "id": "arteries_network",
+      "label": "Arteries \u00b7 connected vascular tree",
+      "systems": [
+        "arteries"
+      ],
+      "triangles": 23040,
+      "cavity": true
+    },
+    {
+      "id": "veins_network",
+      "label": "Veins \u00b7 connected vascular tree",
+      "systems": [
+        "veins"
+      ],
+      "triangles": 22680,
+      "cavity": true
+    },
+    {
+      "id": "coronary_arteries",
+      "label": "Coronary arteries",
+      "systems": [
+        "arteries"
+      ],
+      "triangles": 1216,
+      "cavity": true
+    },
+    {
+      "id": "nervous_network",
+      "label": "Spinal cord & peripheral nerves",
+      "systems": [
+        "nerves"
+      ],
+      "triangles": 13844,
+      "cavity": false
+    },
+    {
+      "id": "cartilage_shoulder_L",
+      "label": "L shoulder joint cartilage",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_elbow_L",
+      "label": "L elbow joint cartilage",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_wrist_L",
+      "label": "L wrist joint cartilage",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_hip_L",
+      "label": "L hip joint cartilage",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_knee_L",
+      "label": "L knee joint cartilage",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_ankle_L",
+      "label": "L ankle joint cartilage",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "cavity": true
+    },
+    {
+      "id": "lens_L",
+      "label": "L eye lens",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "cavity": false
+    },
+    {
+      "id": "retina_L",
+      "label": "L retina",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3360,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_shoulder_R",
+      "label": "R shoulder joint cartilage",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_elbow_R",
+      "label": "R elbow joint cartilage",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_wrist_R",
+      "label": "R wrist joint cartilage",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_hip_R",
+      "label": "R hip joint cartilage",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_knee_R",
+      "label": "R knee joint cartilage",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_ankle_R",
+      "label": "R ankle joint cartilage",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "cavity": true
+    },
+    {
+      "id": "lens_R",
+      "label": "R eye lens",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "cavity": false
+    },
+    {
+      "id": "retina_R",
+      "label": "R retina",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3360,
+      "cavity": true
+    },
+    {
+      "id": "pineal",
+      "label": "Pineal gland",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "cavity": false
+    },
+    {
+      "id": "thymus",
+      "label": "Thymus",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "cavity": false
+    },
+    {
+      "id": "biliary_tree",
+      "label": "Bile ducts",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 440,
+      "cavity": true
+    },
+    {
+      "id": "brain_white_matter",
+      "label": "Brain \u00b7 deep white matter",
+      "systems": [
+        "organs",
+        "nerves"
+      ],
+      "triangles": 4048,
+      "cavity": false
+    },
+    {
+      "id": "dermis_Body",
+      "label": "Skin \u00b7 Body",
+      "systems": [
+        "skin"
+      ],
+      "triangles": 14476,
+      "cavity": true
+    },
+    {
+      "id": "dermis_Arm_L",
+      "label": "Skin \u00b7 Arm L",
+      "systems": [
+        "skin"
+      ],
+      "triangles": 2012,
+      "cavity": true
+    },
+    {
+      "id": "dermis_Arm_R",
+      "label": "Skin \u00b7 Arm R",
+      "systems": [
+        "skin"
+      ],
+      "triangles": 2012,
+      "cavity": true
+    },
+    {
+      "id": "dermis_Foot_L",
+      "label": "Skin \u00b7 Foot L",
+      "systems": [
+        "skin"
+      ],
+      "triangles": 2632,
+      "cavity": true
+    },
+    {
+      "id": "dermis_Foot_R",
+      "label": "Skin \u00b7 Foot R",
+      "systems": [
+        "skin"
+      ],
+      "triangles": 2632,
+      "cavity": true
+    },
+    {
+      "id": "dermis_Ear_L",
+      "label": "Skin \u00b7 Ear L",
+      "systems": [
+        "skin"
+      ],
+      "triangles": 3580,
+      "cavity": true
+    },
+    {
+      "id": "dermis_Ear_R",
+      "label": "Skin \u00b7 Ear R",
+      "systems": [
+        "skin"
+      ],
+      "triangles": 3580,
+      "cavity": true
+    },
+    {
+      "id": "dermis_Tail",
+      "label": "Skin \u00b7 Tail",
+      "systems": [
+        "skin"
+      ],
+      "triangles": 1028,
+      "cavity": true
+    }
+  ],
+  "triangles": 442604,
+  "materials": {
+    "Anatomy_airway": {
+      "tint": [
+        1,
+        1,
+        1
+      ],
+      "texture": null
+    },
+    "Anatomy_arteries": {
+      "tint": [
+        1,
+        1,
+        1
+      ],
+      "texture": null
+    },
+    "Anatomy_brain": {
+      "tint": [
+        0.95,
+        0.8,
+        0.65
+      ],
+      "texture": "organ-albedo.png"
+    },
+    "Anatomy_cartilage": {
+      "tint": [
+        1,
+        1,
+        1
+      ],
+      "texture": null
+    },
+    "Anatomy_cortical_bone": {
+      "tint": [
+        1,
+        1,
+        1
+      ],
+      "texture": null
+    },
+    "Anatomy_dermis": {
+      "tint": [
+        1,
+        1,
+        1
+      ],
+      "texture": null
+    },
+    "Anatomy_fat": {
+      "tint": [
+        1,
+        1,
+        1
+      ],
+      "texture": null
+    },
+    "Anatomy_gallbladder": {
+      "tint": [
+        1,
+        1,
+        1
+      ],
+      "texture": null
+    },
+    "Anatomy_glands": {
+      "tint": [
+        0.87,
+        0.67,
+        0.3
+      ],
+      "texture": "organ-albedo.png"
+    },
+    "Anatomy_intestine": {
+      "tint": [
+        0.99,
+        0.7,
+        0.48
+      ],
+      "texture": "organ-albedo.png"
+    },
+    "Anatomy_kidney": {
+      "tint": [
+        0.61,
+        0.22,
+        0.21
+      ],
+      "texture": "organ-albedo.png"
+    },
+    "Anatomy_liver": {
+      "tint": [
+        0.47,
+        0.24,
+        0.2
+      ],
+      "texture": "organ-albedo.png"
+    },
+    "Anatomy_lungs": {
+      "tint": [
+        0.91,
+        0.59,
+        0.59
+      ],
+      "texture": "organ-albedo.png"
+    },
+    "Anatomy_marrow": {
+      "tint": [
+        1,
+        1,
+        1
+      ],
+      "texture": null
+    },
+    "Anatomy_muscle": {
+      "tint": [
+        0.83,
+        0.59,
+        0.53
+      ],
+      "texture": "muscle-albedo.png"
+    },
+    "Anatomy_myocardium": {
+      "tint": [
+        0.64,
+        0.25,
+        0.25
+      ],
+      "texture": "organ-albedo.png"
+    },
+    "Anatomy_nerves": {
+      "tint": [
+        1,
+        1,
+        1
+      ],
+      "texture": null
+    },
+    "Anatomy_sclera": {
+      "tint": [
+        1,
+        1,
+        1
+      ],
+      "texture": null
+    },
+    "Anatomy_spleen": {
+      "tint": [
+        0.38,
+        0.22,
+        0.34
+      ],
+      "texture": "organ-albedo.png"
+    },
+    "Anatomy_stomach": {
+      "tint": [
+        0.95,
+        0.64,
+        0.42
+      ],
+      "texture": "organ-albedo.png"
+    },
+    "Anatomy_tendon": {
+      "tint": [
+        1,
+        1,
+        1
+      ],
+      "texture": null
+    },
+    "Anatomy_veins": {
+      "tint": [
+        1,
+        1,
+        1
+      ],
+      "texture": null
+    },
+    "Anatomy_white_matter": {
+      "tint": [
+        1,
+        1,
+        1
+      ],
+      "texture": null
+    }
+  }
+}

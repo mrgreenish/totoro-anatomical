@@ -4,19 +4,27 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { createTotoroMotion } from './totoro-motion';
+import { createAnatomyExplorer, type AnatomyExplorer } from './totoro-anatomy';
+import type { AnatomyMode, AnatomyState, AnatomySystem } from './anatomy-state';
 
 export type SculptureController = {
   setRotate(value: boolean): void;
   setAnimate(value: boolean): void;
   setNight(value: boolean): void;
+  setMode(value: AnatomyMode): Promise<void>;
+  setCut(value: Partial<AnatomyState['cut']>): void;
+  setExplosion(value: number): void;
+  setVisibleSystems(value: AnatomySystem[]): void;
+  selectPart(id: string | null): void;
   reset(): void;
   dispose(): void;
 };
-type Options = { signal: AbortSignal; animate: boolean; onReady(): void; onError(): void };
+type Options = { signal: AbortSignal; animate: boolean; onReady(): void; onError(): void; onAnatomyState?(state: AnatomyState): void };
 const damp = THREE.MathUtils.damp;
 
 export async function createSculpture(canvas: HTMLCanvasElement, options: Options): Promise<SculptureController> {
-  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'high-performance' });
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, stencil: true, powerPreference: 'high-performance' });
+  renderer.localClippingEnabled = true;
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.AgXToneMapping;
@@ -102,6 +110,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   scene.add(new THREE.Points(particleGeometry, particleMaterial));
   const root = new THREE.Group(); scene.add(root);
   let model: THREE.Group | null = null;
+  let anatomy: AnatomyExplorer | undefined;
   let animated = options.animate, rotating = false, disposed = false, running = false;
   let night = 0, nightTarget = 0, frame = 0, lastTime = 0, elapsed = 0;
   let lastAzimuth = controls.getAzimuthalAngle(), interactionUntil = 0, resetting = false;
@@ -109,8 +118,17 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   const motion = createTotoroMotion();
   let earLeft: THREE.Object3D | undefined, earRight: THREE.Object3D | undefined, leaf: THREE.Object3D | undefined;
   let armLeft: THREE.Object3D | undefined, armRight: THREE.Object3D | undefined;
-  let catchlights: THREE.Object3D | undefined;
-  const blinkObjects: { object: THREE.Object3D; scale: number }[] = [];
+  let breathBone: THREE.Object3D | undefined, tailBone: THREE.Object3D | undefined;
+  const eyelids: { mesh: THREE.Mesh; index: number }[] = [];
+  const restRotations = new Map<THREE.Object3D, THREE.Quaternion>();
+  const localRotation = new THREE.Quaternion();
+  const bendAxis = new THREE.Vector3(0, 0, 1);
+  function bend(object: THREE.Object3D | undefined, angle: number) {
+    if (!object) return;
+    const rest = restRotations.get(object);
+    if (rest) object.quaternion.copy(rest).multiply(localRotation.setFromAxisAngle(bendAxis, angle));
+  }
+  const frameSamples: number[] = [];
   let nextBlink = 3.4, blinkStart = -10;
   let pixelRatio = Math.min(window.devicePixelRatio || 1, 1.8), slowFrames = 0;
   const dayStage = new THREE.Color(0xdbdfcf), nightStage = new THREE.Color(0x3c5054);
@@ -123,7 +141,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     renderer.setPixelRatio(pixelRatio); renderer.setSize(width, height, false);
     camera.aspect = width / height;
     camera.fov = camera.aspect < .8 ? 30 + (.8 - camera.aspect) * 21 : 30;
-    camera.updateProjectionMatrix(); particleMaterial.uniforms.size.value = pixelRatio; wake();
+    camera.updateProjectionMatrix(); particleMaterial.uniforms.size.value = pixelRatio; anatomy?.resize(); wake();
   }
   function wake() {
     if (disposed || options.signal.aborted || document.hidden || running) return;
@@ -132,7 +150,8 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   function tick(now: number) {
     if (disposed) return;
     const rawDt = (now - lastTime) / 1000, dt = Math.min(rawDt, .05); lastTime = now;
-    if (animated) elapsed += dt;
+    const movingCharacter = animated && !anatomy?.active;
+    if (movingCharacter) elapsed += dt;
     if (resetting) {
       camera.position.lerp(initialPosition, 1 - Math.exp(-8 * dt));
       controls.target.lerp(initialTarget, 1 - Math.exp(-8 * dt));
@@ -141,28 +160,31 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     // OrbitControls' damping factor is per update; normalize the render updates
     // to elapsed time so release glide does not speed up on high-refresh screens.
     controls.dampingFactor = 1 - Math.exp(-3.2 * Math.max(dt, .001));
-    controls.autoRotate = rotating && now > interactionUntil && !resetting;
+    controls.autoRotate = rotating && !anatomy?.active && now > interactionUntil && !resetting;
     const changed = controls.update(dt);
     const angle = controls.getAzimuthalAngle();
     const delta = Math.atan2(Math.sin(angle - lastAzimuth), Math.cos(angle - lastAzimuth)); lastAzimuth = angle;
     const polar = controls.getPolarAngle(), polarDelta = polar - lastPolar; lastPolar = polar;
-    if (animated && !resetting) motion.update(delta / Math.max(dt, .001), polarDelta / Math.max(dt, .001), dt);
+    if (movingCharacter && !resetting) motion.update(delta / Math.max(dt, .001), polarDelta / Math.max(dt, .001), dt);
     else motion.update(0, 0, dt);
-    const breath = animated ? Math.sin(elapsed * 1.45) : 0;
+    const breath = movingCharacter ? Math.sin(elapsed * 1.45) : 0;
     if (model) {
-      model.scale.set(1 + breath * .003, 1 + breath * .005, 1 + breath * .004);
       model.rotation.set(motion.pitch.position, motion.yaw.position, motion.lean.position);
     }
-    if (earLeft) earLeft.rotation.z = motion.ears.position + (animated ? Math.sin(elapsed * 1.8) * .011 : 0);
-    if (earRight) earRight.rotation.z = motion.ears.position * 1.13 + (animated ? Math.sin(elapsed * 1.8 + .6) * .012 : 0);
-    if (leaf) { leaf.rotation.z = motion.leaf.position + (animated ? Math.sin(elapsed * 1.6) * .015 : 0); leaf.rotation.x = -motion.pitch.position * 1.3 + (animated ? Math.sin(elapsed * 1.2) * .016 : 0); }
-    if (armLeft) armLeft.rotation.z = (animated ? Math.sin(elapsed * 1.45) * .012 : 0) + motion.arms.position;
-    if (armRight) armRight.rotation.z = (animated ? -Math.sin(elapsed * 1.45 + .4) * .012 : 0) + motion.arms.position;
-    if (animated && elapsed > nextBlink) { blinkStart = elapsed; nextBlink = elapsed + 3.3 + random() * 4; }
+    if (breathBone) breathBone.scale.set(1 + breath * .013, 1 + breath * .004, 1 + breath * .016);
+    bend(earLeft, motion.ears.position + (movingCharacter ? Math.sin(elapsed * 1.8) * .016 : 0));
+    bend(earRight, motion.ears.position * 1.13 + (movingCharacter ? Math.sin(elapsed * 1.8 + .6) * .019 : 0));
+    if (leaf) { leaf.rotation.z = motion.leaf.position + (movingCharacter ? Math.sin(elapsed * 1.6) * .015 : 0); leaf.rotation.x = -motion.pitch.position * 1.3 + (movingCharacter ? Math.sin(elapsed * 1.2) * .016 : 0); }
+    bend(armLeft, (movingCharacter ? Math.sin(elapsed * 1.45) * .017 : 0) + motion.arms.position);
+    bend(armRight, (movingCharacter ? -Math.sin(elapsed * 1.45 + .4) * .017 : 0) + motion.arms.position);
+    bend(tailBone, -motion.yaw.position * .26 + (movingCharacter ? Math.sin(elapsed * .9 + 1) * .020 : 0));
+    if (movingCharacter && elapsed > nextBlink) { blinkStart = elapsed; nextBlink = elapsed + 3.3 + random() * 4; }
     const blinkTime = elapsed - blinkStart;
-    const blink = animated && blinkTime < .22 ? 1 - Math.sin(blinkTime / .22 * Math.PI) * .94 : 1;
-    for (const eye of blinkObjects) eye.object.scale.y = eye.scale * blink;
-    if (catchlights) catchlights.visible = blink > .85;
+    // Fast closure, a brief full closure, then a softer reopening.
+    const blink = !movingCharacter || blinkTime < 0 || blinkTime > .28 ? 0
+      : blinkTime < .09 ? THREE.MathUtils.smoothstep(blinkTime, 0, .09)
+      : blinkTime < .12 ? 1 : 1 - THREE.MathUtils.smoothstep(blinkTime, .12, .28);
+    for (const lid of eyelids) lid.mesh.morphTargetInfluences![lid.index] = blink;
     particleMaterial.uniforms.time.value = elapsed;
     night = damp(night, nightTarget, 3, dt);
     key.color.copy(dayKey).lerp(nightKey, night); key.intensity = THREE.MathUtils.lerp(2.7, 2.2, night);
@@ -170,15 +192,28 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     rim.color.copy(dayRim).lerp(nightRim, night); rim.intensity = THREE.MathUtils.lerp(2.5, 4.5, night);
     fill.intensity = THREE.MathUtils.lerp(.65, .4, night); scene.environmentIntensity = THREE.MathUtils.lerp(.48, .28, night);
     plinthMaterial.color.copy(dayStage).lerp(nightStage, night); edgeMaterial.color.copy(plinthMaterial.color);
-    particleMaterial.uniforms.opacity.value = THREE.MathUtils.lerp(.15, .62, night);
+    particleMaterial.uniforms.opacity.value = anatomy?.active ? 0 : THREE.MathUtils.lerp(.15, .62, night);
+    const anatomySettling = anatomy?.update(dt) ?? false;
+    if (anatomy?.active) { key.color.set(0xfff6eb); fill.intensity = .95; ambient.intensity = .7; scene.environmentIntensity = .55; }
     renderer.render(scene, camera);
+    if (process.env.NODE_ENV !== 'production' && model && rawDt > 0 && rawDt < .2) {
+      frameSamples.push(rawDt * 1000);
+      if (frameSamples.length === 180) {
+        const sorted = [...frameSamples].sort((a, b) => a - b);
+        canvas.dataset.renderStats = JSON.stringify({ medianMs: sorted[90], p95Ms: sorted[171], pixelRatio,
+          triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.calls,
+          width: canvas.clientWidth, height: canvas.clientHeight, eyelids: eyelids.length,
+          rig: !!breathBone, asset: 'refinement-1' });
+        frameSamples.length = 0;
+      }
+    }
     // Adapt only after sustained slow frames, preserving crispness on capable devices.
     if (rawDt > .025 && rawDt < .2 && model) slowFrames++; else slowFrames = Math.max(0, slowFrames - 1);
     if (slowFrames > 100 && pixelRatio > 1.1) { pixelRatio = Math.max(1, pixelRatio - .25); slowFrames = 0; resize(); }
-    const settling = Math.abs(night - nightTarget) > .001 || motion.settling || resetting;
-    if (animated || rotating || changed || settling) frame = requestAnimationFrame(tick); else running = false;
+    const settling = Math.abs(night - nightTarget) > .001 || motion.settling || resetting || anatomySettling;
+    if (movingCharacter || (rotating && !anatomy?.active) || changed || settling) frame = requestAnimationFrame(tick); else running = false;
   }
-  const onStart = () => { interactionUntil = Infinity; resetting = false; wake(); };
+  const onStart = () => { interactionUntil = Infinity; resetting = false; anatomy?.stopCameraMotion(); wake(); };
   const onEnd = () => { interactionUntil = performance.now() + 1800; wake(); };
   controls.addEventListener('start', onStart); controls.addEventListener('end', onEnd); controls.addEventListener('change', wake);
   const onVisibility = () => { if (document.hidden) { cancelAnimationFrame(frame); running = false; } else wake(); };
@@ -190,16 +225,25 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     setRotate(value) { rotating = value; interactionUntil = 0; wake(); },
     setAnimate(value) { animated = value; if (!value) motion.reset(); wake(); },
     setNight(value) { nightTarget = value ? 1 : 0; wake(); },
-    reset() { rotating = false; resetting = true; motion.reset(); wake(); },
+    async setMode(value) { resetting = false; motion.reset(); await anatomy?.setMode(value); wake(); },
+    setCut(value) { anatomy?.setCut(value); },
+    setExplosion(value) { anatomy?.setExplosion(value); },
+    setVisibleSystems(value) { anatomy?.setVisibleSystems(value); },
+    selectPart(id) { anatomy?.selectPart(id); },
+    reset() { rotating = false; resetting = true; anatomy?.reset(); motion.reset(); wake(); },
     dispose() {
       if (disposed) return;
       disposed = true; cancelAnimationFrame(frame); resizeObserver.disconnect(); controls.dispose();
+      anatomy?.dispose();
       document.removeEventListener('visibilitychange', onVisibility); canvas.removeEventListener('webglcontextlost', onContextLost); canvas.removeEventListener('keydown', onKey);
       const geometries = new Set<THREE.BufferGeometry>(), materials = new Set<THREE.Material>();
+      const skeletons = new Set<THREE.Skeleton>();
       scene.traverse(object => { if (object instanceof THREE.Mesh || object instanceof THREE.Points) {
         geometries.add(object.geometry); (Array.isArray(object.material) ? object.material : [object.material]).forEach(m => materials.add(m));
+        if (object instanceof THREE.SkinnedMesh) skeletons.add(object.skeleton);
       } });
       geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose());
+      skeletons.forEach(s => s.dispose());
       environment.dispose(); shadowTexture.dispose(); key.shadow.dispose(); renderer.dispose();
     },
   };
@@ -222,7 +266,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   canvas.addEventListener('keydown', onKey); resize();
 
   try {
-    const response = await fetch('/models/totoro.glb?v=coat-paws-3', { signal: options.signal });
+    const response = await fetch('/models/totoro.glb?v=refinement-1', { signal: options.signal });
     if (!response.ok) throw new Error('Model unavailable');
     const bytes = await response.arrayBuffer();
     if (options.signal.aborted) { controller.dispose(); return controller; }
@@ -242,8 +286,8 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
           const ivory = old.name.includes('Belly');
           material = new THREE.MeshPhysicalMaterial({
             color: old.color, vertexColors: object.geometry.hasAttribute('color'),
-            roughness: fibers ? .86 : .96, metalness: 0,
-            sheen: fibers ? .65 : .38, sheenColor: ivory ? 0xd6ceac : 0x8e9a94,
+            roughness: fibers ? .91 : .96, metalness: 0,
+            sheen: fibers ? .72 : .40, sheenColor: ivory ? 0xd6ceac : 0x8e9a94,
             sheenRoughness: .9, side: fibers ? THREE.DoubleSide : THREE.FrontSide,
           });
           material.name = old.name;
@@ -271,7 +315,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
               vec3 r1 = cross(sigmaY, normal), r2 = cross(normal, sigmaX);
               float determinant = dot(sigmaX, r1) * faceDirection;
               vec3 gradient = sign(determinant) * (dFdx(fuzz) * r1 + dFdy(fuzz) * r2);
-              normal = normalize(max(abs(determinant), .00001) * normal - gradient * .19);
+              normal = normalize(max(abs(determinant), .00001) * normal - gradient * .075);
             `);
           };
           material.customProgramCacheKey = () => `groomed-fur-v3-${fibers}`; materialCache.set(cacheKey, material);
@@ -285,22 +329,29 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     for (const name of ['Foot_L', 'Foot_R']) {
       const foot = model.getObjectByName(name); if (foot) root.attach(foot);
     }
-    // Compression recenters meshes; explicit pivots retain natural ear/shoulder motion.
-    function pivot(name: string, position: THREE.Vector3) {
-      const object = model!.getObjectByName(name); if (!object) return undefined;
-      const group = new THREE.Group(); group.position.copy(position); model!.add(group);
-      group.updateMatrixWorld(true); group.attach(object); return group;
+    earLeft = model.getObjectByName('EarBend_L'); earRight = model.getObjectByName('EarBend_R');
+    armLeft = model.getObjectByName('ArmSwing_L'); armRight = model.getObjectByName('ArmSwing_R');
+    breathBone = model.getObjectByName('Breath'); tailBone = model.getObjectByName('TailSway');
+    for (const object of [earLeft, earRight, armLeft, armRight, tailBone]) {
+      if (object) restRotations.set(object, object.quaternion.clone());
     }
-    earLeft = pivot('Ear_L', new THREE.Vector3(-.72, 3.83, -.045));
-    earRight = pivot('Ear_R', new THREE.Vector3(.72, 3.83, -.045));
-    armLeft = pivot('Arm_L', new THREE.Vector3(-1.2, 2.6, -.015));
-    armRight = pivot('Arm_R', new THREE.Vector3(1.2, 2.6, -.015));
-    leaf = model.getObjectByName('Leaf'); catchlights = model.getObjectByName('Eye_catchlights');
-    for (const name of ['Eye_L', 'Eye_R', 'Pupil_L', 'Pupil_R']) {
-      const object = model.getObjectByName(name); if (object) blinkObjects.push({ object, scale: object.scale.y });
+    leaf = model.getObjectByName('Leaf');
+    for (const name of ['Eyelids_L', 'Eyelids_R']) {
+      const object = model.getObjectByName(name);
+      if (object instanceof THREE.Mesh && object.morphTargetDictionary?.Blink !== undefined) {
+        eyelids.push({ mesh: object, index: object.morphTargetDictionary.Blink });
+        object.morphTargetInfluences![object.morphTargetDictionary.Blink] = 0;
+      }
     }
+    anatomy = createAnatomyExplorer({ canvas, renderer, scene, camera, controls, exterior: root,
+      signal: options.signal, wake, onState: state => options.onAnatomyState?.(state), onMode: () => motion.reset() });
     await renderer.compileAsync(scene, camera);
     if (!options.signal.aborted && !disposed) { renderer.render(scene, camera); options.onReady(); wake(); } else controller.dispose();
-  } catch { if (!options.signal.aborted) options.onError(); }
+  } catch (error) {
+    if (!options.signal.aborted) {
+      if (process.env.NODE_ENV !== 'production') console.error('Sculpture loading failed', error);
+      options.onError();
+    }
+  }
   return controller;
 }

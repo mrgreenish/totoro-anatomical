@@ -1,0 +1,147 @@
+{
+  "passed": true,
+  "closedSurfaces": {
+    "Body": 0,
+    "Ear_L": 0,
+    "Ear_R": 0,
+    "Arm_L": 0,
+    "Arm_R": 0,
+    "Foot_L": 0,
+    "Foot_R": 0,
+    "Tail": 0
+  },
+  "coatAttachments": [
+    {
+      "pose": "rest",
+      "surface": "Body",
+      "samples": 752,
+      "maxRootDistance": 0.0033648263197392225
+    },
+    {
+      "pose": "rest",
+      "surface": "Body",
+      "samples": 96,
+      "maxRootDistance": 0.003088166005909443
+    },
+    {
+      "pose": "rest",
+      "surface": "Cream belly",
+      "samples": 128,
+      "maxRootDistance": 0.002813408151268959
+    },
+    {
+      "pose": "rest",
+      "surface": "Belly chevrons",
+      "samples": 10,
+      "maxRootDistance": 0.002026886446401477
+    },
+    {
+      "pose": "rest",
+      "surface": "Arm_L",
+      "samples": 129,
+      "maxRootDistance": 0.0010001184418797493
+    },
+    {
+      "pose": "rest",
+      "surface": "Arm_R",
+      "samples": 129,
+      "maxRootDistance": 0.0010001019109040499
+    },
+    {
+      "pose": "rest",
+      "surface": "Ear_L",
+      "samples": 27,
+      "maxRootDistance": 0.000999982818029821
+    },
+    {
+      "pose": "rest",
+      "surface": "Ear_R",
+      "samples": 27,
+      "maxRootDistance": 0.0010000126203522086
+    },
+    {
+      "pose": "rest",
+      "surface": "Tail",
+      "samples": 85,
+      "maxRootDistance": 0.0010000035399571061
+    },
+    {
+      "pose": "rest",
+      "surface": "Foot_L",
+      "samples": 18,
+      "maxRootDistance": 0.0010000234469771385
+    },
+    {
+      "pose": "rest",
+      "surface": "Foot_R",
+      "samples": 19,
+      "maxRootDistance": 0.0009999533649533987
+    },
+    {
+      "pose": "motion",
+      "surface": "Body",
+      "samples": 752,
+      "maxRootDistance": 0.003355790628120303
+    },
+    {
+      "pose": "motion",
+      "surface": "Body",
+      "samples": 96,
+      "maxRootDistance": 0.003088166005909443
+    },
+    {
+      "pose": "motion",
+      "surface": "Cream belly",
+      "samples": 128,
+      "maxRootDistance": 0.0028457222506403923
+    },
+    {
+      "pose": "motion",
+      "surface": "Belly chevrons",
+      "samples": 10,
+      "maxRootDistance": 0.002057513454928994
+    },
+    {
+      "pose": "motion",
+      "surface": "Arm_L",
+      "samples": 129,
+      "maxRootDistance": 0.0011138777481392026
+    },
+    {
+      "pose": "motion",
+      "surface": "Arm_R",
+      "samples": 129,
+      "maxRootDistance": 0.0010972123127430677
+    },
+    {
+      "pose": "motion",
+      "surface": "Ear_L",
+      "samples": 27,
+      "maxRootDistance": 0.0011876766802743077
+    },
+    {
+      "pose": "motion",
+      "surface": "Ear_R",
+      "samples": 27,
+      "maxRootDistance": 0.0011737619061022997
+    },
+    {
+      "pose": "motion",
+      "surface": "Tail",
+      "samples": 85,
+      "maxRootDistance": 0.0013295294484123588
+    },
+    {
+      "pose": "motion",
+      "surface": "Foot_L",
+      "samples": 18,
+      "maxRootDistance": 0.0010000234469771385
+    },
+    {
+      "pose": "motion",
+      "surface": "Foot_R",
+      "samples": 19,
+      "maxRootDistance": 0.0009999533649533987
+    }
+  ]
+}

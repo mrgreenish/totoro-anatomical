@@ -1,0 +1,58 @@
+{
+  "passed": true,
+  "parts": 264,
+  "triangles": 442604,
+  "bytes": 7929248,
+  "textures": [
+    {
+      "name": "bone-normal",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "bone-roughness",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "muscle-normal",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "muscle-albedo",
+      "width": 1024,
+      "height": 1024,
+      "format": "webp"
+    },
+    {
+      "name": "muscle-roughness",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "organ-normal",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    },
+    {
+      "name": "organ-albedo",
+      "width": 1024,
+      "height": 1024,
+      "format": "webp"
+    },
+    {
+      "name": "organ-roughness",
+      "width": 512,
+      "height": 512,
+      "format": "png"
+    }
+  ],
+  "metadataPreserved": true,
+  "tangentsPresent": true
+}

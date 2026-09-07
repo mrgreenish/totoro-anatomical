@@ -7,10 +7,12 @@ An interactive Totoro sculpture created in Blender 5.1, exported to glTF, and re
 - `artwork/totoro.blend`: editable model, materials, studio lighting, and camera.
 - `artwork/totoro-render.png`: transparent Cycles render.
 - `artwork/totoro-raw.glb`: uncompressed export.
-- `public/models/totoro.glb`: Meshopt-compressed browser model (6,608,872 bytes).
+- `public/models/totoro.glb`: Meshopt-compressed browser model (4,844,876 bytes).
 - `scripts/build_totoro.py`: deterministic procedural Blender source.
+- `scripts/totoro_rig.py`: seven-bone deformation rig, UVs and shared skin weights.
 - `scripts/optimize-model.mjs`: export optimization and glTF validation.
-- `scripts/verify-model.mjs`: compressed-model decoding, visible teeth, attachment and camera checks.
+- `scripts/verify-model.mjs`: compressed-model decoding, visible teeth/markings, eyelids, skinning, attachment and camera checks.
+- `scripts/verify_totoro_blender.py`: closed body surfaces and fur attachment in rest and deformed poses.
 - `scripts/render_totoro_views.py`: repeatable front, three-quarter, profile and rear renders.
 
 The sculpt has a wide crescent grin with ten individually curved enamel crowns, a broad nose, smaller inset eyes, lofted cheeks and torso, shaped forearms, five attached claws per hand, lofted paws with flat soles and three short embedded claws, a dense groomed coat and a leaf draped over the crown. Face and profile proportions were studied against [Studio Ghibli's official Totoro stills](https://www.ghibli.jp/works/totoro/), particularly frames 030, 032, 034 and 036. The result is a stylized 3D adaptation; the neutral stance and concealed anatomy are inferred.
@@ -21,7 +23,9 @@ Drag to orbit, scroll or pinch to zoom. With the canvas focused, arrow keys rota
 
 ## Rendering
 
-460,408 model triangles, 71 mesh draws, shared geometry/materials, no external texture/HDR requests. Meshopt compression cuts the 27.4 MB model to 6.61 MB. A WebP render appears while the GPU programs compile. Bent three-triangle strands, surface-aligned normals, root-to-tip vertex colors and shorter face/belly fur create the coat. Area-weighted sampling covers appendages evenly. The underlying groom texture fades below pixel size to avoid shimmer. Physical sheen, AgX tone mapping, balanced studio reflections, softer variance shadows and contact shadows finish the real-time render. Versioned asset requests prevent the earlier closed-mouth sculpture from remaining in the browser cache.
+324,967 model triangles and 57 mesh draws: 29.4% fewer triangles and a 26.7% smaller download than the previous coat. Meshopt compression cuts the 25.6 MB export to 4.84 MB. There are no external texture/HDR requests. A WebP render appears while the GPU programs compile. Shorter bent strands, shared fiber materials, surface-aligned normals and regional vertex colors create a coherent coat across the body, arms and tail. The belly boundary feathers into grey, and the seven chevrons follow the belly surface. The thinner curled leaf clears the crown. Physical sheen, AgX tone mapping, studio reflections and contact shadows finish the real-time render. Versioned model and poster requests refresh the cached sculpture together.
+
+Both eyelids have a Blink shape key that closes over unchanged eyeballs. Seven bones deform breathing, shoulders, ears and tail; their fur, claws and belly markings share the corresponding skin weights. The head keeps its proportions, and the paws remain planted. Body poles and ear openings are closed. Regional strand parameters, shape keys, UVs and armature modifiers remain editable in the native source. The chosen coat uses fewer mesh strands plus subtle runtime microdetail; baked texture maps and simulated hair were not added.
 
 Animation stays outside React state. Orbit damping and character animation use delta time. Pixel ratio is capped at 1.8 and decreases after sustained slow frames. Rendering stops in hidden tabs, and stops after settling when motion is paused. GPU resources and listeners are released on unmount. Reduced-motion preferences disable initial idle animation.
 
@@ -39,6 +43,38 @@ Recreate the model with `blender -b --python scripts/build_totoro.py`, then run 
 
 ## Verification
 
-The compressed file is decoded with the gallery's Three.js loader and Meshopt decoder. Verification checks all named animation parts, finite vertices, transfer/triangle budgets, expected bounds, actual front-ray visibility and curved depth of all ten teeth, claw/fur attachment transforms, and initial desktop/mobile camera framing. Results are in `artwork/model-verification.json`. The glTF validator reports zero errors and warnings; it cannot validate the Meshopt extension itself, so the Three.js decoder check verifies that path. Fixed front, three-quarter, profile and rear Cycles renders are reviewed for likeness and attachment. The numerical motion checks pass at 30, 60 and 120 Hz, with a maximum angular difference below 0.005 radians. GPU browser interactions and frame rate have not been benchmarked across target devices; the denser coat increases download and geometry cost. Opaque-silhouette comparison excludes the translucent ground shadow and retains 98.96% overlap with the previous sculpt.
+The compressed file is decoded with the gallery's Three.js loader and Meshopt decoder. Verification checks all named animation parts, finite vertices, transfer/triangle budgets, expected bounds, front-ray visibility of ten teeth and seven markings, normalized skin weights, actual deformed vertices, eyelid closure and initial desktop/mobile camera framing. Results are in `artwork/model-verification.json`. Native Blender checks find no boundary edges on the body or appendages and verify sampled fur roots stay within 0.0034 model units of their surfaces in rest and exaggerated motion poses. The glTF validator reports zero errors and warnings; its unsupported Meshopt extension is checked with the actual Three.js decoder.
+
+Front, three-quarter, profile and rear Cycles renders were reviewed. The opaque silhouette retains 99.06% overlap with the previous sculpt. Browser QA covered dragging, keyboard orbit/zoom, both lighting modes, auto-rotation, pause/reset, fullscreen and a 390 × 844 viewport without horizontal overflow. A stable desktop observation at DPR 1 measured 10 ms median / 11 ms p95 frame intervals; this is not a hardware-wide performance benchmark. Numerical motion checks pass at 30/60/120 Hz with maximum angular difference below 0.005 radians. TypeScript, lint on changed application/verification files and the production build pass. See `artwork/browser-verification.json` and `artwork/blender-improvement-plan.md` for scope and implementation notes.
 
 Fan-made tribute to the character from *My Neighbor Totoro*. Not affiliated with Studio Ghibli.
+
+## Anatomy explorer
+
+Exterior remains the initial view. Split uses one model-space cutting plane, with three directions, reversal, an on-model drag handle and a keyboard slider. Stencil passes create tissue-colored section surfaces from closed volumes, including inward cavity walls. Only visible volumes intersecting the plane participate. Exploded interpolates captured original transforms toward authored diagram offsets; bones stay central, skin and muscles move aside, organs fan forward, and the vascular and nervous trees move into layers. Click a part or choose its name to focus it. The seven system filters persist across anatomy modes. Character deformation pauses while anatomy is active, preserving the previous motion preference. Reset clears the anatomy controls and returns to Exterior.
+
+The additional anatomy contains 264 identifiable parts and 442,604 triangles. The optimized asset is about 7.93 MB. This is an imagined, human-inspired anatomical model fitted to Totoro, with major visible structures, simplified branching networks and attachment regions. It is not a medical reference. Microscopic structures, reproductive anatomy and a complete lymphatic network are outside its scope.
+
+The editable source is `artwork/anatomy/totoro-anatomy.blend`; the previous exterior file remains separate. Geometry and original transforms are stored alongside `partId`, label, system membership, assembly group, cavity flags and explosion offsets. Blender uses Z up / front −Y; metadata offsets and the browser use glTF Y up / front +Z. The manifest, exported validation reports, texture maps and review renders are under `artwork/anatomy/`.
+
+### Rebuild through Blender MCP
+
+Install the [Blender MCP add-on and server](https://github.com/ahujasid/blender-mcp), then open a dedicated Blender GUI instance with `blender artwork/totoro.blend --python scripts/blender_mcp_host.py`. Its add-on listens locally on port 9877. `scripts/blender_mcp_client.py` launches the official MCP server with `uvx`, initializes a genuine MCP session, and calls the add-on's `execute_blender_code` tool. It does not modify the original exterior file. Keep Blender's GUI event loop running; the add-on cannot execute modeling in Blender background mode.
+
+```sh
+uv run --with 'mcp>=1.9,<2' scripts/blender_mcp_client.py --info
+uv run --with 'mcp>=1.9,<2' scripts/blender_mcp_client.py scripts/build_anatomy.py skeleton
+uv run --with 'mcp>=1.9,<2' scripts/blender_mcp_client.py scripts/build_anatomy.py organs
+uv run --with 'mcp>=1.9,<2' scripts/blender_mcp_client.py scripts/build_anatomy.py muscles
+uv run --with 'mcp>=1.9,<2' scripts/blender_mcp_client.py scripts/build_anatomy.py networks
+uv run --with 'mcp>=1.9,<2' scripts/blender_mcp_client.py scripts/build_anatomy.py details
+uv run --with 'mcp>=1.9,<2' scripts/blender_mcp_client.py scripts/bake_anatomy.py
+uv run --with 'mcp>=1.9,<2' scripts/blender_mcp_client.py scripts/finalize_anatomy.py
+node scripts/optimize-anatomy.mjs
+node scripts/verify-anatomy-asset.mjs
+node scripts/verify-anatomy-runtime.mjs
+```
+
+`BLENDER_MCP_SOURCE` can point to a checkout of the integration. Each geometry stage is reproducible; the skeleton stage starts a fresh anatomy collection. The final pass fits superficial parts to the source envelope, preserves the tissue topology, triangulates only for export, and restores editable geometry afterward. Albedo textures were generated with Image Gen. Normal and roughness maps were independently baked in Blender; the web export keeps these channels lossless and optimizes the albedo maps to WebP. The optimization scripts use the installed `sharp` encoder.
+
+Anatomical cavity placement follows [OpenStax Anatomy and Physiology 2e, anatomical terminology](https://openstax.org/books/anatomy-and-physiology-2e/pages/1-6-anatomical-terminology). Runtime section passes follow the [Three.js clipping stencil example](https://threejs.org/examples/webgl_clipping_stencil.html). Blender Boolean review sections and browser stencil sections use different algorithms; the browser is the final reference for interactive cuts.

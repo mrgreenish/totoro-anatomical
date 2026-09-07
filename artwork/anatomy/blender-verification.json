@@ -1,0 +1,3454 @@
+{
+  "passed": true,
+  "parts": 264,
+  "triangles": 442604,
+  "systems": [
+    "arteries",
+    "bones",
+    "muscles",
+    "nerves",
+    "organs",
+    "skin",
+    "veins"
+  ],
+  "errors": [],
+  "meshes": [
+    {
+      "id": "skull",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 8820,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 1,
+      "volume": 0.56242803,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "mandible",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 696,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.06168349,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "tooth_roots",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 600,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00188283,
+      "components": 10,
+      "inwardCavities": 2,
+      "cavity": false
+    },
+    {
+      "id": "vertebra_01",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00365813,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_01",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00035105,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_02",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00365813,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_02",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00035105,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_03",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00365813,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_03",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00035105,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_04",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00365813,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_04",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00035105,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_05",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00365813,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_05",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00035105,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_06",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00365813,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_06",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00035105,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_07",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00365813,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_07",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00035105,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_08",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00365813,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_08",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00035105,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_09",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00365813,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_09",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00035105,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_10",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00365813,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_10",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00035105,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_11",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00365813,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_11",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00035105,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_12",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00365813,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_12",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00035105,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_13",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00365813,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_13",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00035105,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_14",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00365813,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_14",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00035105,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_15",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00365813,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_15",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00035105,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_16",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00365813,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_16",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00035105,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_17",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00365813,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_17",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00035105,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_18",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00365813,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_18",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00035104,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_19",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00365813,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_19",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00035104,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_20",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00266518,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_20",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00021236,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_21",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00266518,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_21",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00021236,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_22",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00266518,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_22",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00021236,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_23",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00266518,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_23",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00021236,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "vertebra_24",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 456,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00266518,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "disc_24",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00021236,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "rib_L_01",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00793047,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_02",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.0084719,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_03",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00896242,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_04",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00936547,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_05",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00965155,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_06",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00979993,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_07",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00979993,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_08",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00936682,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_09",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00908074,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_10",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00867768,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_11",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00818717,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_L_12",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00764573,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "clavicle_L",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 308,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01479196,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "scapula_L",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1680,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.02799099,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "pelvis_L",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 2944,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.11231625,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "humerus_L",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.02337834,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "radius_L",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00274183,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "ulna_L",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00227473,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "carpals_L",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1008,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00059988,
+      "components": 6,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_L_0",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00017026,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "finger_L_0",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00020152,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_L_1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00019754,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "finger_L_1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 1.293e-05,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_L_2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00018736,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "finger_L_2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": -1.296e-05,
+      "components": 1,
+      "inwardCavities": 1,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_L_3",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00012931,
+      "components": 8,
+      "inwardCavities": 4,
+      "cavity": true
+    },
+    {
+      "id": "finger_L_3",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 2.345e-05,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_L_4",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 4,
+      "volume": 0.00011989,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "finger_L_4",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00016015,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "femur_L",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.0202658,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "tibia_L",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.0084319,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "fibula_L",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00122485,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "patella_L",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 440,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00115426,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "metatarsal_L_0",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00159384,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "toe_L_0",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 176,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00062198,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "metatarsal_L_1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00159384,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "toe_L_1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 176,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00063068,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "metatarsal_L_2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00159384,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "toe_L_2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 176,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.000595,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "ear_cartilage_L",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 308,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00783703,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_01",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00792538,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_02",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00846622,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_03",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00895627,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_04",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00935897,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_05",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00964482,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_06",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00979308,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_07",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 404,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00979308,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_08",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00936008,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_09",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00907424,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_10",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00867153,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_11",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00818149,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "rib_R_12",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 336,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00764065,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "clavicle_R",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 308,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01479785,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "scapula_R",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1680,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.02799099,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "pelvis_R",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 2942,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.11233201,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "humerus_R",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.02337834,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "radius_R",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00274186,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "ulna_R",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00227468,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "carpals_R",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1008,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00059988,
+      "components": 6,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_R_0",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00016982,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "finger_R_0",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00023143,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_R_1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00019751,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "finger_R_1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 1.73e-05,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_R_2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00018456,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "finger_R_2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": -2.021e-05,
+      "components": 1,
+      "inwardCavities": 1,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_R_3",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00013,
+      "components": 8,
+      "inwardCavities": 4,
+      "cavity": true
+    },
+    {
+      "id": "finger_R_3",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 4.945e-05,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "metacarpal_R_4",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 2,
+      "volume": 0.00012153,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "finger_R_4",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 140,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 7.035e-05,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "femur_R",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.0202658,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "tibia_R",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.0084319,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "fibula_R",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00122485,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "patella_R",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 440,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00115426,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "metatarsal_R_0",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00159384,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "toe_R_0",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 176,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00059339,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "metatarsal_R_1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00159384,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "toe_R_1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 176,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00063068,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "metatarsal_R_2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 3516,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00159384,
+      "components": 8,
+      "inwardCavities": 3,
+      "cavity": true
+    },
+    {
+      "id": "toe_R_2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 176,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00061094,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "ear_cartilage_R",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 308,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00805753,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "sternum",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 260,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00457256,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "sacrum",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 780,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.02286672,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "tail_vertebra_1",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 288,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00185895,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "tail_vertebra_2",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 288,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00165223,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "tail_vertebra_3",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 288,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00145756,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "tail_vertebra_4",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 288,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00127492,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "tail_vertebra_5",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 288,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00110433,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "tail_vertebra_6",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 288,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00094578,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "tail_vertebra_7",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 288,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00079927,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "tail_vertebra_8",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 288,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00066481,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "tail_vertebra_9",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 288,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00054238,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "temporalis_L",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01630021,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "masseter_L",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.02133795,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "trapezius_L",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.04009319,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "deltoid_L",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.03462478,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "biceps_L",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.02247505,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "triceps_L",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.0348654,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "forearm_L_0",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00648488,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "forearm_L_1",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00637569,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "forearm_L_2",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00633397,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "pectoralis_L_0",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01970571,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "pectoralis_L_1",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.02175764,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "pectoralis_L_2",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.02355262,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "abdominis_L_0",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00463196,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "abdominis_L_1",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00468949,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "abdominis_L_2",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00434046,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "abdominis_L_3",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00341668,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "oblique_L_0",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01573629,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "oblique_L_1",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01523694,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "oblique_L_2",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01409261,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "oblique_L_3",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01172508,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "latissimus_L",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.09314793,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "erector_L",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.02954046,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "gluteus_L",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.0601992,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "quadriceps_L",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.02111028,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "hamstrings_L",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01810382,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "calf_L",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01303098,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "temporalis_R",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01629829,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "masseter_R",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.02123611,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "trapezius_R",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.04014051,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "deltoid_R",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.03468952,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "biceps_R",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.02261325,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "triceps_R",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.03486322,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "forearm_R_0",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.0064848,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "forearm_R_1",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00637565,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "forearm_R_2",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00633397,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "pectoralis_R_0",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01968936,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "pectoralis_R_1",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.02175059,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "pectoralis_R_2",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.0235449,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "abdominis_R_0",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00463383,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "abdominis_R_1",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00469175,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "abdominis_R_2",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00434397,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "abdominis_R_3",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00342388,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "oblique_R_0",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01573311,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "oblique_R_1",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01523289,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "oblique_R_2",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01408968,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "oblique_R_3",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.011728,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "latissimus_R",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.09337143,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "erector_R",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.02953961,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "gluteus_R",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.06011047,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "quadriceps_R",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.02109728,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "hamstrings_R",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01832963,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "calf_R",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01303111,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "diaphragm",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 2640,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.23306216,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "tail_muscles",
+      "systems": [
+        "muscles"
+      ],
+      "triangles": 536,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.10050097,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "brain",
+      "systems": [
+        "organs",
+        "nerves"
+      ],
+      "triangles": 36352,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.46362343,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "cerebellum",
+      "systems": [
+        "organs",
+        "nerves"
+      ],
+      "triangles": 8688,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.09469858,
+      "components": 20,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "brainstem",
+      "systems": [
+        "organs",
+        "nerves"
+      ],
+      "triangles": 304,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00895014,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "eye_L",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3360,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00792244,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "inner_ear_L",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1606,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00082931,
+      "components": 4,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "eye_R",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3360,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00792244,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "inner_ear_R",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1606,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00083055,
+      "components": 4,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "tongue",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.03834931,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "salivary_L",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01618639,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "salivary_R",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01618639,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "pituitary",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00077695,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "thyroid",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00543369,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "parathyroids",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 672,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00026596,
+      "components": 4,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "airways",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 6600,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01058048,
+      "components": 21,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "lung_L",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3380,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.36673099,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "lung_R",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3408,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.37862011,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "heart",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 8658,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.06642842,
+      "components": 10,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "liver",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.20403071,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "gallbladder",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3360,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00355447,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "esophagus",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1056,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00569937,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "stomach",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 4592,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.0297237,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "pancreas",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01732435,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "spleen",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.05416213,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "small_intestine",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 14796,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.0614663,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "large_intestine",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 5656,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.06119181,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "appendix",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 140,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00034668,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "kidney_L",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3360,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.03565572,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "kidney_medulla_L",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 308,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00371368,
+      "components": 7,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "adrenal_L",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00261473,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "ureter_L",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 468,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00067805,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "kidney_R",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3360,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.03565572,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "kidney_medulla_R",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 308,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00371368,
+      "components": 7,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "adrenal_R",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00261473,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "ureter_R",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 468,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00067798,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "bladder",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3360,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01712627,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "urethra",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 180,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 7.074e-05,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "arteries_network",
+      "systems": [
+        "arteries"
+      ],
+      "triangles": 23040,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.04751746,
+      "components": 49,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "veins_network",
+      "systems": [
+        "veins"
+      ],
+      "triangles": 22680,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.05458337,
+      "components": 49,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "coronary_arteries",
+      "systems": [
+        "arteries"
+      ],
+      "triangles": 1216,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00031897,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "nervous_network",
+      "systems": [
+        "nerves"
+      ],
+      "triangles": 13844,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.05996673,
+      "components": 64,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "cartilage_shoulder_L",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00360597,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_elbow_L",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00080077,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_wrist_L",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00042675,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_hip_L",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00338216,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_knee_L",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.0010992,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_ankle_L",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00046505,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "lens_L",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00119373,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "retina_L",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3360,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00306738,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_shoulder_R",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00360597,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_elbow_R",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00080077,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_wrist_R",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00042675,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_hip_R",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00338216,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_knee_R",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.0010992,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "cartilage_ankle_R",
+      "systems": [
+        "bones"
+      ],
+      "triangles": 1056,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00046505,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "lens_R",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00119373,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "retina_R",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 3360,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00306738,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "pineal",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00020731,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "thymus",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00414372,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "biliary_tree",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 440,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00024596,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "brain_white_matter",
+      "systems": [
+        "organs",
+        "nerves"
+      ],
+      "triangles": 4048,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.21680645,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "dermis_Body",
+      "systems": [
+        "skin"
+      ],
+      "triangles": 14476,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.55081219,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "dermis_Arm_L",
+      "systems": [
+        "skin"
+      ],
+      "triangles": 2012,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.04154726,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "dermis_Arm_R",
+      "systems": [
+        "skin"
+      ],
+      "triangles": 2012,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.05503488,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "dermis_Foot_L",
+      "systems": [
+        "skin"
+      ],
+      "triangles": 2632,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.03639192,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "dermis_Foot_R",
+      "systems": [
+        "skin"
+      ],
+      "triangles": 2632,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.03639295,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "dermis_Ear_L",
+      "systems": [
+        "skin"
+      ],
+      "triangles": 3580,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.0133249,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "dermis_Ear_R",
+      "systems": [
+        "skin"
+      ],
+      "triangles": 3580,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.01328933,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "dermis_Tail",
+      "systems": [
+        "skin"
+      ],
+      "triangles": 1028,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.06714969,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    }
+  ],
+  "scope": "Manifold edges, finite vertices, connected-shell winding, required major parts, and cavity bounds. Intersections and recognizability are also reviewed visually."
+}

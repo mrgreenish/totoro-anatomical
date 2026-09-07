@@ -1,0 +1,88 @@
+{
+  "name": "Totoro anatomy explorer",
+  "workflow": "User-approved Blender MCP anatomy implementation; existing exterior proportions are the fixed reference.",
+  "reference": "artwork/totoro-render.png",
+  "referenceSuitability": {
+    "verdict": "conditional",
+    "reason": "Exterior geometry is observable; the user explicitly requests imagined human-inspired internal anatomy."
+  },
+  "qualityContract": {
+    "criticalFeatures": [
+      "recognizable anatomical volumes",
+      "true tissue walls and cavities",
+      "nested proportions inside Totoro",
+      "complete named systems",
+      "exact assembly and clipping"
+    ],
+    "reviewViews": [
+      "front",
+      "three-quarter",
+      "profile",
+      "cross-section",
+      "exploded"
+    ],
+    "budgets": {
+      "anatomyTriangles": 500000,
+      "compressedBytes": 12000000
+    },
+    "maximumCorrectionsPerPass": 3,
+    "maximumCorrectionsTotal": 6
+  },
+  "passes": [
+    "skeleton",
+    "organs",
+    "muscles",
+    "networks",
+    "finish",
+    "interaction"
+  ],
+  "geometryStrategy": "Closed lofted tissue surfaces, cortical shells, modeled organ cavities, branched tubular volumes, authored cortical gyri. Blender Z-up converted to glTF Y-up.",
+  "materials": "Two Image Gen albedo sources, independent baked normal and roughness channels, stable PBR system colors.",
+  "interaction": "One plane with stencil caps, authored explosion offsets, shared metadata for filtering and picking.",
+  "reviewHistory": [
+    {
+      "pass": "skeleton",
+      "action": "refine-code",
+      "reason": "First curved tubes used an unstable moving frame. Corrected parallel transport; added rounded epiphyses and costal cartilage. The proportion review shows a broad skull and thorax, low pelvis, short limbs, matching the existing shape.",
+      "evidence": "artwork/anatomy/reviews/bones.png",
+      "remaining": "Final multi-angle and exported-volume checks follow with the complete assembly."
+    },
+    {
+      "pass": "organs",
+      "action": "refine-code",
+      "reason": "Replaced primitive brain folds, balloon-like lungs and oval stomach with sculpted cortical grooves, tapered lobes, a four-chamber myocardial volume and a hollow J-shaped stomach.",
+      "evidence": "artwork/anatomy/reviews/organs.png"
+    },
+    {
+      "pass": "finish",
+      "action": "refine-code",
+      "reason": "Aligned hand anatomy with the source paws and recessed superficial tissues beneath the exterior envelope.",
+      "evidence": "artwork/anatomy/containment-adjustments.json"
+    },
+    {
+      "pass": "finish",
+      "action": "refine-code",
+      "reason": "Used proportional skin inset and disabled even-thickness amplification at narrow ear tips; final skin envelope is smooth and contained.",
+      "evidence": "artwork/anatomy/reviews/skin.png"
+    },
+    {
+      "pass": "interaction",
+      "action": "refine-code",
+      "reason": "Preserved single primitive materials so intact organ surfaces render alongside stencil caps; retained intended camera direction through layout resize.",
+      "evidence": "artwork/anatomy/runtime-verification.json"
+    },
+    {
+      "pass": "interaction",
+      "action": "refine-code",
+      "reason": "Placed the panel after the viewer on mobile, eliminated horizontal overflow, and made selected names visible above the viewer.",
+      "evidence": "artwork/anatomy/browser-verification.json"
+    },
+    {
+      "pass": "final",
+      "action": "accept",
+      "reason": "Named coverage, manifold volumes, texture decoding, metadata, transfer and triangle budgets, interactive cuts, exploded selection, desktop/mobile controls and production checks pass. The anatomy is an imagined study with simplified major structures.",
+      "evidence": "artwork/anatomy/asset-verification.json"
+    }
+  ],
+  "status": "complete"
+}

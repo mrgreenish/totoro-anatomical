@@ -1,13 +1,13 @@
 {
   "passed": true,
-  "sha256": "66dfcbeebea08358576526e2333274e471fc036f9b7d419a9110b39b4b16d6e5",
-  "compressedBytes": 6608872,
-  "triangles": 460408,
-  "meshDraws": 71,
+  "sha256": "5f4f933e6955149b63a42399df196597d698eea8d3ad98fcbbabf0e8b3f439ea",
+  "compressedBytes": 4844876,
+  "triangles": 324967,
+  "meshDraws": 57,
   "bounds": [
     3.921605348587036,
-    4.965649210421888,
-    3.0924874239259563
+    5.001012467353193,
+    2.974703693356564
   ],
   "requiredParts": [
     "Body",
@@ -29,6 +29,15 @@
     "Pupil_L",
     "Pupil_R",
     "Eye_catchlights",
+    "Eyelids_L",
+    "Eyelids_R",
+    "MotionRoot",
+    "Breath",
+    "TailSway",
+    "ArmSwing_L",
+    "ArmSwing_R",
+    "EarBend_L",
+    "EarBend_R",
     "Tooth_01",
     "Tooth_02",
     "Tooth_03",
@@ -44,36 +53,36 @@
     {
       "name": "Tooth_01",
       "dimensions": [
-        0.17325818538665771,
-        0.11936186641799384,
-        0.11993292522782584
+        0.17356914281845093,
+        0.11934302156742138,
+        0.12311453649667148
       ],
       "exposed": true
     },
     {
       "name": "Tooth_02",
       "dimensions": [
-        0.18222870398736313,
+        0.18191874053810242,
         0.19531869888305664,
-        0.11553291487629025
+        0.1135777608117241
       ],
       "exposed": true
     },
     {
       "name": "Tooth_03",
       "dimensions": [
-        0.20283051735059598,
+        0.20269539834494976,
         0.2767152786254883,
-        0.1087454647316024
+        0.10459055530798289
       ],
       "exposed": true
     },
     {
       "name": "Tooth_04",
       "dimensions": [
-        0.21047431077199555,
+        0.21043447461967757,
         0.3263278007507324,
-        0.0875698218329779
+        0.08717146030979839
       ],
       "exposed": true
     },
@@ -98,36 +107,36 @@
     {
       "name": "Tooth_07",
       "dimensions": [
-        0.21047431077199555,
+        0.21043447461967757,
         0.3263278007507324,
-        0.0875698218329779
+        0.08717146030979839
       ],
       "exposed": true
     },
     {
       "name": "Tooth_08",
       "dimensions": [
-        0.20283051735059598,
+        0.20269539834494976,
         0.2767152786254883,
-        0.1087454647316024
+        0.10459055530798289
       ],
       "exposed": true
     },
     {
       "name": "Tooth_09",
       "dimensions": [
-        0.18222870398736313,
+        0.18191874053810242,
         0.19531869888305664,
-        0.11553291487629025
+        0.1135777608117241
       ],
       "exposed": true
     },
     {
       "name": "Tooth_10",
       "dimensions": [
-        0.1732582449913025,
-        0.11936190748111386,
-        0.1199329664874027
+        0.17356902360916138,
+        0.11934293960125775,
+        0.12311445194018766
       ],
       "exposed": true
     }
@@ -148,9 +157,9 @@
     {
       "side": "L",
       "dimensions": [
-        0.8097520243184015,
-        0.6192558339884815,
-        1.3776417213261616
+        0.8070843245441992,
+        0.6032137531038165,
+        1.3704283672154438
       ],
       "soleHeight": 0.024351514370592242,
       "attachedClaws": true
@@ -158,20 +167,40 @@
     {
       "side": "R",
       "dimensions": [
-        0.8255768464206574,
-        0.6227434863704088,
-        1.387127264100362
+        0.8001981746485742,
+        0.6113636410613333,
+        1.3709939556897175
       ],
       "soleHeight": 0.024351514370592242,
       "attachedClaws": true
     }
   ],
-  "fiberTriangles": 363864,
+  "eyelids": [
+    {
+      "side": "L",
+      "visible": [
+        "Pupil_L",
+        "Pupil_L",
+        "Eyelids_L"
+      ],
+      "eyeVolumePreserved": true
+    },
+    {
+      "side": "R",
+      "visible": [
+        "Pupil_R",
+        "Pupil_R",
+        "Eyelids_R"
+      ],
+      "eyeVolumePreserved": true
+    }
+  ],
+  "fiberTriangles": 224859,
   "parts": [
     {
       "name": "Body",
       "parent": "Scene",
-      "triangles": 25600
+      "triangles": 25852
     },
     {
       "name": "Cream_belly",
@@ -179,44 +208,24 @@
       "triangles": 6720
     },
     {
-      "name": "Ear_L_fibers",
-      "parent": "Ear_L",
-      "triangles": 5400
+      "name": "Ear_L",
+      "parent": "Scene",
+      "triangles": 6396
     },
     {
-      "name": "Ear_L_1",
-      "parent": "Ear_L",
-      "triangles": 6144
+      "name": "Ear_R",
+      "parent": "Scene",
+      "triangles": 6396
     },
     {
-      "name": "Ear_R_fibers",
-      "parent": "Ear_R",
-      "triangles": 5400
-    },
-    {
-      "name": "Ear_R_1",
-      "parent": "Ear_R",
-      "triangles": 6144
-    },
-    {
-      "name": "Arm_L_fibers",
-      "parent": "Arm_L",
-      "triangles": 12600
-    },
-    {
-      "name": "Hand_L_claws",
-      "parent": "Arm_L",
-      "triangles": 1600
-    },
-    {
-      "name": "Arm_L_1",
-      "parent": "Arm_L",
+      "name": "Arm_L",
+      "parent": "Scene",
       "triangles": 3596
     },
     {
       "name": "Foot_L_fibers",
       "parent": "Foot_L",
-      "triangles": 3192
+      "triangles": 2763
     },
     {
       "name": "Toe_L_claws",
@@ -229,24 +238,19 @@
       "triangles": 4700
     },
     {
-      "name": "Arm_R_fibers",
-      "parent": "Arm_R",
-      "triangles": 12600
-    },
-    {
-      "name": "Hand_R_claws",
-      "parent": "Arm_R",
+      "name": "Hand_L_claws",
+      "parent": "Scene",
       "triangles": 1600
     },
     {
-      "name": "Arm_R_1",
-      "parent": "Arm_R",
+      "name": "Arm_R",
+      "parent": "Scene",
       "triangles": 3596
     },
     {
       "name": "Foot_R_fibers",
       "parent": "Foot_R",
-      "triangles": 3291
+      "triangles": 2883
     },
     {
       "name": "Toe_R_claws",
@@ -259,13 +263,13 @@
       "triangles": 4700
     },
     {
-      "name": "Tail_fibers",
-      "parent": "Tail",
-      "triangles": 8400
+      "name": "Hand_R_claws",
+      "parent": "Scene",
+      "triangles": 1600
     },
     {
-      "name": "Sphere",
-      "parent": "Tail",
+      "name": "Tail",
+      "parent": "Scene",
       "triangles": 1840
     },
     {
@@ -284,9 +288,9 @@
       "triangles": 336
     },
     {
-      "name": "Upper_eyelid",
+      "name": "Eyelids_L",
       "parent": "Scene",
-      "triangles": 576
+      "triangles": 1280
     },
     {
       "name": "Eye_R",
@@ -299,9 +303,9 @@
       "triangles": 1216
     },
     {
-      "name": "Upper_eyelid001",
+      "name": "Eyelids_R",
       "parent": "Scene",
-      "triangles": 576
+      "triangles": 1280
     },
     {
       "name": "Nose",
@@ -396,7 +400,7 @@
     {
       "name": "Belly_chevrons",
       "parent": "Scene",
-      "triangles": 280
+      "triangles": 1680
     },
     {
       "name": "Whiskers",
@@ -404,34 +408,9 @@
       "triangles": 1920
     },
     {
-      "name": "Whisker_follicle",
+      "name": "Whisker_follicles",
       "parent": "Scene",
-      "triangles": 288
-    },
-    {
-      "name": "Whisker_follicle001",
-      "parent": "Scene",
-      "triangles": 288
-    },
-    {
-      "name": "Whisker_follicle002",
-      "parent": "Scene",
-      "triangles": 288
-    },
-    {
-      "name": "Whisker_follicle003",
-      "parent": "Scene",
-      "triangles": 288
-    },
-    {
-      "name": "Whisker_follicle004",
-      "parent": "Scene",
-      "triangles": 288
-    },
-    {
-      "name": "Whisker_follicle005",
-      "parent": "Scene",
-      "triangles": 288
+      "triangles": 1728
     },
     {
       "name": "Leaf_midrib",
@@ -444,54 +423,9 @@
       "triangles": 256
     },
     {
-      "name": "Leaf_vein",
+      "name": "Leaf_veins",
       "parent": "Leaf",
-      "triangles": 192
-    },
-    {
-      "name": "Leaf_vein001",
-      "parent": "Leaf",
-      "triangles": 192
-    },
-    {
-      "name": "Leaf_vein002",
-      "parent": "Leaf",
-      "triangles": 192
-    },
-    {
-      "name": "Leaf_vein003",
-      "parent": "Leaf",
-      "triangles": 192
-    },
-    {
-      "name": "Leaf_vein004",
-      "parent": "Leaf",
-      "triangles": 192
-    },
-    {
-      "name": "Leaf_vein005",
-      "parent": "Leaf",
-      "triangles": 192
-    },
-    {
-      "name": "Leaf_vein006",
-      "parent": "Leaf",
-      "triangles": 192
-    },
-    {
-      "name": "Leaf_vein007",
-      "parent": "Leaf",
-      "triangles": 192
-    },
-    {
-      "name": "Leaf_vein008",
-      "parent": "Leaf",
-      "triangles": 192
-    },
-    {
-      "name": "Leaf_vein009",
-      "parent": "Leaf",
-      "triangles": 192
+      "triangles": 1920
     },
     {
       "name": "Leaf_hat",
@@ -501,28 +435,53 @@
     {
       "name": "Fine_grey_fibers",
       "parent": "Scene",
-      "triangles": 239457
+      "triangles": 119505
     },
     {
       "name": "Fine_ivory_fibers",
       "parent": "Scene",
-      "triangles": 40194
+      "triangles": 20319
     },
     {
       "name": "Chevron_fibers",
       "parent": "Scene",
-      "triangles": 3027
+      "triangles": 1527
     },
     {
       "name": "Face_fibers",
       "parent": "Scene",
-      "triangles": 30303
+      "triangles": 15162
     },
     {
       "name": "Cheek_fur_tufts",
       "parent": "Scene",
       "triangles": 72
+    },
+    {
+      "name": "Arm_L_fibers",
+      "parent": "Scene",
+      "triangles": 20400
+    },
+    {
+      "name": "Arm_R_fibers",
+      "parent": "Scene",
+      "triangles": 20400
+    },
+    {
+      "name": "Ear_L_fibers",
+      "parent": "Scene",
+      "triangles": 4200
+    },
+    {
+      "name": "Ear_R_fibers",
+      "parent": "Scene",
+      "triangles": 4200
+    },
+    {
+      "name": "Tail_fibers",
+      "parent": "Scene",
+      "triangles": 13500
     }
   ],
-  "scope": "Compressed glTF decoding, finite geometry, exposed curved teeth, animation attachment transforms and initial camera framing. GPU browser interaction is not covered."
+  "scope": "Compressed glTF decoding, finite geometry, skin weights and deformed attachments, eyelid occlusion, breathing, planted paws, exposed curved teeth and initial camera framing. Browser checks are recorded separately."
 }
