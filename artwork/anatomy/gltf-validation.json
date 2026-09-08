@@ -1,5 +1,5 @@
 {
-  "bytes": 11077760,
+  "bytes": 12716440,
   "triangles": 484316,
   "parts": 264,
   "errors": 0,
@@ -10,6 +10,18 @@
       "message": "Cannot validate an extension as it is not supported by the validator: 'EXT_meshopt_compression'.",
       "severity": 2,
       "pointer": "/extensionsUsed/0"
+    },
+    {
+      "code": "IMAGE_NPOT_DIMENSIONS",
+      "message": "Image has non-power-of-two dimensions: 768x768.",
+      "severity": 2,
+      "pointer": "/images/0"
+    },
+    {
+      "code": "IMAGE_NPOT_DIMENSIONS",
+      "message": "Image has non-power-of-two dimensions: 768x768.",
+      "severity": 2,
+      "pointer": "/images/3"
     }
   ]
 }

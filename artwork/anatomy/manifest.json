@@ -2431,7 +2431,7 @@
         1,
         1
       ],
-      "texture": null
+      "texture": "cortical_bone-albedo.png"
     },
     "Anatomy_dermis": {
       "tint": [
@@ -2507,9 +2507,9 @@
     },
     "Anatomy_muscle": {
       "tint": [
-        0.83,
-        0.59,
-        0.53
+        1,
+        1,
+        1
       ],
       "texture": "muscle-albedo.png"
     },
@@ -2559,7 +2559,7 @@
         1,
         1
       ],
-      "texture": null
+      "texture": "tendon-albedo.png"
     },
     "Anatomy_veins": {
       "tint": [

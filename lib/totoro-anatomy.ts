@@ -12,7 +12,7 @@ const tissueSectionColors: Record<string, number> = {
   brain: 0xbc9180, myocardium: 0x8c3538, lungs: 0xb57076,
   liver: 0x74332e, stomach: 0xd79986, intestine: 0xd39480,
   kidney: 0x843b34, spleen: 0x69384d, glands: 0xc79b65,
-  muscle: 0x9e4740,
+  muscle: 0x873e35, cortical_bone: 0xcaba98, tendon: 0xd4c9af,
 };
 type Cap = { source: THREE.Mesh; part: Part; back: THREE.Mesh; front: THREE.Mesh; cap: THREE.Mesh; box: THREE.Box3 };
 type Options = {
@@ -110,7 +110,7 @@ export function createAnatomyExplorer(o: Options) {
     if (model || loadPromise) return loadPromise;
     state.status = 'loading'; emit();
     loadPromise = (async () => {
-      const response = await fetch('/models/totoro-anatomy.glb?v=tissue-realism-2', { signal: loadAbort.signal });
+      const response = await fetch('/models/totoro-anatomy.glb?v=structural-realism-4', { signal: loadAbort.signal });
       if (!response.ok) throw new Error('Anatomy unavailable');
       const bytes = await response.arrayBuffer();
       if (disposed || o.signal.aborted) return;
@@ -131,6 +131,17 @@ export function createAnatomyExplorer(o: Options) {
             const clone = m.clone();
             if (clone instanceof THREE.MeshStandardMaterial) {
               clone.envMapIntensity = .8;
+              if (clone instanceof THREE.MeshPhysicalMaterial) {
+                if (clone.name === 'Anatomy_muscle' || clone.name === 'Anatomy_tendon') {
+                  // A restrained collagen sheen lifts grazing-angle fibers
+                  // without making the entire muscle belly glossy.
+                  clone.sheen = clone.name === 'Anatomy_tendon' ? .22 : .12;
+                  clone.sheenColor.set(clone.name === 'Anatomy_tendon' ? 0xe3d5ba : 0x9b6b62);
+                  clone.sheenRoughness = .62;
+                } else if (clone.name === 'Anatomy_cortical_bone') {
+                  clone.envMapIntensity = .6;
+                }
+              }
               for (const texture of [clone.map, clone.normalMap, clone.roughnessMap]) {
                 if (texture) texture.anisotropy = Math.min(8, o.renderer.capabilities?.getMaxAnisotropy() ?? 1);
               }

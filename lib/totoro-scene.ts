@@ -30,9 +30,10 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   renderer.toneMapping = THREE.AgXToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.VSMShadowMap;
+  // PCF avoids variance-shadow light leaks through thin ribs and close tissue.
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(30, 1, .1, 60);
+  const camera = new THREE.PerspectiveCamera(30, 1, .1, 100);
   const initialPosition = new THREE.Vector3(3.5, 4.0, 12.4);
   const initialTarget = new THREE.Vector3(0, 2.30, 0);
   camera.position.copy(initialPosition);
@@ -198,12 +199,25 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       // Neutral studio light preserves red/brown tissue separation. A lower
       // fill keeps fissures and overlapping organs dimensional; the environment
       // supplies broad, restrained reflections on the moist capsules.
-      key.color.set(0xfff4ed); key.intensity = 2.6;
-      fill.intensity = .48; ambient.intensity = .30;
-      rim.color.set(0xf0f4ff); rim.intensity = 1.25;
-      scene.environmentIntensity = .38;
-      key.shadow.normalBias = .006;
-    } else key.shadow.normalBias = .018;
+      key.color.set(0xfff7f0); key.intensity = 2.35;
+      fill.color.set(0xdce7f5); fill.intensity = .42;
+      ambient.color.set(0xf3f5fa); ambient.groundColor.set(0x514a43); ambient.intensity = .22;
+      rim.color.set(0xe4edff); rim.intensity = 1.65;
+      scene.environmentIntensity = .46;
+      renderer.toneMappingExposure = 1;
+      key.shadow.normalBias = .004;
+    } else {
+      key.shadow.normalBias = .018;
+      fill.color.set(0xc7deef);
+      ambient.color.set(0xf8ffe9); ambient.groundColor.set(0x778371);
+      renderer.toneMappingExposure = 1.05;
+    }
+    // Keep the spread-out muscle and vessel layers inside the shadow volume.
+    const shadowExtent = anatomy?.active ? 8 : 4;
+    if (key.shadow.camera.right !== shadowExtent) {
+      key.shadow.camera.left = -shadowExtent; key.shadow.camera.right = shadowExtent;
+      key.shadow.camera.updateProjectionMatrix();
+    }
     renderer.render(scene, camera);
     if (process.env.NODE_ENV !== 'production' && model && rawDt > 0 && rawDt < .2) {
       frameSamples.push(rawDt * 1000);

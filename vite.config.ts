@@ -1,7 +1,7 @@
 import { sites } from '@openai/sites-vite-plugin';
 import tailwindcss from '@tailwindcss/postcss';
 import vinext from 'vinext';
-import { defineConfig } from 'vite';
+import { defineConfig, type PluginOption } from 'vite';
 import hostingConfig from './.openai/hosting.json';
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
@@ -42,7 +42,7 @@ export default defineConfig(async () => {
   process.env.MINIFLARE_REGISTRY_PATH ??= '.wrangler/registry';
 
   const deployToVercel = Boolean(process.env.VERCEL);
-  const plugins = [vinext()];
+  const plugins: PluginOption[] = [vinext()];
 
   if (!deployToVercel) {
     const { cloudflare } = await import('@cloudflare/vite-plugin');
