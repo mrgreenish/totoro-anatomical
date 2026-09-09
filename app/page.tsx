@@ -77,7 +77,7 @@ export default function Home() {
         <div className="background-word" aria-hidden="true">TOTORO</div>
         <div className="edition"><span className="edition-line" />THE FOREST SPIRIT<span className="edition-number">01</span></div>
         <section className={`sculpture ${ready ? 'is-ready' : ''}`} aria-label="Interactive Totoro sculpture">
-          <img className="sculpture-poster" src="/totoro-poster.webp?v=refinement-1" alt="A grey Totoro with a wide toothy grin, soft groomed fur, small rounded paws, an ivory belly, seven chevrons, and a green leaf hat." fetchPriority="high" />
+          <img className="sculpture-poster" src="/totoro-poster.webp?v=museum-1" width={1100} height={1100} alt="A grey Totoro with a wide toothy grin, soft groomed fur, small rounded paws, an ivory belly, seven chevrons, and a green leaf hat." fetchPriority="high" />
           <canvas ref={canvasRef} tabIndex={0} aria-label={anatomy.brainView.status === 'open' ? 'Detailed brain. Hover for neural sparks. Press the tissue to poke, drag it to pull, and release to let go. Drag the background or use arrow keys to rotate. Scroll or pinch to zoom. Escape returns to anatomy.' : 'Rotate Totoro by dragging or using the arrow keys. Scroll, pinch, or use plus and minus to zoom. Press Home to reset.'} />
           {!ready && !error ? <output className="loading-status"><span className="loading-dot" />Waking the forest…</output> : null}
           {error ? <output className="render-error"><p>The interactive view couldn’t wake up.</p><button onClick={() => window.location.reload()}>Try again <ArrowUpRight size={14} /></button></output> : null}

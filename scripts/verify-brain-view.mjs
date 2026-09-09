@@ -7,10 +7,12 @@ import { Document, NodeIO } from '@gltf-transform/core';
 const moduleURL=s=>'data:text/javascript;base64,'+Buffer.from(s).toString('base64');
 const compile=s=>ts.transpileModule(s,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
 const stateURL=moduleURL(compile(await readFile('lib/anatomy-state.ts','utf8')));
+const presentationURL=moduleURL(compile(await readFile('lib/anatomy-presentation.ts','utf8')));
+const tissueURL=moduleURL(compile(await readFile('lib/tissue-materials.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g,(_,name)=>`from ${JSON.stringify(import.meta.resolve(name))}`));
 const touchURL=moduleURL(compile(await readFile('lib/brain-touch.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g,(_,name)=>`from ${JSON.stringify(import.meta.resolve(name))}`));
 const activityURL=moduleURL(compile(await readFile('lib/brain-activity.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g,(_,name)=>`from ${JSON.stringify(import.meta.resolve(name))}`));
-const detailURL=moduleURL(compile(await readFile('lib/brain-detail.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g,(_,name)=>`from ${JSON.stringify(name==='./brain-touch'?touchURL:name==='./brain-activity'?activityURL:import.meta.resolve(name))}`));
-const source=compile(await readFile('lib/totoro-anatomy.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g,(_,name)=>`from ${JSON.stringify(name==='./anatomy-state'?stateURL:name==='./brain-detail'?detailURL:import.meta.resolve(name))}`);
+const detailURL=moduleURL(compile(await readFile('lib/brain-detail.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g,(_,name)=>`from ${JSON.stringify(name==='./tissue-materials'?tissueURL:name==='./brain-touch'?touchURL:name==='./brain-activity'?activityURL:import.meta.resolve(name))}`));
+const source=compile(await readFile('lib/totoro-anatomy.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g,(_,name)=>`from ${JSON.stringify(name==='./anatomy-presentation'?presentationURL:name==='./tissue-materials'?tissueURL:name==='./anatomy-state'?stateURL:name==='./brain-detail'?detailURL:import.meta.resolve(name))}`);
 const {createAnatomyExplorer}=await import(moduleURL(source));
 const {brainProximity,detailTextureSize,isBrainOccluder}=await import(detailURL);
 let count=0;const check=(v,msg)=>{assert.ok(v,msg);count++;};
@@ -134,6 +136,45 @@ let resolveDelay;delayDetail=new Promise(r=>{resolveDelay=r;});
 const pending=fixture();await focus(pending);const load=pending.api.openBrainView();pending.api.reset();resolveDelay();delayDetail=undefined;await load;
 check(pending.api.state.mode==='exterior'&&pending.api.state.brainView.status==='closed'&&!pending.api.detailScene,'Reset cancels stale opening');pending.api.dispose();
 
+// Shortcut entry is independent of proximity, visibility, and clipping.
+const direct=fixture();
+for(const mode of ['split','exploded']) {
+  await direct.api.setMode(mode);direct.api.setVisibleSystems(['bones']);direct.api.setCut({position:0});direct.api.update(1);
+  check(!direct.api.state.brainView.available,'Hidden brain keeps the contextual entry unavailable');
+  const requestsBefore=fetched.length;await direct.api.openBrainView();
+  check(fetched.length===requestsBefore&&!direct.api.detailScene,'Contextual entry stays gated without preloading');
+  const saved={position:direct.camera.position.clone(),target:direct.controls.target.clone(),settings:JSON.stringify({mode:direct.api.state.mode,cut:direct.api.state.cut,variant:direct.api.state.variant,systems:direct.api.state.visibleSystems,explosion:direct.api.state.explosion})};
+  await direct.api.openBrainView('shortcut');
+  check(direct.api.state.brainView.status==='open','Shortcut opens a hidden or clipped brain');
+  direct.api.closeBrainView();
+  check(direct.camera.position.equals(saved.position)&&direct.controls.target.equals(saved.target),'Shortcut restores the previous camera');
+  check(JSON.stringify({mode:direct.api.state.mode,cut:direct.api.state.cut,variant:direct.api.state.variant,systems:direct.api.state.visibleSystems,explosion:direct.api.state.explosion})===saved.settings,'Shortcut preserves filters, cut, variant, mode and separation');
+}
+direct.api.dispose();
+for(const action of ['reset','mode','filters','variant','dispose']) {
+  const cancel=fixture();await cancel.api.setMode('split');
+  delayDetail=new Promise(r=>{resolveDelay=r;});
+  const opening=cancel.api.openBrainView('shortcut');await Promise.resolve();
+  if(action==='reset')cancel.api.reset();
+  if(action==='mode')await cancel.api.setMode('exterior');
+  if(action==='filters')cancel.api.setVisibleSystems(['bones']);
+  if(action==='variant')cancel.api.setAnatomyVariant('female');
+  if(action==='dispose')cancel.api.dispose();
+  resolveDelay();delayDetail=undefined;await opening;
+  check(!cancel.api.detailScene&&cancel.api.state.brainView.status!=='open',`${action} cancels a pending shortcut`);
+  cancel.api.dispose();
+}
+const race=fixture();await race.api.setMode('split');
+delayDetail=new Promise(r=>{resolveDelay=r;});
+const stale=race.api.openBrainView('shortcut');await Promise.resolve();race.api.closeBrainView();
+const current=race.api.openBrainView('shortcut');resolveDelay();delayDetail=undefined;
+await Promise.all([stale,current]);
+check(race.api.state.brainView.status==='open'&&race.api.detailScene.children.length>0,'A stale completion cannot unload or replace a newer shortcut session');
+race.api.dispose();
+const directFailure=fixture();await directFailure.api.setMode('split');directFailure.api.setVisibleSystems(['bones']);failDetail=true;
+await directFailure.api.openBrainView('shortcut');check(directFailure.api.state.brainView.status==='error','Direct entry reports loading failure');
+failDetail=false;await directFailure.api.openBrainView('shortcut');check(directFailure.api.state.brainView.status==='open','Direct entry retry keeps shortcut semantics');directFailure.api.dispose();
+
 reduced=false;const animated=fixture();await focus(animated);
 const coat=fixture();
 const coatFiber=new THREE.Mesh(new THREE.BoxGeometry(4,4,.3),new THREE.MeshStandardMaterial());
@@ -153,6 +194,6 @@ await animated.api.openBrainView();const pulses=[];animated.api.detailScene.trav
 animated.api.update(.5,true);const animatedTime=pulses[0].uniforms.brainTime.value;check(animatedTime>0,'Neural activity advances while playing');
 animated.api.update(.5,false);check(pulses[0].uniforms.brainTime.value===animatedTime,'Pause freezes neural activity');animated.api.dispose();
 check(createdBitmaps===closedBitmaps,'Decoded images released exactly once');
-const report={passed:true,assertions:count,coverage:['proximity hysteresis','occlusion and clipping','selection and filters','explicit opening','camera and settings restoration','responsive framing','texture choices and bindings','shader hooks','cached reopening','failure and retry','stale opening cancellation','pause and reduced motion','resource disposal','no proximity preload','split-view occlusion cost','heartbeat does not retrigger occlusion'],scope:'Node integration with real detail GLB and texture files, a DOM fixture, and a stub image decoder. Browser shader compilation and interaction are checked separately.'};
+const report={passed:true,assertions:count,coverage:['proximity hysteresis','occlusion and clipping','selection and filters','explicit opening','camera and settings restoration','responsive framing','texture choices and bindings','shader hooks','cached reopening','failure and retry','stale opening cancellation','pause and reduced motion','resource disposal','no proximity preload','split-view occlusion cost','heartbeat does not retrigger occlusion','shortcut with hidden and clipped brain in both modes','shortcut cancellation on reset/mode/filter/variant/disposal','cancel-and-reopen race','shortcut retry and restoration'],scope:'Node integration with real detail GLB and texture files, a DOM fixture, and a stub image decoder. Browser shader compilation and interaction are checked separately.'};
 await writeFile('artwork/anatomy/brain-detail/runtime-verification.json',JSON.stringify(report,null,2));
 console.log(JSON.stringify(report,null,2));

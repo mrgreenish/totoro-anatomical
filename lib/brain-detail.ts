@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { applyTissuePreset } from './tissue-materials';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -154,6 +155,7 @@ export function createBrainDetail(o: Options) {
         let material: THREE.MeshPhysicalMaterial;
         if (name.includes('artery') || name.includes('vein')) {
           material = new THREE.MeshPhysicalMaterial({ color: source.color, roughness: .28, clearcoat: .85, clearcoatRoughness: .10 });
+          applyTissuePreset(material, 'detail_vessel');
           material.onBeforeCompile = shader => {
             shader.uniforms.brainTime = time;
             shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nuniform float brainTime;')
@@ -174,6 +176,7 @@ export function createBrainDetail(o: Options) {
             transmission: .015, thickness: .12, thicknessMap: membrane,
             attenuationColor: new THREE.Color(.72, .30, .25), attenuationDistance: .24,
           });
+          applyTissuePreset(material, 'detail_cortex');
           // Three's normalMap takes precedence over bumpMap. Add the height
           // relief explicitly so both independently baked maps contribute.
           material.onBeforeCompile = shader => {

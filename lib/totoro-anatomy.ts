@@ -5,8 +5,10 @@ import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { clamp01, cutCoordinate, CUT_BOUNDS, defaultAnatomyState, fitDistance, partVisible } from './anatomy-state';
 import type { AnatomyMode, AnatomyPart, AnatomyState, AnatomySystem, AnatomyVariant } from './anatomy-state';
 import { brainProximity, createBrainDetail, isBrainOccluder, probeBrainVisibility, type BrainDetail } from './brain-detail';
+import { COAT_OFFSET, REVEAL_DURATION, museumEase, presentationOffset, presentationPhase, revealProgress, type PresentationPhase } from './anatomy-presentation';
+import { applyTissuePreset, BRAIN_SURFACE, createHeartTissueMaterial, sectionTint } from './tissue-materials';
 
-type Part = AnatomyPart & { node: THREE.Object3D; rest: THREE.Vector3; restScale: THREE.Vector3; offset: THREE.Vector3; meshes: THREE.Mesh[] };
+type Part = AnatomyPart & { node: THREE.Object3D; rest: THREE.Vector3; restScale: THREE.Vector3; offset: THREE.Vector3; phase: PresentationPhase; meshes: THREE.Mesh[] };
 // Textured glTF materials use a white color factor. Section faces need the
 // underlying tissue color instead of that multiplier to avoid white cut walls.
 const tissueSectionColors: Record<string, number> = {
@@ -20,6 +22,7 @@ type Options = {
   canvas: HTMLCanvasElement; renderer: THREE.WebGLRenderer; scene: THREE.Scene; camera: THREE.PerspectiveCamera;
   controls: OrbitControls; exterior: THREE.Group; signal: AbortSignal; wake(): void;
   onState?(state: AnatomyState): void; onMode?(): void;
+  animate?: boolean;
 };
 
 // Continuous object-space detail avoids atlas seams and follows the organ
@@ -36,6 +39,7 @@ function brainTissueMaterial(source: THREE.MeshStandardMaterial) {
   material.specularIntensity = .9;
   material.normalScale.set(.32, .32);
   material.envMapIntensity = 1.45;
+  applyTissuePreset(material);
   material.onBeforeCompile = shader => {
     shader.vertexShader = shader.vertexShader.replace('#include <common>', `
       #include <common>
@@ -79,7 +83,7 @@ function brainTissueMaterial(source: THREE.MeshStandardMaterial) {
       diffuseColor.rgb = tissueColor * tissueShade;
     `).replace('#include <roughnessmap_fragment>', `
       #include <roughnessmap_fragment>
-      roughnessFactor = mix(.17, .30, tissueMoisture);
+      roughnessFactor = mix(${BRAIN_SURFACE.roughness[0]}, ${BRAIN_SURFACE.roughness[1]}, tissueMoisture);
     `).replace('#include <normal_fragment_maps>', `
       #include <normal_fragment_maps>
       // Microscopic relief breaks up broad highlights without changing
@@ -93,18 +97,21 @@ function brainTissueMaterial(source: THREE.MeshStandardMaterial) {
     `).replace('#include <lights_physical_fragment>', `
       #include <lights_physical_fragment>
       // Thin, irregular fluid film over the softer diffuse tissue layer.
-      material.clearcoat = mix(.75, 1.0, tissueMoisture);
-      material.clearcoatRoughness = mix(.045, .12, tissueFine);
+      material.clearcoat = mix(${BRAIN_SURFACE.clearcoat[0]}, ${BRAIN_SURFACE.clearcoat[1]}, tissueMoisture);
+      material.clearcoatRoughness = mix(${BRAIN_SURFACE.coatRoughness[0]}, ${BRAIN_SURFACE.coatRoughness[1]}, tissueFine);
     `);
   };
-  material.customProgramCacheKey = () => 'brain-wet-cortex-v2';
+  material.customProgramCacheKey = () => 'brain-wet-cortex-museum-v3';
   return material;
 }
 
 export function createAnatomyExplorer(o: Options) {
   let state = defaultAnatomyState();
   let model: THREE.Group | undefined, loadPromise: Promise<void> | undefined;
-  let disposed = false, revision = 0, dirty = true, expanded = 0, fitting = false;
+  let disposed = false, revision = 0, dirty = true, fitting = false;
+  let animationEnabled = o.animate ?? true;
+  const expansion = [0, 0, 0], expansionFrom = [0, 0, 0];
+  let revealTime = 0, revealing = false, entrance = false;
   const loadAbort = new AbortController();
   const abortLoad = () => loadAbort.abort();
   o.signal.addEventListener('abort', abortLoad, { once: true });
@@ -119,9 +126,10 @@ export function createAnatomyExplorer(o: Options) {
   let heartbeatTime = 0;
   let cameraTime = 0;
   const cameraFrom = initialPosition.clone(), lookFrom = initialTarget.clone();
-  const ease = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
   function startCamera() {
-    cameraFrom.copy(o.camera.position); lookFrom.copy(o.controls.target); cameraTime = 0; fitting = true;
+    cameraFrom.copy(o.camera.position); lookFrom.copy(o.controls.target); cameraTime = 0;
+    fitting = !reduced && animationEnabled;
+    if (!fitting) { o.camera.position.copy(targetPosition); o.controls.target.copy(targetLook); }
   }
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let detail: BrainDetail | undefined;
@@ -129,6 +137,9 @@ export function createAnatomyExplorer(o: Options) {
   const proximityPosition = new THREE.Vector3(Infinity, Infinity, Infinity);
   const proximityTarget = new THREE.Vector3(Infinity, Infinity, Infinity);
   let opening = false, restoringCamera = false;
+  let openingEntry: 'contextual' | 'shortcut' = 'contextual';
+  // One owner at a time may decode, compile, or release the shared detail scene.
+  let brainLoadQueue: Promise<void> = Promise.resolve();
   let brainSnapshot: {
     position: THREE.Vector3; target: THREE.Vector3; quaternion: THREE.Quaternion;
     near: number; far: number; fov: number;
@@ -175,17 +186,20 @@ export function createAnatomyExplorer(o: Options) {
     o.camera.near = .025; o.camera.far = 100; o.camera.updateProjectionMatrix();
     o.camera.lookAt(targetLook); o.camera.updateMatrixWorld(true);
   }
-  async function openBrainView() {
-    if (!state.brainView.available || opening || state.brainView.status === 'open' || disposed) return;
+  async function openBrainView(entry: 'contextual' | 'shortcut' = 'contextual') {
+    if (state.mode === 'exterior' || state.status !== 'ready' || (entry === 'contextual' && !state.brainView.available)
+      || opening || state.brainView.status === 'open' || disposed) return;
     const request = ++brainRequest;
-    opening = true; state.brainView.status = 'loading'; emit();
-    try {
-      await brainAsset().load(o.canvas.clientWidth);
-      if (!disposed && !o.signal.aborted && request === brainRequest && state.brainView.available) await o.renderer.compileAsync?.(detail!.scene, o.camera);
-      if (disposed || o.signal.aborted || request !== brainRequest || !state.brainView.available) {
-        detail?.unload();
-        return;
-      }
+    opening = true; openingEntry = entry; state.brainView.status = 'loading'; emit();
+    const valid = () => !disposed && !o.signal.aborted && request === brainRequest && state.mode !== 'exterior'
+      && (entry === 'shortcut' || state.brainView.available);
+    const loading = brainLoadQueue.then(async () => {
+      if (!valid()) return;
+      const asset = brainAsset();
+      await asset.load(o.canvas.clientWidth);
+      if (!valid()) { asset.unload(); return; }
+      await o.renderer.compileAsync?.(asset.scene, o.camera);
+      if (!valid()) { asset.unload(); return; }
       fitting = false; discardInertia();
       brainSnapshot = {
         position: o.camera.position.clone(), target: o.controls.target.clone(), quaternion: o.camera.quaternion.clone(),
@@ -196,7 +210,9 @@ export function createAnatomyExplorer(o: Options) {
       frameBrain(); handle.hidden = true;
       state.brainView.status = 'open';
       detail!.setInteractive(true);
-    } catch {
+    });
+    brainLoadQueue = loading.catch(() => {});
+    try { await loading; } catch {
       if (request === brainRequest && !disposed && !o.signal.aborted) state.brainView.status = 'error';
     } finally {
       if (request === brainRequest && !disposed) {
@@ -257,7 +273,7 @@ export function createAnatomyExplorer(o: Options) {
     const available = brainProximity(fraction, visible, state.brainView.available);
     if (available !== state.brainView.available) {
       state.brainView.available = available;
-      if (!available && opening) { ++brainRequest; opening = false; state.brainView.status = 'closed'; }
+      if (!available && opening && openingEntry === 'contextual') closeBrainView();
       emit();
     }
   }
@@ -307,6 +323,7 @@ export function createAnatomyExplorer(o: Options) {
       stencilWrite: true, stencilRef: 0, stencilFunc: THREE.NotEqualStencilFunc,
       stencilFail: THREE.ReplaceStencilOp, stencilZFail: THREE.ReplaceStencilOp, stencilZPass: THREE.ReplaceStencilOp,
       polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+    capMat.color.multiply(new THREE.Color(sectionTint(sourceMaterial.name)));
     capMat.userData.sectionCap = true;
     const back = new THREE.Mesh(mesh.geometry, backMat), front = new THREE.Mesh(mesh.geometry, frontMat);
     for (const volume of [back, front]) { volume.matrixAutoUpdate = false; volume.frustumCulled = false; }
@@ -335,32 +352,22 @@ export function createAnatomyExplorer(o: Options) {
         if (!node.userData.partId) return;
         const part: Part = { id: node.userData.partId, label: node.userData.label,
           systems: node.userData.systems, description: node.userData.description || '', variant: node.userData.variant, node,
-          rest: node.position.clone(), restScale: node.scale.clone(), offset: new THREE.Vector3().fromArray(node.userData.explodeOffset), meshes: [] };
+          rest: node.position.clone(), restScale: node.scale.clone(),
+          offset: new THREE.Vector3().fromArray(presentationOffset(node.userData.partId, node.userData.assemblyGroup, node.userData.explodeOffset)),
+          phase: presentationPhase(node.userData.assemblyGroup), meshes: [] };
         node.traverse(child => {
           if (!(child instanceof THREE.Mesh)) return;
           part.meshes.push(child);
           child.castShadow = true; child.receiveShadow = true;
           const multiple = Array.isArray(child.material);
           const clones = (multiple ? child.material as THREE.Material[] : [child.material as THREE.Material]).map(m => {
+            const cardiac = part.id === 'heart' && m instanceof THREE.MeshStandardMaterial;
             const clone = m instanceof THREE.MeshStandardMaterial && m.name.startsWith('Anatomy_brain')
-              ? brainTissueMaterial(m) : m.clone();
+              ? brainTissueMaterial(m) : cardiac ? createHeartTissueMaterial(m) : m.clone();
             if (clone instanceof THREE.MeshStandardMaterial) {
-              if (!clone.name.startsWith('Anatomy_brain')) clone.envMapIntensity = .68;
-              if (clone instanceof THREE.MeshPhysicalMaterial) {
-                if (clone.name === 'Anatomy_muscle' || clone.name === 'Anatomy_tendon') {
-                  // Tissue should catch a soft museum-light highlight rather
-                  // than a plastic studio reflection. Tendons stay a touch
-                  // brighter while muscle remains matte between the fibers.
-                  const tendon = clone.name === 'Anatomy_tendon';
-                  clone.sheen = tendon ? .16 : .07;
-                  clone.sheenColor.set(tendon ? 0xe3d5ba : 0x8c463e);
-                  clone.sheenRoughness = tendon ? .72 : .82;
-                  clone.clearcoat = tendon ? .025 : .015;
-                  clone.clearcoatRoughness = .54;
-                  if (clone.normalMap) clone.normalScale.set(tendon ? .52 : .58, tendon ? .52 : .58);
-                } else if (clone.name === 'Anatomy_cortical_bone') {
-                  clone.envMapIntensity = .6;
-                }
+              if (!cardiac && !clone.name.startsWith('Anatomy_brain')) {
+                clone.envMapIntensity = .68;
+                applyTissuePreset(clone);
               }
               for (const texture of [clone.map, clone.normalMap, clone.roughnessMap]) {
                 if (texture) texture.anisotropy = Math.min(8, o.renderer.capabilities?.getMaxAnisotropy() ?? 1);
@@ -411,7 +418,7 @@ export function createAnatomyExplorer(o: Options) {
     const vector = direction ?? o.camera.position.clone().sub(o.controls.target).normalize();
     const distance = Math.max(1.2, fitDistance(size.x, size.y, size.z, o.camera.fov, o.camera.aspect));
     targetPosition.copy(targetLook).addScaledVector(vector.normalize(), distance); startCamera();
-    if (reduced) { o.camera.position.copy(targetPosition); o.controls.target.copy(targetLook); fitting = false; }
+    if (reduced || !animationEnabled) { o.camera.position.copy(targetPosition); o.controls.target.copy(targetLook); fitting = false; }
     invalidate();
   }
   function cutDirection() {
@@ -419,12 +426,21 @@ export function createAnatomyExplorer(o: Options) {
     return state.cut.axis === 'x' ? new THREE.Vector3(10 * sign, 3, 9)
       : state.cut.axis === 'y' ? new THREE.Vector3(5, 12 * sign, 8) : new THREE.Vector3(3, 3, 13 * sign);
   }
+  function fitDestination(direction?: THREE.Vector3, part?: Part) {
+    if (state.mode !== 'exploded' || !revealing) { fit(direction, part); return; }
+    const current = expansion.slice();
+    expansion.fill(state.explosion); updateLayout(); fit(direction, part);
+    for (let i = 0; i < 3; i++) expansion[i] = current[i];
+    updateLayout();
+  }
   async function setMode(mode: AnatomyMode) {
     closeBrainView(); restoringCamera = false;
+    revealing = false;
     const request = ++revision;
     clearSelection(); state.mode = mode; o.onMode?.();
     // Hide geometry and independent stencil passes synchronously, even if an
     // earlier anatomy load has not settled yet.
+    if (mode !== 'exploded') expansion.fill(0);
     if (mode === 'exterior') { applyVisibility(); updateLayout(); }
     if (mode !== 'exterior') {
       try { await load(); } catch (error) {
@@ -435,20 +451,23 @@ export function createAnatomyExplorer(o: Options) {
     }
     if (disposed || o.signal.aborted || request !== revision) return;
     applyVisibility(); applyPlane();
-    const previousExpansion = expanded;
-    expanded = state.mode === 'exploded' ? state.explosion : 0;
+    for (let i = 0; i < 3; i++) expansionFrom[i] = expansion[i];
+    expansion.fill(state.mode === 'exploded' ? state.explosion : 0);
     updateLayout();
     if (state.mode === 'exterior') {
       targetPosition.copy(initialPosition); targetLook.copy(initialTarget); startCamera();
     } else fit(state.mode === 'split' ? cutDirection() : new THREE.Vector3(2, 1, 14));
     // Measure the destination first, then animate from the current assembly.
-    if (!reduced && state.mode === 'exploded') expanded = previousExpansion;
+    if (!reduced && animationEnabled && state.mode === 'exploded') {
+      for (let i = 0; i < 3; i++) expansion[i] = expansionFrom[i];
+      revealTime = 0; revealing = true; entrance = true;
+    }
     updateLayout();
     invalidate(); emit();
   }
   function updateLayout() {
-    for (const part of parts) part.node.position.copy(part.rest).addScaledVector(part.offset, expanded);
-    o.exterior.position.set(-4.35 * expanded, 0, 0);
+    for (const part of parts) part.node.position.copy(part.rest).addScaledVector(part.offset, expansion[part.phase]);
+    o.exterior.position.set(COAT_OFFSET[0] * expansion[0], COAT_OFFSET[1] * expansion[0], COAT_OFFSET[2] * expansion[0]);
     model?.updateMatrixWorld(true); o.exterior.updateMatrixWorld(true);
     for (const c of caps) {
       const visible = state.mode === 'split' && c.part.node.visible && c.box.copy(c.source.geometry.boundingBox!).applyMatrix4(c.source.matrixWorld).intersectsPlane(plane);
@@ -471,11 +490,19 @@ export function createAnatomyExplorer(o: Options) {
   }
   function update(dt: number, animated = true) {
     if (disposed) return false;
+    animationEnabled = animated;
     if (state.brainView.status === 'open') return detail?.update(dt, animated && !reduced) ?? false;
     const target = state.mode === 'exploded' ? state.explosion : 0;
-    const moving = Math.abs(expanded - target) > .0001;
-    if (moving) { expanded = reduced ? target : THREE.MathUtils.damp(expanded, target, 8, dt); dirty = true; }
-    else expanded = target;
+    const moving = revealing;
+    if (revealing) {
+      revealTime += dt;
+      for (let i = 0; i < 3; i++) {
+        const progress = reduced || !animated ? 1 : revealProgress(revealTime, i as PresentationPhase, entrance);
+        expansion[i] = progress === 1 ? target : THREE.MathUtils.lerp(expansionFrom[i], target, progress);
+      }
+      revealing = !reduced && animated && revealTime < (entrance ? REVEAL_DURATION : .3);
+      dirty = true;
+    }
     const heart = parts.find(part => part.id === 'heart');
     const pumping = !reduced && animated && state.mode !== 'exterior' && !!heart?.node.visible;
     if (pumping) heartbeatTime += dt;
@@ -491,8 +518,8 @@ export function createAnatomyExplorer(o: Options) {
     }
     if (dirty) updateLayout();
     if (fitting) {
-      cameraTime = Math.min(1, cameraTime + dt / 1.15);
-      const t = reduced ? 1 : ease(cameraTime);
+      cameraTime = Math.min(1, cameraTime + dt / REVEAL_DURATION);
+      const t = reduced || !animated ? 1 : museumEase(cameraTime);
       o.camera.position.lerpVectors(cameraFrom, targetPosition, t); o.controls.target.lerpVectors(lookFrom, targetLook, t);
       fitting = t < 1;
     }
@@ -535,10 +562,14 @@ export function createAnatomyExplorer(o: Options) {
       state.selectedId = part.id;
       for (const mesh of part.meshes) for (const mat of (Array.isArray(mesh.material) ? mesh.material : [mesh.material])) {
         if (mat instanceof THREE.MeshStandardMaterial && !mat.name.startsWith('Anatomy_brain')) {
-          mat.emissive.set(0x597246); mat.emissiveIntensity = .28; selectedMaterials.push(mat);
+          // The green inspector glow bleaches red tissue when focusing the
+          // heart. Keep its natural color and lighting readable at close range.
+          mat.emissive.set(part.id === 'heart' ? 0x6c2020 : 0x597246);
+          mat.emissiveIntensity = part.id === 'heart' ? .035 : .28;
+          selectedMaterials.push(mat);
         }
       }
-      fit(undefined, part);
+      fitDestination(undefined, part);
     }
     emit(); invalidate();
   }
@@ -612,32 +643,48 @@ export function createAnatomyExplorer(o: Options) {
     setMode, setCut, selectPart, update, openBrainView, closeBrainView,
     setAnatomyVariant(value: AnatomyVariant) {
       if ((value !== 'male' && value !== 'female') || state.variant === value) return;
+      if (state.brainView.status === 'open' || opening) closeBrainView();
       state.variant = value;
       // Stop a previous selection flight without reframing the user's cut.
       fitting = false;
       applyVisibility(); updateLayout(); invalidate(); emit();
     },
     stopCameraMotion() { fitting=false; },
+    setAnimate(value: boolean) {
+      animationEnabled = value;
+      if (!value) {
+        revealing = false; expansion.fill(state.mode === 'exploded' ? state.explosion : 0);
+        if (fitting) { o.camera.position.copy(targetPosition); o.controls.target.copy(targetLook); fitting = false; }
+        updateLayout();
+      }
+      invalidate();
+    },
     resize() {
       if (state.brainView.status === 'open') { detail?.setInteractive(false); frameBrain(); detail?.setInteractive(true); return; }
       if (restoringCamera) { restoringCamera = false; return; }
-      if (state.mode !== 'exterior' && model) fit(fitting ? targetPosition.clone().sub(targetLook) : undefined);
+      if (state.mode !== 'exterior' && model) fitDestination(fitting ? targetPosition.clone().sub(targetLook) : undefined);
     },
     setExplosion(value: number) {
       if (state.brainView.status === 'open' || opening) closeBrainView();
       state.explosion=clamp01(value);
       // Fit the final expanded bounds without rebuilding any geometry.
-      const current=expanded; expanded=state.explosion; updateLayout(); fit(); expanded=current; invalidate();emit();
+      for (let i = 0; i < 3; i++) expansionFrom[i] = expansion[i];
+      expansion.fill(state.mode === 'exploded' ? state.explosion : 0); updateLayout(); fit();
+      if (!reduced && animationEnabled && state.mode === 'exploded') {
+        for (let i = 0; i < 3; i++) expansion[i] = expansionFrom[i];
+        revealTime = 0; revealing = true; entrance = false;
+      } else revealing = false;
+      updateLayout(); invalidate(); emit();
     },
     setVisibleSystems(visible: AnatomySystem[]) {
       if (state.brainView.status === 'open' || opening) closeBrainView();
       state.visibleSystems=[...new Set(visible)]; applyVisibility(); invalidate(); emit();
-      if (state.mode==='exploded') fit();
+      if (state.mode==='exploded') fitDestination();
     },
     reset() {
       closeBrainView(); restoringCamera = false;
       ++revision; clearSelection(); const status=state.status, manifest=state.parts;
-      state={...defaultAnatomyState(),status,parts:manifest}; expanded=0; applyPlane(); applyVisibility();updateLayout();
+      state={...defaultAnatomyState(),status,parts:manifest}; revealing=false; expansion.fill(0); applyPlane(); applyVisibility();updateLayout();
       targetPosition.copy(initialPosition);targetLook.copy(initialTarget);startCamera();emit();invalidate();o.onMode?.();
     },
     dispose() {

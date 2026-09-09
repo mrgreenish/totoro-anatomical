@@ -10,8 +10,12 @@ const factory = source.slice(source.indexOf('function brainTissueMaterial('), so
 const code = ts.transpileModule(factory + '\nexport { brainTissueMaterial };', {
   compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
 }).outputText;
+const tissueCode = ts.transpileModule(await readFile('lib/tissue-materials.ts','utf8'), {
+  compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+}).outputText.replace(/from ['"]([^'"]+)['"]/g, (_, name) => `from ${JSON.stringify(import.meta.resolve(name))}`);
+const tissueURL = 'data:text/javascript;base64,' + Buffer.from(tissueCode).toString('base64');
 const { brainTissueMaterial } = await import('data:text/javascript;base64,' + Buffer.from(
-  `import * as THREE from ${JSON.stringify(import.meta.resolve('three'))};\n${code}`,
+  `import * as THREE from ${JSON.stringify(import.meta.resolve('three'))};\nimport { applyTissuePreset, BRAIN_SURFACE } from ${JSON.stringify(tissueURL)};\n${code}`,
 ).toString('base64'));
 for (const sourceMaterial of [new THREE.MeshStandardMaterial(), new THREE.MeshPhysicalMaterial()]) {
   sourceMaterial.name = 'Anatomy_brain';

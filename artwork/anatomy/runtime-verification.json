@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "assertions": 102,
+  "assertions": 113,
   "coverage": [
     "cut coordinates and reverse",
     "system membership",
@@ -17,7 +17,12 @@
     "desktop/mobile framing",
     "heartbeat and section synchronization",
     "pause and reduced motion",
-    "animated explosion"
+    "animated explosion",
+    "staged reveal phases",
+    "slider retarget continuity",
+    "camera interruption",
+    "mode cancellation",
+    "30/60/120 Hz reveal consistency"
   ],
   "scope": "Node integration with the real Three.js GLTF loader and a DOM event fixture. GPU rendering and browser layout are separate checks."
 }

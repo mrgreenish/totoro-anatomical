@@ -18,7 +18,7 @@ export type SculptureController = {
   setVisibleSystems(value: AnatomySystem[]): void;
   setAnatomyVariant(value: AnatomyVariant): void;
   selectPart(id: string | null): void;
-  openBrainView(): Promise<void>;
+  openBrainView(entry?: 'contextual' | 'shortcut'): Promise<void>;
   closeBrainView(): void;
   reset(): void;
   dispose(): void;
@@ -39,7 +39,8 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(30, 1, .1, 100);
-  const initialPosition = new THREE.Vector3(3.5, 4.0, 12.4);
+  const cameraRadius = Math.hypot(3.5, 12.4), cameraAzimuth = THREE.MathUtils.degToRad(25);
+  const initialPosition = new THREE.Vector3(Math.sin(cameraAzimuth) * cameraRadius, 4.0, Math.cos(cameraAzimuth) * cameraRadius);
   const initialTarget = new THREE.Vector3(0, 2.30, 0);
   camera.position.copy(initialPosition);
   const controls = new OrbitControls(camera, canvas);
@@ -63,7 +64,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   scene.environment = environment.texture;
   scene.environmentIntensity = .48;
   room.dispose(); pmrem.dispose();
-  const ambient = new THREE.HemisphereLight(0xf8ffe9, 0x778371, .65);
+  const ambient = new THREE.HemisphereLight(0xf8ffe9, 0x778371, .45);
   scene.add(ambient);
   const key = new THREE.DirectionalLight(0xfff4de, 2.7);
   key.position.set(-3.5, 7, 5); key.castShadow = true;
@@ -72,9 +73,9 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   key.shadow.bias = -.00015; key.shadow.normalBias = .018;
   key.shadow.radius = 4; key.shadow.blurSamples = 8;
   key.target.position.set(0, 2, 0); scene.add(key, key.target);
-  const fill = new THREE.DirectionalLight(0xc7deef, .65);
+  const fill = new THREE.DirectionalLight(0xc7deef, .48);
   fill.position.set(5, 4, 2); scene.add(fill);
-  const rim = new THREE.DirectionalLight(0xe8ffc3, 2.5);
+  const rim = new THREE.DirectionalLight(0xddeafa, 3.0);
   rim.position.set(2, 5, -4); scene.add(rim);
 
   const plinthMaterial = new THREE.MeshPhysicalMaterial({ color: 0xdbdfcf, roughness: .82, metalness: 0, clearcoat: .08, clearcoatRoughness: .7 });
@@ -140,7 +141,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   let pixelRatio = Math.min(window.devicePixelRatio || 1, 1.8), slowFrames = 0;
   const dayStage = new THREE.Color(0xdbdfcf), nightStage = new THREE.Color(0x3c5054);
   const dayKey = new THREE.Color(0xfff4de), nightKey = new THREE.Color(0xbddeff);
-  const dayRim = new THREE.Color(0xe8ffc3), nightRim = new THREE.Color(0xc3df9b);
+  const dayRim = new THREE.Color(0xddeafa), nightRim = new THREE.Color(0xc3df9b);
 
   let viewportWidth = 0, viewportHeight = 0;
   function resize() {
@@ -207,9 +208,9 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     particleMaterial.uniforms.time.value = elapsed;
     night = damp(night, nightTarget, 3, dt);
     key.color.copy(dayKey).lerp(nightKey, night); key.intensity = THREE.MathUtils.lerp(2.7, 2.2, night);
-    ambient.intensity = THREE.MathUtils.lerp(.65, .25, night);
-    rim.color.copy(dayRim).lerp(nightRim, night); rim.intensity = THREE.MathUtils.lerp(2.5, 4.5, night);
-    fill.intensity = THREE.MathUtils.lerp(.65, .4, night); scene.environmentIntensity = THREE.MathUtils.lerp(.48, .28, night);
+    ambient.intensity = THREE.MathUtils.lerp(.45, .25, night);
+    rim.color.copy(dayRim).lerp(nightRim, night); rim.intensity = THREE.MathUtils.lerp(3.0, 4.5, night);
+    fill.intensity = THREE.MathUtils.lerp(.48, .4, night); scene.environmentIntensity = THREE.MathUtils.lerp(.48, .28, night);
     plinthMaterial.color.copy(dayStage).lerp(nightStage, night); edgeMaterial.color.copy(plinthMaterial.color);
     particleMaterial.uniforms.opacity.value = anatomy?.active ? 0 : THREE.MathUtils.lerp(.15, .62, night);
     const anatomySettling = anatomy?.update(dt, animated) ?? false;
@@ -279,7 +280,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
 
   const controller: SculptureController = {
     setRotate(value) { rotating = value; interactionUntil = 0; wake(); },
-    setAnimate(value) { animated = value; if (!value) motion.reset(); wake(); },
+    setAnimate(value) { animated = value; anatomy?.setAnimate(value); if (!value) motion.reset(); wake(); },
     setNight(value) { nightTarget = value ? 1 : 0; wake(); },
     async setMode(value) { resetting = false; motion.reset(); await anatomy?.setMode(value); wake(); },
     setCut(value) { anatomy?.setCut(value); },
@@ -287,7 +288,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     setVisibleSystems(value) { anatomy?.setVisibleSystems(value); },
     setAnatomyVariant(value) { anatomy?.setAnatomyVariant(value); renderer.shadowMap.needsUpdate = true; },
     selectPart(id) { anatomy?.selectPart(id); },
-    async openBrainView() { resetting = false; await anatomy?.openBrainView(); wake(); },
+    async openBrainView(entry) { resetting = false; await anatomy?.openBrainView(entry); wake(); },
     closeBrainView() { anatomy?.closeBrainView(); wake(); },
     reset() { rotating = false; resetting = true; anatomy?.reset(); motion.reset(); wake(); },
     dispose() {
@@ -409,7 +410,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       }
     }
     anatomy = createAnatomyExplorer({ canvas, renderer, scene, camera, controls, exterior: root,
-      signal: options.signal, wake, onState: state => options.onAnatomyState?.(state), onMode: () => motion.reset() });
+      signal: options.signal, animate: animated, wake, onState: state => options.onAnatomyState?.(state), onMode: () => motion.reset() });
     await renderer.compileAsync(scene, camera);
     if (!options.signal.aborted && !disposed) { renderer.render(scene, camera); options.onReady(); wake(); } else controller.dispose();
   } catch (error) {

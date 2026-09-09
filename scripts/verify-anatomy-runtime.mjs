@@ -8,10 +8,12 @@ const asModule = source => 'data:text/javascript;base64,' + Buffer.from(source).
 const compile = source => ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
 const stateURL = asModule(compile(await readFile('lib/anatomy-state.ts','utf8')));
 const state = await import(stateURL);
+const presentationURL=asModule(compile(await readFile('lib/anatomy-presentation.ts','utf8')));
+const tissueURL=asModule(compile(await readFile('lib/tissue-materials.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g,(_,name)=>`from ${JSON.stringify(import.meta.resolve(name))}`));
 const touchURL = asModule(compile(await readFile('lib/brain-touch.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g, (_, name) => `from ${JSON.stringify(import.meta.resolve(name))}`));
 const activityURL=asModule(compile(await readFile('lib/brain-activity.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g,(_,name)=>`from ${JSON.stringify(import.meta.resolve(name))}`));
-const detailURL = asModule(compile(await readFile('lib/brain-detail.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g, (_, name) => `from ${JSON.stringify(name==='./brain-touch'?touchURL:name==='./brain-activity'?activityURL:import.meta.resolve(name))}`));
-const source = compile(await readFile('lib/totoro-anatomy.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g, (_, name) => `from ${JSON.stringify(name==='./anatomy-state'?stateURL:name==='./brain-detail'?detailURL:import.meta.resolve(name))}`);
+const detailURL = asModule(compile(await readFile('lib/brain-detail.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g, (_, name) => `from ${JSON.stringify(name==='./tissue-materials'?tissueURL:name==='./brain-touch'?touchURL:name==='./brain-activity'?activityURL:import.meta.resolve(name))}`));
+const source = compile(await readFile('lib/totoro-anatomy.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g, (_, name) => `from ${JSON.stringify(name==='./anatomy-presentation'?presentationURL:name==='./tissue-materials'?tissueURL:name==='./anatomy-state'?stateURL:name==='./brain-detail'?detailURL:import.meta.resolve(name))}`);
 const { createAnatomyExplorer } = await import(asModule(source));
 let assertions = 0;
 function check(value, message) { assert(value,message); assertions++; }
@@ -40,14 +42,14 @@ globalThis.document={createElement:()=>new Element()};
 
 const doc=new Document();const buffer=doc.createBuffer();
 for(const [i,id,system,offset,variant] of [[0,'heart','organs',[1,0,2]],[1,'bone','bones',[0,0,0]],
-  [0,'male_part','reproductive',[.3,0,1],'male'],[0,'female_part','reproductive',[-.3,0,1],'female']]){
+  [0,'male_part','reproductive',[.3,0,1],'male'],[0,'female_part','reproductive',[-.3,0,1],'female'],[1,'muscle','muscles',[2,0,0]]]){
   const geometry=new THREE.BoxGeometry(.5,.8,.5);
   const pos=doc.createAccessor().setType('VEC3').setArray(geometry.attributes.position.array).setBuffer(buffer);
   const idx=doc.createAccessor().setType('SCALAR').setArray(geometry.index.array).setBuffer(buffer);
   const normal=doc.createAccessor().setType('VEC3').setArray(geometry.attributes.normal.array).setBuffer(buffer);
   const material=doc.createMaterial().setBaseColorFactor([.6,.3,.2,1]);
   const mesh=doc.createMesh().addPrimitive(doc.createPrimitive().setAttribute('POSITION',pos).setAttribute('NORMAL',normal).setIndices(idx).setMaterial(material));
-  const node=doc.createNode(id).setMesh(mesh).setTranslation([i-.5,2.5,0]).setExtras({partId:id,label:id,systems:[system],explodeOffset:offset,cap:true,...(variant?{variant}:{})});
+  const node=doc.createNode(id).setMesh(mesh).setTranslation([i-.5,2.5,0]).setExtras({partId:id,label:id,systems:[system],explodeOffset:offset,cap:true,...(id==='muscle'?{assemblyGroup:'muscles'}:{}),...(variant?{variant}:{})});
   (doc.getRoot().listScenes()[0]??doc.createScene()).addChild(node);
 }
 const bytes=await new NodeIO().writeBinary(doc);
@@ -67,12 +69,12 @@ function fixture(){
 const f=fixture();
 await f.api.setMode('split');f.api.update(.1);
 check(f.api.active&&f.api.state.status==='ready','Anatomy loads and activates');
-check(f.api.state.parts.length===4,'Exported identities become selectable parts');
+check(f.api.state.parts.length===5,'Exported identities become selectable parts');
 check(f.api.state.variant==='male','Male is the initial anatomical variant');
 const plane=f.material.clippingPlanes[0];
 const stencilVolumes=[];
 f.scene.traverse(node=>{if(node.isMesh&&node.material.stencilWrite&&!node.material.colorWrite)stencilVolumes.push(node);});
-check(stencilVolumes.length===8,'Both stencil passes are present for each fixture mesh');
+check(stencilVolumes.length===10,'Both stencil passes are present for each fixture mesh');
 for(const axis of ['x','y','z']) for(const flipped of [false,true]) for(const position of [.1,.41,.8]) {
   f.api.setCut({axis,flipped,position});f.api.update(.016);
   check(stencilVolumes.every(node=>node.material.clippingPlanes[0]===plane),
@@ -206,18 +208,52 @@ const volume=beating.scene.children.flatMap(n=>n.children).find(n=>n.geometry===
 check(volume.matrix.equals(beatingHeart.matrixWorld),'Cut stencil follows the deformed heart');
 beating.api.update(.01,false);
 check(beatingHeart.scale.equals(restScale),'Pausing restores the resting heart and section');
+beating.api.setAnimate(true);
 await beating.api.setMode('exploded');
 check(beatingHeart.position.distanceTo(new THREE.Vector3(-.5,2.5,0))<1e-9,'Exploded reveal starts assembled');
-beating.api.update(.15);
+beating.api.update(.4);
 check(beatingHeart.position.x>-.5&&beatingHeart.position.x<.15,'Exploded reveal interpolates before reaching its destination');
 beating.api.setVisibleSystems(['bones']);
 for(let i=0;i<240;i++)beating.api.update(1/60);
 check(!beating.api.update(1/60),'Hidden heart does not keep the render loop awake');
 beating.api.dispose();
+// The actual explorer stages existing transforms and respects interruption.
+const staged=fixture();await staged.api.setMode('exploded');
+const stagedHeart=staged.scene.getObjectByName('heart'),stagedMuscle=staged.scene.getObjectByName('muscle');
+const notifications=staged.events.length;
+staged.api.update(.1);
+check(staged.exterior.position.x<0&&stagedMuscle.position.x===.5&&stagedHeart.position.x===-.5,'Coat starts before muscles and organs');
+staged.api.update(.15);
+check(stagedMuscle.position.x>.5&&stagedHeart.position.x===-.5,'Muscles start while organs wait');
+staged.api.update(.15);
+check(stagedHeart.position.x>-.5,'Organs follow the coat and muscles');
+check(staged.events.length===notifications,'Reveal does not send per-frame React updates');
+const heldCamera=staged.camera.position.clone(),heldTarget=staged.controls.target.clone();staged.api.stopCameraMotion();staged.api.update(.1);
+check(staged.camera.position.equals(heldCamera)&&staged.controls.target.equals(heldTarget),'Orbit input immediately stops the camera flight');
+const beforeRetarget=stagedHeart.position.clone();staged.api.setExplosion(.25);
+check(stagedHeart.position.equals(beforeRetarget),'Slider retarget begins at the current pose');
+staged.api.update(.3);check(Math.abs(stagedHeart.position.x-(-.5+.25))<1e-9,'Slider reaches its destination without replaying entrance');
+staged.api.setAnimate(false);staged.api.setExplosion(0);
+check(stagedHeart.position.equals(new THREE.Vector3(-.5,2.5,0))&&staged.exterior.position.lengthSq()===0,'Paused zero separation restores exact authored positions immediately');
+await staged.api.setMode('split');await staged.api.setMode('exploded');
+check(staged.exterior.position.lengthSq()===0,'Paused mode entry does not start a reveal');
+staged.api.setAnimate(true);staged.api.setExplosion(.65);staged.api.update(.1);await staged.api.setMode('split');staged.api.update(.1);
+check(stagedHeart.position.equals(new THREE.Vector3(-.5,2.5,0)),'Switching modes cancels the reveal without stale offsets');
+staged.api.dispose();
+const motionSamples=[];
+for(const hz of [30,60,120]) {
+  const run=fixture();await run.api.setMode('exploded');let elapsed=0;const samples=[];
+  for(const target of [.15,.3,.6,.9,1.15]) {
+    while(elapsed<target-1e-12){const step=Math.min(1/hz,target-elapsed);run.api.update(step);elapsed+=step;}
+    samples.push([...run.exterior.position.toArray(),...run.scene.getObjectByName('muscle').position.toArray(),...run.scene.getObjectByName('heart').position.toArray(),...run.camera.position.toArray()]);
+  }
+  motionSamples.push(samples);run.api.dispose();
+}
+check(motionSamples.slice(1).every(run=>run.every((sample,i)=>sample.every((value,j)=>Math.abs(value-motionSamples[0][i][j])<1e-8))),'Reveal and camera agree at 30, 60 and 120 Hz');
 globalThis.window.matchMedia=()=>({matches:true});
 const still=fixture();await still.api.setMode('split');still.api.update(.13);
 check(still.scene.getObjectByName('heart').scale.equals(restScale),'Reduced motion leaves the heart at rest');still.api.dispose();
 
-const report={passed:true,assertions,coverage:['cut coordinates and reverse','system membership','GLTF metadata loading','visibility','exact reassembly','selection','reset','keyboard handle','perspective slice alignment and pointer dragging on all axes','failed loading and retry','stale load cancellation','resource cleanup','desktop/mobile framing','heartbeat and section synchronization','pause and reduced motion','animated explosion'],scope:'Node integration with the real Three.js GLTF loader and a DOM event fixture. GPU rendering and browser layout are separate checks.'};
+const report={passed:true,assertions,coverage:['cut coordinates and reverse','system membership','GLTF metadata loading','visibility','exact reassembly','selection','reset','keyboard handle','perspective slice alignment and pointer dragging on all axes','failed loading and retry','stale load cancellation','resource cleanup','desktop/mobile framing','heartbeat and section synchronization','pause and reduced motion','animated explosion','staged reveal phases','slider retarget continuity','camera interruption','mode cancellation','30/60/120 Hz reveal consistency'],scope:'Node integration with the real Three.js GLTF loader and a DOM event fixture. GPU rendering and browser layout are separate checks.'};
 await writeFile('artwork/anatomy/runtime-verification.json',JSON.stringify(report,null,2));
 console.log(JSON.stringify(report,null,2));

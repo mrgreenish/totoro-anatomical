@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "assertions": 89,
+  "assertions": 107,
   "coverage": [
     "proximity hysteresis",
     "occlusion and clipping",
@@ -17,7 +17,11 @@
     "resource disposal",
     "no proximity preload",
     "split-view occlusion cost",
-    "heartbeat does not retrigger occlusion"
+    "heartbeat does not retrigger occlusion",
+    "shortcut with hidden and clipped brain in both modes",
+    "shortcut cancellation on reset/mode/filter/variant/disposal",
+    "cancel-and-reopen race",
+    "shortcut retry and restoration"
   ],
   "scope": "Node integration with real detail GLB and texture files, a DOM fixture, and a stub image decoder. Browser shader compilation and interaction are checked separately."
 }

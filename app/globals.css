@@ -30,7 +30,7 @@ button:focus-visible,a:focus-visible { outline:2px solid var(--ring); outline-of
 .edition { position:absolute; z-index:2; left:4.5%; top:23%; display:flex; align-items:center; gap:12px; font-size:12px; font-weight:500; letter-spacing:1.4px; color:var(--secondary-ink); }
 .edition-line { display:block; width:24px; height:1px; background:var(--secondary-ink); }
 .edition-number { padding:2px 6px; border:1px solid var(--faint); border-radius:4px; font-size:12px; margin-left:7px; }
-.sculpture { position:absolute; z-index:1; inset:68px 0 115px 16%; }
+.sculpture { position:absolute; z-index:1; inset:124px 0 174px 16%; }
 .sculpture canvas { position:absolute; display:block; width:100%; height:100%; outline:none; cursor:grab; touch-action:none; opacity:0; transition:opacity 1s; }
 .sculpture canvas:active { cursor:grabbing; }
 .sculpture canvas:focus-visible { outline:1px solid #90a080; outline-offset:-12px; border-radius:40px; }
@@ -80,33 +80,33 @@ h1 span { color:#84956f; }
 .is-night .brand-icon { border-color:#ffffff27; }
 .gallery.is-fullscreen { position:fixed; inset:0; z-index:100; height:100dvh; min-height:0; }
 .is-fullscreen .gallery-header { opacity:.7; }
-.is-fullscreen .sculpture { inset:65px 0 100px; }
+.is-fullscreen .sculpture { inset:145px 0 125px; }
 .is-fullscreen .interaction-area { bottom:30px; left:50%; }
 .is-fullscreen .interaction-hint { position:static; }
 .is-fullscreen .sculpture-title,.is-fullscreen .gallery-footer,.is-fullscreen .edition,.is-fullscreen .vertical-note { display:none; }
 @keyframes breathe { 50% { opacity:.3; } }
-@media(min-width:1700px) { .sculpture { inset:90px 2% 140px 13%; } .interaction-area { bottom:130px; left:56%; } }
+@media(min-width:1700px) { .sculpture { inset:150px 2% 200px 13%; } .interaction-area { bottom:130px; left:56%; } }
 @media(max-width:1050px) { .header-note { display:none; } .sculpture-title { bottom:27%; } h1 { font-size:76px; } .sculpture-title p { max-width:170px; line-height:1.6; } .eyebrow { letter-spacing:1px; } .vertical-note { right:3%; } .background-word { top:24%; } }
 @media(max-width:700px) {
   .gallery { min-height:780px; }
   .gallery-header { padding:24px 6%; } .wordmark { font-size:20px; gap:9px; } .brand-icon { width:33px; height:33px; }
   .light-button { min-width:100px; height:39px!important; }
-  .edition { top:110px; left:6%; gap:8px; letter-spacing:.6px; } .edition-line { width:16px; }
+  .edition { display:none; } .edition-line { width:16px; }
   .background-word { left:-5%; top:21%; width:110%; font-size:25vw; }
-  .sculpture { inset:130px -4% 235px -4%; }
-  .sculpture-title { left:6%; bottom:139px; } .eyebrow,.title-rule,.japanese-title { display:none; }
+  .sculpture { inset:142px -4% 270px -4%; }
+  .sculpture-title { left:6%; bottom:174px; } .eyebrow,.title-rule,.japanese-title { display:none; }
   h1 { font-size:55px; margin:0 0 2px; } .sculpture-title p { font-size:14px; max-width:none; }
-  .vertical-note { right:6%; top:auto; bottom:153px; } .vertical-note span:first-child { font-size:12px; letter-spacing:3px; } .vertical-note span:last-child { display:none; }
-  .interaction-area { bottom:65px; left:50%; gap:10px; } .interaction-hint { position:absolute; top:-147px; }
+  .vertical-note { right:6%; top:auto; bottom:187px; } .vertical-note span:first-child { font-size:12px; letter-spacing:3px; } .vertical-note span:last-child { display:none; }
+  .interaction-area { bottom:65px; left:50%; gap:10px; } .interaction-hint { position:static; }
   .controls { padding:5px 8px; } .gallery-footer { left:6%; right:6%; padding:18px 0; } .gallery-footer>span:first-child { font-size:12px; letter-spacing:-.3px; }
   .footer-slash { margin:0 6px; } .live-badge { display:none; }
 }
 @media(max-width:380px) { .wordmark { font-size:18px; } .gallery-header { padding-inline:5%; } .light-button { min-width:90px; } .gallery-footer>span:first-child { font-size:11px; } }
-@media(max-height:650px) and (min-width:701px) { .gallery { min-height:600px; } .sculpture { inset:58px 0 95px 20%; } .interaction-area { bottom:79px; } .sculpture-title { bottom:30%; } h1 { font-size:67px; } .title-rule { margin-top:20px; } }
+@media(max-height:650px) and (min-width:701px) { .gallery { min-height:600px; } .sculpture { inset:135px 0 165px 20%; } .interaction-area { bottom:79px; } .sculpture-title { bottom:30%; } h1 { font-size:67px; } .title-rule { margin-top:20px; } }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition-duration:.01ms!important; } }
 
 /* Anatomy is a working surface within the same Quiet Forest gallery. */
-.anatomy-modebar { margin:0;min-width:0;position:absolute;z-index:6;top:104px;left:50%;transform:translateX(-50%);display:flex;gap:4px;padding:5px;border:1px solid var(--faint);border-radius:30px;background:#f6f8efed;box-shadow:0 5px 22px #26392608; }
+.anatomy-modebar { margin:0;min-width:0;position:absolute;z-index:6;top:89px;left:50%;transform:translateX(-50%);display:flex;gap:4px;padding:5px;border:1px solid var(--faint);border-radius:30px;background:#f6f8efed;box-shadow:0 5px 22px #26392608; }
 .anatomy-modebar button { display:flex;align-items:center;gap:8px;padding:10px 17px;border:0;border-radius:22px;background:transparent;color:var(--secondary-ink);font-size:14px;cursor:pointer;white-space:nowrap; }
 .anatomy-modebar button[aria-pressed=true] { background:#344a3b;color:#f9fbf2; }
 .anatomy-modebar button:disabled { opacity:.5;cursor:wait; }
@@ -259,3 +259,14 @@ h1 span { color:#84956f; }
   @keyframes anatomy-arrive { from { opacity:0; transform:translateX(24px); } to { opacity:1; transform:translateX(0); } }
   @keyframes detail-arrive { from { opacity:0; translate:0 8px; } to { opacity:1; translate:0 0; } }
 }
+
+/* The shortcut belongs to the existing inspector, above its system controls. */
+.brain-shortcut-area { margin:16px 0; }
+.brain-shortcut { display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:44px;padding:10px 12px;border:1px solid #71856a55;border-radius:10px;background:#e6ecdf;color:var(--ink);font-size:14px; }
+.brain-shortcut:hover:not(:disabled) { background:#dbe6d2; }
+.brain-shortcut svg { flex-shrink:0; }
+.brain-shortcut>span { flex:1;text-align:left; }
+.brain-shortcut-area .brain-entry-error { margin:9px 0 0;line-height:1.5; }
+.brain-shortcut-area .brain-cancel { padding-left:0; }
+.is-night .brain-shortcut { background:#344940;border-color:#81987955; }
+.is-night .brain-shortcut:hover:not(:disabled) { background:#425d4e; }

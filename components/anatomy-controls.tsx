@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, type RefObject } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { Layers3, ScanLine, Sparkles, ArrowLeftRight, Focus, X, ArrowLeft, ArrowUpRight, Brain } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { SYSTEMS, partVisible } from '@/lib/anatomy-state';
@@ -20,11 +20,17 @@ export function AnatomyControls({ state, ready, controller }: Props) {
   const active = state.mode !== 'exterior';
   const brainOpen = state.brainView.status === 'open';
   const brainButton = useRef<HTMLButtonElement>(null);
+  const shortcutButton = useRef<HTMLButtonElement>(null);
+  const activeModeButton = useRef<HTMLButtonElement>(null);
+  const [entry, setEntry] = useState<'contextual' | 'shortcut'>('contextual');
   const backButton = useRef<HTMLButtonElement>(null);
   const wasOpen = useRef(false);
   useEffect(() => {
     if (brainOpen) backButton.current?.focus({ preventScroll: true });
-    else if (wasOpen.current) brainButton.current?.focus({ preventScroll: true });
+    else if (wasOpen.current) {
+      const trigger = entry === 'shortcut' ? shortcutButton.current : brainButton.current;
+      (trigger ?? activeModeButton.current)?.focus({ preventScroll: true });
+    }
     wasOpen.current = brainOpen;
     if (!brainOpen && state.brainView.status !== 'loading') return;
     const escape = (event: KeyboardEvent) => {
@@ -32,8 +38,12 @@ export function AnatomyControls({ state, ready, controller }: Props) {
     };
     document.addEventListener('keydown', escape);
     return () => document.removeEventListener('keydown', escape);
-  }, [brainOpen, state.brainView.status, controller]);
+  }, [brainOpen, state.brainView.status, controller, entry]);
   const selected = state.parts.find(p => p.id === state.selectedId);
+  const openBrain = (origin: 'contextual' | 'shortcut') => {
+    setEntry(origin);
+    void controller.current?.openBrainView(origin);
+  };
   const selectable = state.parts.filter(p => partVisible(p, state));
   const toggle = (id: AnatomySystem) => controller.current?.setVisibleSystems(state.visibleSystems.includes(id)
     ? state.visibleSystems.filter(s => s !== id) : [...state.visibleSystems, id]);
@@ -44,14 +54,14 @@ export function AnatomyControls({ state, ready, controller }: Props) {
       <span className="brain-study-note">Human-inspired · Fictional anatomy</span>
     </div> : null}
     {active && !brainOpen && state.brainView.available ? <div className="brain-entry" aria-live="polite">
-      <button ref={brainButton} type="button" className="brain-open" aria-busy={state.brainView.status === 'loading'} disabled={state.brainView.status === 'loading'} onClick={() => { void controller.current?.openBrainView(); }}>
+      <button ref={brainButton} type="button" className="brain-open" aria-busy={state.brainView.status === 'loading'} disabled={state.brainView.status === 'loading'} onClick={() => openBrain('contextual')}>
         <Brain size={17} strokeWidth={1.5}/><span>{state.brainView.status === 'loading' ? 'Preparing brain view…' : state.brainView.status === 'error' ? 'Retry brain view' : 'Open brain view'}</span>{state.brainView.status === 'loading' ? <span className="loading-dot"/> : <ArrowUpRight size={15}/>}
       </button>
-      {state.brainView.status === 'error' ? <span className="brain-entry-error">The close-up couldn’t load.</span> : null}
-      {state.brainView.status === 'loading' ? <button type="button" className="brain-cancel" onClick={() => controller.current?.closeBrainView()}>Cancel</button> : null}
+      {entry === 'contextual' && state.brainView.status === 'error' ? <span className="brain-entry-error">The close-up couldn’t load.</span> : null}
+      {entry === 'contextual' && state.brainView.status === 'loading' ? <button type="button" className="brain-cancel" onClick={() => controller.current?.closeBrainView()}>Cancel</button> : null}
     </div> : null}
     {!brainOpen ? <fieldset className="anatomy-modebar" aria-label="View mode">
-      {MODES.map(({ id, label, icon: Icon }) => <button key={id} type="button" aria-pressed={state.mode === id}
+      {MODES.map(({ id, label, icon: Icon }) => <button key={id} ref={state.mode === id ? activeModeButton : undefined} type="button" aria-pressed={state.mode === id}
         disabled={!ready} onClick={() => { void controller.current?.setMode(id); }}><Icon size={16} strokeWidth={1.6}/>{label}</button>)}
     </fieldset> : null}
     {active && !brainOpen && selected ? <output className="anatomy-selection-badge"><Focus size={15}/><span>{selected.label}</span><button type="button" aria-label="Dismiss part highlight" onClick={() => controller.current?.selectPart(null)}><X size={15}/></button></output> : null}
@@ -60,6 +70,18 @@ export function AnatomyControls({ state, ready, controller }: Props) {
     {active && !brainOpen ? <aside className="anatomy-panel" aria-label="Anatomy controls">
       <div className="anatomy-panel-heading"><div><span className="anatomy-eyebrow">BENEATH THE COAT</span><h2>Anatomy study<span>.</span></h2></div><span className="anatomy-index">02</span></div>
       <p className="anatomy-intro">An imagined anatomy, shaped for a forest spirit.</p>
+      <div className="brain-shortcut-area" aria-live="polite">
+        <button ref={shortcutButton} type="button" className="brain-shortcut"
+          disabled={state.status !== 'ready' || state.brainView.status === 'loading'}
+          aria-busy={entry === 'shortcut' && state.brainView.status === 'loading'} onClick={() => openBrain('shortcut')}>
+          <Brain size={17} strokeWidth={1.5} aria-hidden="true"/>
+          <span>{entry === 'shortcut' && state.brainView.status === 'loading' ? 'Preparing brain view…'
+            : entry === 'shortcut' && state.brainView.status === 'error' ? 'Retry brain view' : 'Explore the brain'}</span>
+          <ArrowUpRight size={15} aria-hidden="true"/>
+        </button>
+        {entry === 'shortcut' && state.brainView.status === 'error' ? <p className="brain-entry-error">The close-up couldn’t load. Please try again.</p> : null}
+        {entry === 'shortcut' && state.brainView.status === 'loading' ? <button type="button" className="brain-cancel" onClick={() => controller.current?.closeBrainView()}>Cancel</button> : null}
+      </div>
       <fieldset className="anatomy-variants cut-directions" aria-label="Reproductive anatomy variant">
         <legend>Anatomical variant</legend>
         {(['male', 'female'] as const).map(variant => <button key={variant} type="button" aria-pressed={state.variant === variant}
