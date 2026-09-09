@@ -4,6 +4,7 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { clamp01, cutCoordinate, CUT_BOUNDS, defaultAnatomyState, fitDistance, systemVisible } from './anatomy-state';
 import type { AnatomyMode, AnatomyPart, AnatomyState, AnatomySystem } from './anatomy-state';
+import { brainProximity, createBrainDetail, type BrainDetail } from './brain-detail';
 
 type Part = AnatomyPart & { node: THREE.Object3D; rest: THREE.Vector3; restScale: THREE.Vector3; offset: THREE.Vector3; meshes: THREE.Mesh[] };
 // Textured glTF materials use a white color factor. Section faces need the
@@ -123,6 +124,16 @@ export function createAnatomyExplorer(o: Options) {
     cameraFrom.copy(o.camera.position); lookFrom.copy(o.controls.target); cameraTime = 0; fitting = true;
   }
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let detail: BrainDetail | undefined;
+  let brainRequest = 0, proximityTime = .2, proximityPending = true;
+  const proximityPosition = new THREE.Vector3(Infinity, Infinity, Infinity);
+  const proximityTarget = new THREE.Vector3(Infinity, Infinity, Infinity);
+  let opening = false, restoringCamera = false;
+  let brainSnapshot: {
+    position: THREE.Vector3; target: THREE.Vector3; quaternion: THREE.Quaternion;
+    near: number; far: number; fov: number;
+    minDistance: number; maxDistance: number; minPolarAngle: number; maxPolarAngle: number;
+  } | undefined;
   const pointer = new THREE.Vector2(), raycaster = new THREE.Raycaster();
   const externalMaterials = new Set<THREE.Material>();
   o.exterior.traverse(ob => { if (ob instanceof THREE.Mesh) for (const m of (Array.isArray(ob.material) ? ob.material : [ob.material])) externalMaterials.add(m); });
@@ -135,8 +146,128 @@ export function createAnatomyExplorer(o: Options) {
   o.canvas.parentElement?.appendChild(handle);
   let dragging: { id: number; position: number; x: number; y: number; dx: number; dy: number; screenPosition: number; wa: number; wb: number; camera: THREE.Vector3; target: THREE.Vector3 } | undefined;
 
-  function emit() { if (!disposed && !o.signal.aborted) o.onState?.({ ...state, cut: { ...state.cut }, visibleSystems: [...state.visibleSystems] }); }
-  function invalidate() { dirty = true; o.wake(); }
+  function emit() { if (!disposed && !o.signal.aborted) o.onState?.({ ...state, brainView: { ...state.brainView }, cut: { ...state.cut }, visibleSystems: [...state.visibleSystems] }); }
+  function invalidate() { dirty = true; proximityPending = true; o.wake(); }
+  function brainAsset() {
+    detail ??= createBrainDetail({ renderer: o.renderer, environment: o.scene.environment, signal: o.signal });
+    return detail;
+  }
+  async function preloadBrain() {
+    if (state.brainView.status === 'error' || disposed) return;
+    try { await brainAsset().load(o.canvas.clientWidth); }
+    catch {
+      if (disposed || o.signal.aborted || opening) return;
+      state.brainView.status = 'error'; emit();
+    }
+  }
+  function discardInertia() {
+    const position = o.camera.position.clone(), target = o.controls.target.clone();
+    const damping = o.controls.enableDamping, rotate = o.controls.autoRotate;
+    o.controls.enableDamping = false; o.controls.autoRotate = false; o.controls.update?.();
+    o.controls.enableDamping = damping; o.controls.autoRotate = rotate;
+    o.camera.position.copy(position); o.controls.target.copy(target);
+  }
+  function frameBrain() {
+    const bounds = new THREE.Box3().setFromObject(detail!.root);
+    const size = bounds.getSize(new THREE.Vector3()); bounds.getCenter(targetLook);
+    const distance = fitDistance(size.x, size.y, size.z, o.camera.fov, o.camera.aspect);
+    targetPosition.copy(targetLook).addScaledVector(new THREE.Vector3(1.2, .85, 2.1).normalize(), distance);
+    o.controls.minDistance = 1.05; o.controls.maxDistance = distance * 2.5;
+    o.controls.minPolarAngle = .025; o.controls.maxPolarAngle = Math.PI - .025;
+    // A fresh framing within the isolated scene avoids flying through the body.
+    o.camera.position.copy(targetPosition); o.controls.target.copy(targetLook);
+    o.camera.near = .025; o.camera.far = 100; o.camera.updateProjectionMatrix();
+    o.camera.lookAt(targetLook); o.camera.updateMatrixWorld(true);
+  }
+  async function openBrainView() {
+    if (!state.brainView.available || opening || state.brainView.status === 'open' || disposed) return;
+    const request = ++brainRequest;
+    opening = true; state.brainView.status = 'loading'; emit();
+    try {
+      await brainAsset().load(o.canvas.clientWidth);
+      if (!disposed && !o.signal.aborted && request === brainRequest && state.brainView.available) await o.renderer.compileAsync?.(detail!.scene, o.camera);
+      if (disposed || o.signal.aborted || request !== brainRequest || !state.brainView.available) return;
+      fitting = false; discardInertia();
+      brainSnapshot = {
+        position: o.camera.position.clone(), target: o.controls.target.clone(), quaternion: o.camera.quaternion.clone(),
+        near: o.camera.near, far: o.camera.far, fov: o.camera.fov,
+        minDistance: o.controls.minDistance, maxDistance: o.controls.maxDistance,
+        minPolarAngle: o.controls.minPolarAngle, maxPolarAngle: o.controls.maxPolarAngle,
+      };
+      frameBrain(); handle.hidden = true;
+      state.brainView.status = 'open';
+    } catch {
+      if (request === brainRequest && !disposed && !o.signal.aborted) state.brainView.status = 'error';
+    } finally {
+      if (request === brainRequest && !disposed) {
+        opening = false;
+        if (state.brainView.status === 'loading') state.brainView.status = 'closed';
+        emit(); invalidate();
+      }
+    }
+  }
+  function closeBrainView() {
+    ++brainRequest; opening = false;
+    if (brainSnapshot) {
+      fitting = false; discardInertia();
+      const saved = brainSnapshot;
+      o.camera.position.copy(saved.position); o.camera.quaternion.copy(saved.quaternion);
+      o.controls.target.copy(saved.target);
+      Object.assign(o.camera, { near: saved.near, far: saved.far, fov: saved.fov }); o.camera.updateProjectionMatrix();
+      Object.assign(o.controls, { minDistance: saved.minDistance, maxDistance: saved.maxDistance, minPolarAngle: saved.minPolarAngle, maxPolarAngle: saved.maxPolarAngle });
+      o.camera.updateMatrixWorld(true); brainSnapshot = undefined;
+      // A CSS viewport change on exit must not replace the restored camera fit.
+      restoringCamera = true;
+    }
+    handle.hidden = state.mode !== 'split';
+    state.brainView.status = 'closed'; emit(); invalidate();
+  }
+  function updateBrainAvailability() {
+    const brain = parts.find(p => p.id === 'brain');
+    let fraction = 0, visible = false;
+    if (brain?.node.visible && state.mode !== 'exterior') {
+      const bounds = new THREE.Box3().setFromObject(brain.node);
+      const center = bounds.getCenter(new THREE.Vector3());
+      const direction = center.clone().sub(o.camera.position);
+      if (direction.dot(o.camera.getWorldDirection(new THREE.Vector3())) > 0) {
+        const screen = new THREE.Box2();
+        for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) {
+          const p = new THREE.Vector3(x, y, z).project(o.camera);
+          screen.expandByPoint(new THREE.Vector2(p.x * o.canvas.clientWidth / 2, p.y * o.canvas.clientHeight / 2));
+        }
+        const size = screen.getSize(new THREE.Vector2());
+        fraction = Math.max(size.x, size.y) / Math.min(o.canvas.clientWidth, o.canvas.clientHeight);
+        if (brainProximity(fraction, true, state.brainView.available)) {
+          const obstacles = parts.filter(p => p.node.visible).flatMap(p => p.meshes);
+          if (o.exterior.visible) o.exterior.traverse(node => { if (node instanceof THREE.Mesh && node.visible) obstacles.push(node); });
+          if (state.mode === 'split') for (const cap of caps) if (cap.cap.visible) obstacles.push(cap.cap);
+          // Actual surface samples handle partial clipping and occlusion. Testing
+          // only the brain's center would fail in the interhemispheric fissure.
+          for (const mesh of brain.meshes) {
+            const positions = mesh.geometry.attributes.position;
+            const stride = Math.max(1, Math.floor(positions.count / 36));
+            for (let i = 0; i < positions.count; i += stride) {
+              const point = new THREE.Vector3().fromBufferAttribute(positions, i).applyMatrix4(mesh.matrixWorld);
+              if (state.mode === 'split' && plane.distanceToPoint(point) < -.001) continue;
+              const projected = point.clone().project(o.camera);
+              if (Math.abs(projected.x) > .94 || Math.abs(projected.y) > .94 || Math.abs(projected.z) > 1) continue;
+              raycaster.setFromCamera(new THREE.Vector2(projected.x, projected.y), o.camera);
+              const hit = raycaster.intersectObjects(obstacles, false).find(h => state.mode !== 'split' || plane.distanceToPoint(h.point) >= -.0001);
+              if (hit && brain.meshes.includes(hit.object as THREE.Mesh)) { visible = true; break; }
+            }
+            if (visible) break;
+          }
+        }
+      }
+    }
+    const available = brainProximity(fraction, visible, state.brainView.available);
+    if (available !== state.brainView.available) {
+      state.brainView.available = available;
+      if (!available && opening) { ++brainRequest; opening = false; state.brainView.status = 'closed'; }
+      emit();
+      if (available) void preloadBrain();
+    }
+  }
   function clearSelection() {
     for (const m of selectedMaterials) { m.emissive.set(0); m.emissiveIntensity = 1; }
     selectedMaterials = []; state.selectedId = null;
@@ -296,6 +427,7 @@ export function createAnatomyExplorer(o: Options) {
       : state.cut.axis === 'y' ? new THREE.Vector3(5, 12 * sign, 8) : new THREE.Vector3(3, 3, 13 * sign);
   }
   async function setMode(mode: AnatomyMode) {
+    closeBrainView(); restoringCamera = false;
     const request = ++revision;
     clearSelection(); state.mode = mode; o.onMode?.();
     if (mode !== 'exterior') {
@@ -343,6 +475,7 @@ export function createAnatomyExplorer(o: Options) {
   }
   function update(dt: number, animated = true) {
     if (disposed) return false;
+    if (state.brainView.status === 'open') return detail?.update(dt, animated && !reduced) ?? false;
     const target = state.mode === 'exploded' ? state.explosion : 0;
     const moving = Math.abs(expanded - target) > .0001;
     if (moving) { expanded = reduced ? target : THREE.MathUtils.damp(expanded, target, 8, dt); dirty = true; }
@@ -372,6 +505,13 @@ export function createAnatomyExplorer(o: Options) {
     }
     // Project the handle using the same camera transform as this frame's render.
     o.camera.lookAt(o.controls.target); o.camera.updateMatrixWorld(true);
+    if (!proximityPosition.equals(o.camera.position) || !proximityTarget.equals(o.controls.target) || dirty) proximityPending = true;
+    proximityTime += dt;
+    if (proximityPending && proximityTime >= .18) {
+      proximityTime = 0; proximityPending = false;
+      proximityPosition.copy(o.camera.position); proximityTarget.copy(o.controls.target);
+      updateBrainAvailability();
+    }
     if (state.mode === 'split' && model) {
       const [a,b,wa,wb] = handleEndpoints();
       const p = state.cut.position;
@@ -382,15 +522,17 @@ export function createAnatomyExplorer(o: Options) {
       handle.setAttribute('aria-valuenow',String(Math.round(state.cut.position*100)));
       handle.setAttribute('aria-valuetext',`${Math.round(state.cut.position*100)} percent, ${state.cut.axis === 'x' ? 'side to side' : state.cut.axis === 'y' ? 'top to bottom' : 'front to back'}`);
     }
-    return moving || fitting || pumping;
+    return moving || fitting || pumping || proximityPending;
   }
   function setCut(cut: Partial<AnatomyState['cut']>) {
+    if (state.brainView.status === 'open' || opening) closeBrainView();
     const changeDirection = cut.axis !== undefined && cut.axis !== state.cut.axis || cut.flipped !== undefined && cut.flipped !== state.cut.flipped;
     state.cut = { ...state.cut, ...cut, position: clamp01(cut.position ?? state.cut.position) };
     applyPlane(); invalidate(); emit();
     if (changeDirection) fit(cutDirection());
   }
   function selectPart(id: string | null) {
+    if (state.brainView.status === 'open' || opening) closeBrainView();
     clearSelection();
     const part = parts.find(p => p.id === id && p.node.visible);
     if (part) {
@@ -408,7 +550,7 @@ export function createAnatomyExplorer(o: Options) {
   const onDown = (event: PointerEvent) => { if (event.isPrimary) pointerDown = { x: event.clientX, y: event.clientY, id: event.pointerId }; };
   const onUp = (event: PointerEvent) => {
     const start = pointerDown; pointerDown = undefined;
-    if (!start || start.id !== event.pointerId || state.mode !== 'exploded' || Math.hypot(event.clientX-start.x,event.clientY-start.y)>5) return;
+    if (!start || start.id !== event.pointerId || state.brainView.status === 'open' || state.mode !== 'exploded' || Math.hypot(event.clientX-start.x,event.clientY-start.y)>5) return;
     const rect = o.canvas.getBoundingClientRect();
     pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);
     raycaster.setFromCamera(pointer,o.camera);
@@ -467,27 +609,34 @@ export function createAnatomyExplorer(o: Options) {
   return {
     get active() { return !!model && state.mode !== 'exterior'; },
     get state() { return state; },
-    setMode, setCut, selectPart, update,
+    get detailScene() { return state.brainView.status === 'open' ? detail?.scene : undefined; },
+    setMode, setCut, selectPart, update, openBrainView, closeBrainView,
     stopCameraMotion() { fitting=false; },
     resize() {
+      if (state.brainView.status === 'open') { frameBrain(); return; }
+      if (restoringCamera) { restoringCamera = false; return; }
       if (state.mode !== 'exterior' && model) fit(fitting ? targetPosition.clone().sub(targetLook) : undefined);
     },
     setExplosion(value: number) {
+      if (state.brainView.status === 'open' || opening) closeBrainView();
       state.explosion=clamp01(value);
       // Fit the final expanded bounds without rebuilding any geometry.
       const current=expanded; expanded=state.explosion; updateLayout(); fit(); expanded=current; invalidate();emit();
     },
     setVisibleSystems(visible: AnatomySystem[]) {
+      if (state.brainView.status === 'open' || opening) closeBrainView();
       state.visibleSystems=[...new Set(visible)]; applyVisibility(); invalidate(); emit();
       if (state.mode==='exploded') fit();
     },
     reset() {
+      closeBrainView(); restoringCamera = false;
       ++revision; clearSelection(); const status=state.status, manifest=state.parts;
       state={...defaultAnatomyState(),status,parts:manifest}; expanded=0; applyPlane(); applyVisibility();updateLayout();
       targetPosition.copy(initialPosition);targetLook.copy(initialTarget);startCamera();emit();invalidate();o.onMode?.();
     },
     dispose() {
       if(disposed)return;disposed=true;++revision;dragEnd();handle.remove();
+      ++brainRequest; detail?.dispose();
       loadAbort.abort();o.signal.removeEventListener('abort',abortLoad);
       o.canvas.removeEventListener('pointerdown',onDown);o.canvas.removeEventListener('pointerup',onUp);
       if(model){disposeObject(model);model.removeFromParent();}

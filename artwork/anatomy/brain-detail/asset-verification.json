@@ -1,0 +1,22 @@
+{
+  "triangles": 299276,
+  "meshes": 63,
+  "sizes": {
+    "brain-detail.glb": 1368984,
+    "basecolor-4096.webp": 2981670,
+    "normal-4096.webp": 23994164,
+    "basecolor-2048.webp": 930700,
+    "normal-2048.webp": 8861814,
+    "surface.webp": 1257228,
+    "membrane.webp": 745930,
+    "height.png": 2475123,
+    "neural-paths.json": 85269
+  },
+  "neuralPaths": 24,
+  "textureSizes": [
+    2048,
+    4096
+  ],
+  "generatedColorSource": "tissue-source.png",
+  "bakeMethod": "Analytical surface-coordinate bakes from the authored cortical field; all data maps use the geometry UVs."
+}

@@ -1,0 +1,8 @@
+{
+  "colorSource": "tissue-source.png",
+  "generator": "Built-in Codex ImageGen",
+  "prompt": "Create one square seamless PBR BASE COLOR texture of freshly hydrated human-inspired cerebral grey-matter tissue for a very photorealistic 3D brain model. This is a material texture sheet, not a picture of a brain. Completely fills frame, flat orthographic microscopic tissue surface, diffuse cross-polarized lighting with NO shadows, NO specular highlights, NO directional light, NO deep folds, NO large anatomy shapes. Natural pale warm pink-grey and blush ivory tissue with subtly varied mottling, delicate reddish-violet capillary traces, translucent-looking organic fine connective tissue, extremely fine irregular grain. Fresh soft tissue, moisture implied only by coloration; wet reflective highlights will be supplied by the 3D material. Low contrast, refined natural color, no gore scene, no labels, no border, no text. Uniform scale across entire frame, seamlessly tileable edges. Highest resolution square texture.",
+  "geometry": "Procedurally authored in Blender using a continuous asymmetric cortical fold field, planar medial surfaces, cerebellar folia and projected vascular curves.",
+  "maps": "Generated tissue color projected in object space, then coordinated analytical UV bakes of normal, height, curvature-derived AO, roughness, wetness and thickness. Native source height is 16-bit; browser runtime height is explicitly 8-bit.",
+  "medicalAccuracy": "Human-inspired fictional anatomy; not a medical reference. Subsurface scattering and neural activity are artistic approximations."
+}

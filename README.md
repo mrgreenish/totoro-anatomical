@@ -49,6 +49,16 @@ Front, three-quarter, profile and rear Cycles renders were reviewed. The opaque 
 
 Fan-made tribute to the character from *My Neighbor Totoro*. Not affiliated with Studio Ghibli.
 
+## Detailed brain study
+
+Zoom toward the exposed brain, or select “Brain · cerebral hemispheres” in the anatomy inspector. A subtle “Open brain view” button appears once the brain fills 30% of the canvas's shorter dimension. It remains available down to 22% to avoid flicker; hidden, occluded, and completely clipped brains do not offer entry. Clicking opens an isolated brain with free orbit. Back or Escape restores the previous camera, cut, filters, separation, and selection. Pause freezes neural and vascular motion; reduced motion disables automatic motion.
+
+The independent close-up contains 299,276 geometry triangles, surface-conforming vascular branches, and 24 neural paths. Its geometry and textures load on proximity and remain cached for reopening. Color and normal maps use 4096 pixels on desktop and 2048 on mobile or hardware limited to smaller textures. Supporting surface and membrane maps use 2048 pixels. The color map combines a new ImageGen tissue source with continuous object-space projection. Normal, height, roughness, curvature-derived ambient occlusion, wetness, and thickness maps are analytically baked at the same UV coordinates used by the cortex generator. The source height bake is 16-bit; browser PNG decoding uses the explicitly exported 8-bit runtime copy. Light scattering and subsurface impulses are artistic real-time approximations.
+
+Rebuild with `blender -b --python scripts/build-brain-detail.py`, then `node scripts/optimize-brain-detail.mjs`. Editable source, full-resolution bakes, provenance, and four offline review renders are in `artwork/anatomy/brain-detail/`. Deployment assets are in `public/models/brain-detail/`. The optimizer must preserve unused vertex attributes because texture bindings are added at runtime rather than embedded in the GLB.
+
+Run `node scripts/verify-brain-view.mjs` for proximity, occlusion, clipping, loading, restoration, texture bindings, UV retention, animation and cleanup checks. This complements the existing anatomy and brain material checks. Browser verification covered entry, detailed rendering, keyboard orbit/zoom, pause/play, Escape, cached reopening, and a 390 × 844 viewport without shader errors. Offline renders are separate from browser rendering and do not imply identical lighting.
+
 ## Anatomy explorer
 
 Exterior remains the initial view. Split uses one model-space cutting plane, with three directions, reversal, an on-model drag handle and a keyboard slider. Stencil passes create tissue-colored section surfaces from closed volumes, including inward cavity walls. Only visible volumes intersecting the plane participate. Exploded interpolates captured original transforms toward authored diagram offsets; bones stay central, skin and muscles move aside, organs fan forward, and the vascular and nervous trees move into layers. Click a part or choose its name to focus it. The seven system filters persist across anatomy modes. Character deformation pauses while anatomy is active, preserving the previous motion preference. Reset clears the anatomy controls and returns to Exterior.

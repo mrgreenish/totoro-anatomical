@@ -16,6 +16,8 @@ export type SculptureController = {
   setExplosion(value: number): void;
   setVisibleSystems(value: AnatomySystem[]): void;
   selectPart(id: string | null): void;
+  openBrainView(): Promise<void>;
+  closeBrainView(): void;
   reset(): void;
   dispose(): void;
 };
@@ -231,7 +233,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       key.shadow.camera.left = -shadowExtent; key.shadow.camera.right = shadowExtent;
       key.shadow.camera.updateProjectionMatrix();
     }
-    renderer.render(scene, camera);
+    renderer.render(anatomy?.detailScene ?? scene, camera);
     if (process.env.NODE_ENV !== 'production' && model && rawDt > 0 && rawDt < .2) {
       frameSamples.push(rawDt * 1000);
       if (frameSamples.length === 180) {
@@ -266,6 +268,8 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     setExplosion(value) { anatomy?.setExplosion(value); },
     setVisibleSystems(value) { anatomy?.setVisibleSystems(value); },
     selectPart(id) { anatomy?.selectPart(id); },
+    async openBrainView() { resetting = false; await anatomy?.openBrainView(); wake(); },
+    closeBrainView() { anatomy?.closeBrainView(); wake(); },
     reset() { rotating = false; resetting = true; anatomy?.reset(); motion.reset(); wake(); },
     dispose() {
       if (disposed) return;
@@ -284,6 +288,9 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     },
   };
   function onKey(event: KeyboardEvent) {
+    if (event.key === 'Escape' && anatomy?.state.brainView.status === 'open') {
+      event.preventDefault(); controller.closeBrainView(); return;
+    }
     if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '-', '=', 'Home'].includes(event.key)) return;
     event.preventDefault(); resetting = false; interactionUntil = performance.now() + 1800;
     const spherical = new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target));

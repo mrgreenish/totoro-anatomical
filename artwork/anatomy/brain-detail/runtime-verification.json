@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "assertions": 59,
+  "coverage": [
+    "proximity hysteresis",
+    "occlusion and clipping",
+    "selection and filters",
+    "explicit opening",
+    "camera and settings restoration",
+    "responsive framing",
+    "texture choices and bindings",
+    "shader hooks",
+    "cached reopening",
+    "failure and retry",
+    "stale opening cancellation",
+    "pause and reduced motion",
+    "resource disposal"
+  ],
+  "scope": "Node integration with real detail GLB and texture files, a DOM fixture, and a stub image decoder. Browser shader compilation and interaction are checked separately."
+}

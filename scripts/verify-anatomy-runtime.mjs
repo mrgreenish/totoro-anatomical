@@ -8,7 +8,8 @@ const asModule = source => 'data:text/javascript;base64,' + Buffer.from(source).
 const compile = source => ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
 const stateURL = asModule(compile(await readFile('lib/anatomy-state.ts','utf8')));
 const state = await import(stateURL);
-const source = compile(await readFile('lib/totoro-anatomy.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g, (_, name) => `from ${JSON.stringify(name==='./anatomy-state'?stateURL:import.meta.resolve(name))}`);
+const detailURL = asModule(compile(await readFile('lib/brain-detail.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g, (_, name) => `from ${JSON.stringify(import.meta.resolve(name))}`));
+const source = compile(await readFile('lib/totoro-anatomy.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g, (_, name) => `from ${JSON.stringify(name==='./anatomy-state'?stateURL:name==='./brain-detail'?detailURL:import.meta.resolve(name))}`);
 const { createAnatomyExplorer } = await import(asModule(source));
 let assertions = 0;
 function check(value, message) { assert(value,message); assertions++; }
