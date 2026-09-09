@@ -63,6 +63,15 @@ await f.api.setMode('split');f.api.update(.1);
 check(f.api.active&&f.api.state.status==='ready','Anatomy loads and activates');
 check(f.api.state.parts.length===2,'Exported identities become selectable parts');
 const plane=f.material.clippingPlanes[0];
+const stencilVolumes=[];
+f.scene.traverse(node=>{if(node.isMesh&&node.material.stencilWrite&&!node.material.colorWrite)stencilVolumes.push(node);});
+check(stencilVolumes.length===4,'Both stencil passes are present for each fixture mesh');
+for(const axis of ['x','y','z']) for(const flipped of [false,true]) for(const position of [.1,.41,.8]) {
+  f.api.setCut({axis,flipped,position});f.api.update(.016);
+  check(stencilVolumes.every(node=>node.material.clippingPlanes[0]===plane),
+    `${axis}/${flipped}/${position}: section masks track the same live plane as the visible tissue`);
+}
+f.api.setCut({axis:'x',flipped:false,position:.5});f.api.update(.016);
 check(plane.distanceToPoint(new THREE.Vector3(-1,2,0))>0,'Default cut retains negative X');
 f.api.setCut({axis:'z',position:.25,flipped:true});f.api.update(.1);
 check(plane.normal.z===1&&Math.abs(plane.constant+state.cutCoordinate('z',.25))<1e-8,'Axis, offset and reversal share one plane');

@@ -1,7 +1,89 @@
 {
-  "correctedVertices": 1152,
+  "correctedVertices": 1133,
   "correctedPrimitives": 24,
   "errors": 0,
   "clearance": 0.035,
-  "source": "Actual exported exterior, closest-surface inset; ocular openings excluded"
+  "source": "Actual exported exterior, closest-surface inset; ocular openings excluded",
+  "redTissueVertexAuditPassed": true,
+  "remainingOutsideParts": [
+    {
+      "name": "lens_R",
+      "outside": 483,
+      "vertices": 992,
+      "maximum": 0.06324119120836258
+    },
+    {
+      "name": "eye_R",
+      "outside": 342,
+      "vertices": 1972,
+      "maximum": 0.08792342990636826
+    },
+    {
+      "name": "eye_L",
+      "outside": 113,
+      "vertices": 1972,
+      "maximum": 0.0864863470196724
+    },
+    {
+      "name": "lens_L",
+      "outside": 55,
+      "vertices": 992,
+      "maximum": 0.05638866499066353
+    },
+    {
+      "name": "finger_L_0",
+      "outside": 17,
+      "vertices": 247,
+      "maximum": 0.008154834620654583
+    },
+    {
+      "name": "finger_R_4",
+      "outside": 23,
+      "vertices": 218,
+      "maximum": 0.01600952260196209
+    },
+    {
+      "name": "retina_R",
+      "outside": 19,
+      "vertices": 2028,
+      "maximum": 0.008607404306530952
+    },
+    {
+      "name": "finger_R_3",
+      "outside": 11,
+      "vertices": 191,
+      "maximum": 0.008359354920685291
+    },
+    {
+      "name": "finger_L_4",
+      "outside": 17,
+      "vertices": 221,
+      "maximum": 0.015970313921570778
+    },
+    {
+      "name": "finger_L_1",
+      "outside": 4,
+      "vertices": 262,
+      "maximum": 0.00419485243037343
+    },
+    {
+      "name": "finger_L_3",
+      "outside": 23,
+      "vertices": 225,
+      "maximum": 0.008288118988275528
+    },
+    {
+      "name": "finger_R_1",
+      "outside": 3,
+      "vertices": 228,
+      "maximum": 0.0036412025801837444
+    },
+    {
+      "name": "finger_R_0",
+      "outside": 19,
+      "vertices": 233,
+      "maximum": 0.008342410437762737
+    }
+  ],
+  "auditScope": "Vertex containment against exported exterior in Blender; no browser GPU visual assertion."
 }

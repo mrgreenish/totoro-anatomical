@@ -173,6 +173,9 @@ export function createAnatomyExplorer(o: Options) {
     backMat.stencilFail = backMat.stencilZFail = backMat.stencilZPass = THREE.IncrementWrapStencilOp;
     const frontMat = base.clone(); frontMat.side = THREE.FrontSide;
     frontMat.stencilFail = frontMat.stencilZFail = frontMat.stencilZPass = THREE.DecrementWrapStencilOp;
+    // Material.clone() deep-copies clipping planes. Both stencil passes must
+    // follow the live plane used by the tissue, rather than the plane at load.
+    backMat.clippingPlanes = frontMat.clippingPlanes = planes;
     base.dispose();
     const sourceMaterial = (Array.isArray(mesh.material) ? mesh.material[0] : mesh.material) as THREE.MeshStandardMaterial;
     const tissue = sourceMaterial.name.replace(/^Anatomy_/, '');
