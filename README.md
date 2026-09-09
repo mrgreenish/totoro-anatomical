@@ -51,6 +51,8 @@ Fan-made tribute to the character from *My Neighbor Totoro*. Not affiliated with
 
 ## Detailed brain study
 
+Pulled tissue uses the deformation's surface-area change to reduce optical thickness and increase local volume transmission, then returns to its dense resting material as the springs settle. Thickness-map-driven subsurface scattering responds to the studio lights and their shadows, with warm absorption through thin tissue. This is a real-time scattering approximation, not a path-traced diffusion simulation; the clear fluid coat remains a separate reflective layer.
+
 In the isolated study, press tissue to make a soft dent, drag it to pull, and release for a damped rebound. Vessels, neural paths, surface normals, and shadows follow the same deformation. Drag the background (or Alt-drag) to orbit. Direct manipulation remains available while automatic animation is paused; reduced motion removes the oscillating rebound. Pointer cancellation, losing focus, closing, and resizing release the grab safely. Run `node scripts/verify-brain-touch.mjs` for spring, gesture, shader, and cleanup checks.
 
 Zoom toward the exposed brain, or select “Brain · cerebral hemispheres” in the anatomy inspector. A subtle “Open brain view” button appears once the brain fills 30% of the canvas's shorter dimension. It remains available down to 22% to avoid flicker; hidden, occluded, and completely clipped brains do not offer entry. Clicking opens an isolated brain with free orbit. Back or Escape restores the previous camera, cut, filters, separation, and selection. Pause freezes neural and vascular motion; reduced motion disables automatic motion.

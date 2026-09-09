@@ -13,7 +13,9 @@
     "No browser shader compilation errors or console warnings",
     "Local tissue pull with fixed camera, quick poke and soft rebound",
     "Background drag rotates isolated brain",
-    "Return after manipulation restores selected brain, filters and separation"
+    "Return after manipulation restores selected brain, filters and separation",
+    "Stretch-dependent volume transmission and light-driven subsurface scattering compile without WebGL errors",
+    "Pulled patch retains wet reflections and returns to resting density"
   ],
   "correctedDuringReview": "The mesh optimizer removed UVs because materials are bound at runtime. keepAttributes now preserves them, with an explicit asset and runtime assertion.",
   "offlineReviews": ["three-quarter.png", "side.png", "underside.png", "macro.png"],

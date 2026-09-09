@@ -53,6 +53,21 @@ export function createTissueSprings() {
 export const TOUCH_GLSL = `
   uniform vec3 tissueTouchCenters[3];
   uniform vec3 tissueTouchOffsets[3];
+  // Surface-area change of the same deformation field. Stretching a patch
+  // thins it; a translation or compression alone must not make it transparent.
+  float softTissueArea(vec3 p, vec3 n) {
+    vec3 t=normalize(cross(n,abs(n.y)<.9?vec3(0.,1.,0.):vec3(1.,0.,0.)));
+    vec3 b=cross(n,t);
+    for (int i=0; i<3; i++) {
+      vec3 delta=p-tissueTouchCenters[i];
+      float weight=exp(-dot(delta,delta)/.0841);
+      vec3 gradient=-2.0*delta*weight/.0841;
+      t+=tissueTouchOffsets[i]*dot(gradient,t);
+      b+=tissueTouchOffsets[i]*dot(gradient,b);
+      p+=tissueTouchOffsets[i]*weight;
+    }
+    return clamp(length(cross(t,b)),.5,3.0);
+  }
   vec3 softTissuePosition(vec3 p) {
     for (int i=0; i<3; i++) {
       vec3 delta=p-tissueTouchCenters[i];

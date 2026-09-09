@@ -166,15 +166,49 @@ export function createBrainDetail(o: Options) {
             clearcoatRoughness: .14, clearcoatRoughnessMap: surface,
             clearcoatNormalMap: normal, clearcoatNormalScale: new THREE.Vector2(.12, .12),
             ior: 1.36, specularIntensity: .85, envMapIntensity: 1.2,
+            // Enable Three's volume-refraction pass; the shader varies its
+            // contribution locally from the actual stretched surface area.
+            transmission: .015, thickness: .12, thicknessMap: membrane,
+            attenuationColor: new THREE.Color(.72, .30, .25), attenuationDistance: .24,
           });
           // Three's normalMap takes precedence over bumpMap. Add the height
           // relief explicitly so both independently baked maps contribute.
           material.onBeforeCompile = shader => {
             shader.uniforms.brainMembrane = { value: membrane };
             shader.uniforms.brainHeight = { value: height };
-            shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vTissueUv;')
-              .replace('#include <begin_vertex>', '#include <begin_vertex>\nvTissueUv = uv;');
-            shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec2 vTissueUv;\nuniform sampler2D brainMembrane;\nuniform sampler2D brainHeight;')
+            shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vTissueUv; varying float vTissueArea;')
+              .replace('#include <begin_vertex>', `#include <begin_vertex>
+                vTissueUv = uv;
+                vec3 restNormal=normalize(mat3(modelMatrix)*normal);
+                vTissueArea=softTissueArea((modelMatrix*vec4(position,1.0)).xyz,restNormal);
+              `);
+            shader.fragmentShader = shader.fragmentShader.replace('#include <common>', `#include <common>
+              varying vec2 vTissueUv; varying float vTissueArea;
+              uniform sampler2D brainMembrane; uniform sampler2D brainHeight;
+              float brainStretch() { return smoothstep(1.035,1.55,vTissueArea); }
+              float brainOpticalDepth() {
+                return mix(.32,1.0,texture2D(brainMembrane,vTissueUv).g)/max(1.0,vTissueArea);
+              }
+            `)
+              .replace('#include <lights_physical_pars_fragment>', `
+                #include <lights_physical_pars_fragment>
+                // Fast thickness-based subsurface transport, evaluated for
+                // each real light after its attenuation and shadowing.
+                void RE_Direct_Brain(const in IncidentLight light, const in vec3 p,
+                  const in vec3 n, const in vec3 v, const in vec3 coatNormal,
+                  const in PhysicalMaterial tissue, inout ReflectedLight reflected) {
+                  RE_Direct_Physical(light,p,n,v,coatNormal,tissue,reflected);
+                  float depth=brainOpticalDepth();
+                  float stretch=brainStretch();
+                  float back=pow(saturate(dot(v,-normalize(light.direction+n*.42))),3.0);
+                  float wrap=saturate((dot(n,light.direction)+.45)/1.45);
+                  vec3 transport=exp(-vec3(.9,2.8,3.5)*depth);
+                  reflected.directDiffuse+=light.color*tissue.diffuseColor*transport*
+                    (back*(.52+.65*stretch)+wrap*.13)*RECIPROCAL_PI;
+                }
+                #undef RE_Direct
+                #define RE_Direct RE_Direct_Brain
+              `)
               .replace('#include <normal_fragment_maps>', `
                 #include <normal_fragment_maps>
                 float relief = texture2D(brainHeight, vTissueUv).r * .00065;
@@ -182,14 +216,11 @@ export function createBrainDetail(o: Options) {
                 vec3 rx = cross(dy, normal), ry = cross(normal, dx);
                 float determinant = dot(dx, rx);
                 normal = normalize(abs(determinant) * normal - sign(determinant) * (dFdx(relief) * rx + dFdy(relief) * ry));
-              `).replace('#include <opaque_fragment>', `
-                float thickness = texture2D(brainMembrane, vTissueUv).g;
-                float grazing = pow(1.0 - abs(dot(normal, normalize(vViewPosition))), 3.0);
-                outgoingLight += vec3(.085, .021, .017) * grazing * (1.0 - thickness);
-                #include <opaque_fragment>
-              `);
+              `).replace('#include <transmission_fragment>', THREE.ShaderChunk.transmission_fragment
+                .replace('material.transmission = transmission;', 'material.transmission = transmission + .46 * brainStretch();')
+                .replace('material.thickness = thickness;', 'material.thickness = thickness / max(1.0,vTissueArea);'));
           };
-          material.customProgramCacheKey = () => 'brain-detail-tissue-v1';
+          material.customProgramCacheKey = () => 'brain-detail-tissue-scattering-v2';
         }
         material.name = name; materials.add(material);
         const compileTissue = material.onBeforeCompile.bind(material);
