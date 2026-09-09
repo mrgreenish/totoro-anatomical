@@ -98,7 +98,7 @@ export default function Home() {
               <Rotate3D size={18} strokeWidth={1.6} /><span>Auto-rotate</span><span className={`toggle-led ${rotating ? 'active' : ''}`} />
             </Toggle>
             <span className="control-divider" />
-            <Tooltip><TooltipTrigger className="icon-button" aria-label={animated ? 'Pause animation' : 'Play animation'} disabled={!ready || anatomy.mode !== 'exterior'} onClick={() => { const next = !animated; setAnimated(next); sculptureRef.current?.setAnimate(next); }}>
+            <Tooltip><TooltipTrigger className="icon-button" aria-label={animated ? 'Pause animation' : 'Play animation'} disabled={!ready} onClick={() => { const next = !animated; setAnimated(next); sculptureRef.current?.setAnimate(next); }}>
               {animated ? <Pause size={17} strokeWidth={1.6} /> : <Play size={17} strokeWidth={1.6} />}
             </TooltipTrigger><TooltipContent>{animated ? 'Pause the moment' : 'Bring to life'}</TooltipContent></Tooltip>
             <Tooltip><TooltipTrigger className="icon-button" aria-label="Reset view" disabled={!ready} onClick={() => { setRotating(false); sculptureRef.current?.reset(); }}><RotateCcw size={17} strokeWidth={1.6} /></TooltipTrigger><TooltipContent>Back to the beginning</TooltipContent></Tooltip>

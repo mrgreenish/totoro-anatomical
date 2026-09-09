@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "assertions": 37,
+  "assertions": 65,
   "coverage": [
     "cut coordinates and reverse",
     "system membership",
@@ -10,10 +10,14 @@
     "selection",
     "reset",
     "keyboard handle",
+    "perspective slice alignment and pointer dragging on all axes",
     "failed loading and retry",
     "stale load cancellation",
     "resource cleanup",
-    "desktop/mobile framing"
+    "desktop/mobile framing",
+    "heartbeat and section synchronization",
+    "pause and reduced motion",
+    "animated explosion"
   ],
   "scope": "Node integration with the real Three.js GLTF loader and a DOM event fixture. GPU rendering and browser layout are separate checks."
 }

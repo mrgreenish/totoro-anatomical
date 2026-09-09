@@ -17,6 +17,20 @@ scene.render.bake.use_selected_to_active = False
 scene.render.bake.margin = 12
 scene.render.bake.use_clear = True
 
+def with_view3d_context(callback, active=None):
+    """Run mesh/UV operators in both Blender GUI and background contexts."""
+    screen = bpy.context.window.screen if bpy.context.window else bpy.context.screen
+    area = next((a for a in screen.areas if a.type == 'VIEW_3D'), None) if screen else None
+    region = next((r for r in area.regions if r.type == 'WINDOW'), None) if area else None
+    if area and region:
+        active = active or bpy.context.view_layer.objects.active
+        bpy.context.view_layer.objects.active = active
+        if active:
+            active.select_set(True)
+        with bpy.context.temp_override(area=area, region=region, active_object=active, object=active):
+            return callback()
+    return callback()
+
 for kind in ['muscle', 'cortical_bone', 'tendon']:
     material = bpy.data.materials['Anatomy_' + kind]
     vertices, faces, sources, coordinates = [], [], [], []
@@ -31,6 +45,8 @@ for kind in ['muscle', 'cortical_bone', 'tendon']:
         _, axes = np.linalg.eigh(np.cov((points[used] - center).T))
         # The long principal axis follows each individual muscle belly, rather
         # than projecting the same horizontal bands across the entire body.
+        # Eigenvalues are sorted, so local Z is the long axis and local X/Y
+        # are the two transverse directions used to stretch the fascicles.
         local = (points - center) @ axes
         vertices.extend(points.tolist())
         coordinates.extend(local.tolist())
@@ -51,10 +67,12 @@ for kind in ['muscle', 'cortical_bone', 'tendon']:
     bpy.ops.object.select_all(action='DESELECT')
     proxy.select_set(True)
     bpy.context.view_layer.objects.active = proxy
-    bpy.ops.object.mode_set(mode='EDIT')
-    bpy.ops.mesh.select_all(action='SELECT')
-    bpy.ops.uv.smart_project(angle_limit=1.2, island_margin=.012)
-    bpy.ops.object.mode_set(mode='OBJECT')
+    def unwrap():
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.uv.smart_project(angle_limit=1.2, island_margin=.012)
+        bpy.ops.object.mode_set(mode='OBJECT')
+    with_view3d_context(unwrap, proxy)
     for i, (uv, loop) in enumerate(sources):
         uv.data[loop].uv = mesh.uv_layers.active.data[i].uv
 
@@ -89,48 +107,53 @@ for kind in ['muscle', 'cortical_bone', 'tendon']:
         r.color_ramp.elements[1].color = (*light, 1)
         link(value, r.inputs[0])
         return r.outputs[0]
-    macro = noise((7, 7, 7))
     is_bone = kind == 'cortical_bone'
     is_tendon = kind == 'tendon'
-    grain = noise((70, 70, 70) if is_bone else (100, 100, 3))
-    bundles = noise((32, 32, 2) if not is_bone else (22, 22, 22))
-    if not is_bone:
-        separate = node('ShaderNodeSeparateXYZ')
-        link(coord.outputs['Vector'], separate.inputs[0])
-        angle = node('ShaderNodeMath')
-        angle.operation = 'ARCTAN2'
-        link(separate.outputs['Y'], angle.inputs[0])
-        link(separate.outputs['X'], angle.inputs[1])
-        phase = node('ShaderNodeMath')
-        phase.operation = 'MULTIPLY_ADD'
-        phase.inputs[1].default_value = 38
-        link(angle.outputs[0], phase.inputs[0])
-        link(bundles, phase.inputs[2])
-        wave = node('ShaderNodeMath')
-        wave.operation = 'SINE'
-        link(phase.outputs[0], wave.inputs[0])
-        normalize = node('ShaderNodeMath')
-        normalize.operation = 'MULTIPLY_ADD'
-        normalize.inputs[1].default_value = .5
-        normalize.inputs[2].default_value = .5
-        link(wave.outputs[0], normalize.inputs[0])
+    # Anisotropic noise produces longitudinal fibers: the high frequencies
+    # run across X/Y while Z changes slowly along the muscle belly. This keeps
+    # the pattern directional without the old concentric ring artifact.
+    macro = noise((4.5, 4.5, 1.8), detail=4)
+    if is_bone:
+        grain = noise((70, 70, 70), detail=3)
+        bundles = noise((22, 22, 22), detail=4)
+    elif is_tendon:
+        grain = noise((92, 30, 5), detail=2)
+        bundles = noise((28, 10, 2.5), detail=3)
+    else:
+        grain = noise((108, 108, 7), detail=2)
+        bundles = noise((22, 22, 3.5), detail=4)
+        # A soft transverse wave breaks up the fascicles without making a
+        # repeated stripe pattern. The shallow distortion follows each belly.
+        wave = node('ShaderNodeTexWave')
+        wave.wave_type = 'BANDS'
+        wave.bands_direction = 'X'
+        wave.inputs['Scale'].default_value = 18
+        wave.inputs['Distortion'].default_value = 3.2
+        wave.inputs['Detail'].default_value = 4
+        wave.inputs['Detail Scale'].default_value = 2.5
+        wave_mapping = node('ShaderNodeVectorMath')
+        wave_mapping.operation = 'MULTIPLY'
+        wave_mapping.inputs[1].default_value = (2.6, 2.6, .16)
+        link(coord.outputs['Vector'], wave_mapping.inputs[0])
+        link(wave_mapping.outputs[0], wave.inputs['Vector'])
         fiber_mix = node('ShaderNodeMixRGB')
-        fiber_mix.inputs[0].default_value = .40
+        fiber_mix.inputs[0].default_value = .34
         link(grain, fiber_mix.inputs[1])
-        link(normalize.outputs[0], fiber_mix.inputs[2])
+        link(wave.outputs['Color'], fiber_mix.inputs[2])
         grain = fiber_mix.outputs[0]
     if is_bone:
         color = ramp(macro, (.48, .395, .27), (.79, .73, .59))
         detail = ramp(grain, (.57, .51, .41), (1, 1, 1), .25, .68)
         roughness = (.54, .75)
     elif is_tendon:
-        color = ramp(macro, (.55, .48, .37), (.84, .79, .65))
-        detail = ramp(bundles, (.77, .75, .70), (1, 1, 1))
-        roughness = (.36, .53)
+        color = ramp(macro, (.48, .39, .28), (.82, .74, .58))
+        detail = ramp(bundles, (.78, .74, .66), (1, 1, .96))
+        roughness = (.43, .61)
     else:
-        color = ramp(macro, (.19, .028, .026), (.37, .082, .065))
-        detail = ramp(grain, (.64, .50, .47), (1.16, 1.07, 1.02))
-        roughness = (.46, .64)
+        color = ramp(macro, (.16, .018, .016), (.43, .095, .072), .12, .88)
+        # Perimysium is a quieter warm highlight between fiber bundles.
+        detail = ramp(grain, (.62, .40, .36), (1.14, 1.04, .98), .28, .72)
+        roughness = (.52, .68)
     multiply = node('ShaderNodeMixRGB')
     multiply.blend_type = 'MULTIPLY'
     multiply.inputs[0].default_value = 1
@@ -165,8 +188,8 @@ for kind in ['muscle', 'cortical_bone', 'tendon']:
     rough = bake_map('roughness', 'EMIT', 512)
     bsdf = node('ShaderNodeBsdfPrincipled')
     bump = node('ShaderNodeBump')
-    bump.inputs['Strength'].default_value = .45
-    bump.inputs['Distance'].default_value = .005 if is_bone else .006
+    bump.inputs['Strength'].default_value = .34 if is_tendon else (.28 if not is_bone else .45)
+    bump.inputs['Distance'].default_value = .004 if is_tendon else (.002 if not is_bone else .005)
     link(grain, bump.inputs['Height'])
     link(bump.outputs[0], bsdf.inputs['Normal'])
     link(bsdf.outputs[0], output.inputs[0])
@@ -195,18 +218,18 @@ for kind in ['muscle', 'cortical_bone', 'tendon']:
     nt = node('ShaderNodeTexImage')
     nt.image = normal
     nm = node('ShaderNodeNormalMap')
-    nm.inputs['Strength'].default_value = .65
+    nm.inputs['Strength'].default_value = .56 if not is_bone else .65
     link(nt.outputs[0], nm.inputs['Color'])
     link(nm.outputs[0], p.inputs['Normal'])
     p.inputs['IOR'].default_value = 1.46 if is_bone else 1.38
-    p.inputs['Coat Weight'].default_value = .025 if is_bone else .055
-    p.inputs['Coat Roughness'].default_value = .48 if is_bone else .34
-    p.inputs['Subsurface Weight'].default_value = .025 if is_bone else .09
+    p.inputs['Coat Weight'].default_value = .025 if is_bone else (.035 if is_tendon else .025)
+    p.inputs['Coat Roughness'].default_value = .48 if is_bone else (.44 if is_tendon else .52)
+    p.inputs['Subsurface Weight'].default_value = .025 if is_bone else (.04 if is_tendon else .065)
     p.inputs['Subsurface Radius'].default_value = (1, .35, .2)
     p.inputs['Subsurface Scale'].default_value = .012
     material['tint'] = [1, 1, 1]
     material['textureSource'] = kind + '-albedo.png'
-    material['realismRevision'] = 4
+    material['realismRevision'] = 5
     print('STRUCTURAL_TISSUE_BAKED', kind, flush=True)
 
 for img in list(bpy.data.images):

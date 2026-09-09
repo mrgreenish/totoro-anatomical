@@ -34,7 +34,11 @@ for name, position, energy, size, color in [
 camera = scene.camera
 camera.data.type = 'ORTHO'
 studies = [
-    ('muscles-realistic', 'muscles', None, (3, -12, 4.4), (0, 0, 1.9), 4.3),
+    ('muscles-realistic', 'muscles', None, (0, -13, 3.3), (0, 0, 1.9), 4.3),
+    ('muscles-three-quarter', 'muscles', None, (3, -12, 4.4), (0, 0, 1.9), 4.3),
+    ('muscles-profile', 'muscles', None, (10, -2, 3.0), (0, 0, 1.9), 4.3),
+    ('muscles-shoulder-close', 'muscles', None, (2.5, -8, 3.35), (.95, -.24, 2.45), 2.0),
+    ('muscles-thigh-close', 'muscles', None, (2.5, -8, 1.65), (.78, -.20, .56), 2.0),
     ('bones-realistic', 'bones', None, (3, -12, 4.8), (0, 0, 2.1), 4.8),
     ('bone-detail-realistic', None, ['skull', 'mandible'], (2, -9, 5), (0, -.05, 3.4), 2.5),
 ]
