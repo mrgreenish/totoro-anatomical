@@ -69,7 +69,25 @@ Run `node scripts/verify-brain-view.mjs` for proximity, occlusion, clipping, loa
 
 Exterior remains the initial view. Split uses one model-space cutting plane, with three directions, reversal, an on-model drag handle and a keyboard slider. Stencil passes create tissue-colored section surfaces from closed volumes, including inward cavity walls. Only visible volumes intersecting the plane participate. Exploded interpolates captured original transforms toward authored diagram offsets; bones stay central, skin and muscles move aside, organs fan forward, and the vascular and nervous trees move into layers. Click a part or choose its name to focus it. The seven system filters persist across anatomy modes. Character deformation pauses while anatomy is active, preserving the previous motion preference. Reset clears the anatomy controls and returns to Exterior.
 
-The additional anatomy contains 264 identifiable parts and 484,316 triangles. The optimized asset is about 11.08 MB. This is an imagined, human-inspired anatomical model fitted to Totoro, with major visible structures, simplified branching networks and attachment regions. It is not a medical reference. Microscopic structures, reproductive anatomy and a complete lymphatic network are outside its scope.
+The anatomy includes switchable male and female reproductive structures alongside the shared body systems. The complete asset stays within 500,000 triangles and 12 MB; current counts are recorded in `artwork/anatomy/asset-verification.json`. This is an imagined, human-inspired anatomical model fitted to Totoro, with major visible structures, simplified branching networks and attachment regions. It is not a medical reference. Microscopic structures and a complete lymphatic network remain outside its scope.
+
+### Reproductive variants
+
+The anatomy panel offers Male / Female and an independent Reproductive system filter. Both external genital tissue and internal reproductive structures appear only in Split and Exploded; Exterior uses the original unchanged sculpture. Male is the initial variant. Switching preserves the camera, slice, filters and separation, retaining a shared selected part and clearing one that becomes hidden. Reset restores Male and Exterior. No variant preference is stored between page loads.
+
+The 43 variant-specific parts include connected reproductive ducts, separate urinary routes, hollow tissue walls, labels, and authored explosion offsets. The bladder and terminal ureters move slightly anteriorly to create space for the reproductive tract. Genital tissue is fitted to its own anatomical envelopes, preserving the original coat. Tissue maps reuse occupied regions of the existing organ atlases. The anatomical basis is OpenStax's [male](https://openstax.org/books/anatomy-and-physiology/pages/27-1-anatomy-and-physiology-of-the-male-reproductive-system) and [female](https://openstax.org/books/anatomy-and-physiology/pages/27-2-anatomy-and-physiology-of-the-female-reproductive-system) reproductive-system diagrams, adapted to the character's proportions.
+
+Rebuild the addition without replacing unrelated runtime refinements:
+
+```sh
+blender -b artwork/anatomy/totoro-anatomy.blend --python-exit-code 1 --python scripts/build_reproductive.py --python scripts/verify_reproductive_blender.py
+node scripts/optimize-reproductive.mjs
+node scripts/verify-anatomy-asset.mjs
+node scripts/verify-anatomy-runtime.mjs
+blender -b artwork/anatomy/totoro-anatomy.blend --python scripts/review_reproductive.py
+```
+
+The additive merger replaces stable IDs in both the raw and runtime assets, reuses the existing material resources, and validates both outputs before writing. Generated geometry is repeatable and variant metadata lives in glTF extras and the manifest. The geometry verifier checks closed finite tissue volumes, genital containment, pelvic bounds, and connected duct endpoints. Offline front, side, underside, cutaway and exploded studies are in `artwork/anatomy/reviews/reproductive/`; these do not claim identical browser shading. Runtime tests cover inactive variants, section masks, selection, shadows through mesh visibility, reset, and returning to Exterior during a delayed load.
 
 The editable source is `artwork/anatomy/totoro-anatomy.blend`; the previous exterior file remains separate. Geometry and original transforms are stored alongside `partId`, label, system membership, assembly group, cavity flags and explosion offsets. Blender uses Z up / front −Y; metadata offsets and the browser use glTF Y up / front +Z. The manifest, exported validation reports, texture maps and review renders are under `artwork/anatomy/`.
 
@@ -84,6 +102,7 @@ uv run --with 'mcp>=1.9,<2' scripts/blender_mcp_client.py scripts/build_anatomy.
 uv run --with 'mcp>=1.9,<2' scripts/blender_mcp_client.py scripts/build_anatomy.py muscles
 uv run --with 'mcp>=1.9,<2' scripts/blender_mcp_client.py scripts/build_anatomy.py networks
 uv run --with 'mcp>=1.9,<2' scripts/blender_mcp_client.py scripts/build_anatomy.py details
+uv run --with 'mcp>=1.9,<2' scripts/blender_mcp_client.py scripts/build_anatomy.py reproductive
 uv run --with 'mcp>=1.9,<2' scripts/blender_mcp_client.py scripts/bake_anatomy.py
 uv run --with 'mcp>=1.9,<2' scripts/blender_mcp_client.py scripts/finalize_anatomy.py
 node scripts/optimize-anatomy.mjs
@@ -111,4 +130,4 @@ node scripts/verify-anatomy-runtime.mjs
 blender -b artwork/anatomy/totoro-anatomy.blend --python scripts/render_organ_studies.py
 ```
 
-`bake_organ_tissues.py` can rebake the organ atlases independently. The four `*-realistic.png` studies under `artwork/anatomy/reviews/` show the assembly, heart, brain, and abdomen with 48-sample denoised Cycles rendering. These are offline render checks; they do not establish browser frame rates or pixel-identical GPU shading. The asset checks verify closed finite volumes, all 264 stable IDs, independent tissue textures, normal tangents, physical coats, and the existing 12 MB / 500,000 triangle limits. Runtime integration checks exercise filtering, clipping controls, explosion/reassembly, selection, reset and resource cleanup.
+`bake_organ_tissues.py` can rebake the organ atlases independently. The four `*-realistic.png` studies under `artwork/anatomy/reviews/` show the assembly, heart, brain, and abdomen with 48-sample denoised Cycles rendering. These are offline render checks; they do not establish browser frame rates or pixel-identical GPU shading. The asset checks verify closed finite volumes, stable IDs, independent tissue textures, normal tangents, physical coats, and the existing 12 MB / 500,000 triangle limits. Runtime integration checks exercise filtering, clipping controls, explosion/reassembly, selection, reset and resource cleanup.

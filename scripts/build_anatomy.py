@@ -76,6 +76,7 @@ SPLEEN = material('spleen', (.38, .22, .34), .5, 'organ-albedo.png')
 GALL = material('gallbladder', (.25, .44, .24), .41)
 AIRWAY = material('airway', (.70, .58, .42), .48)
 SCLERA = material('sclera', (.93, .88, .73), .25)
+PUPIL = material('pupil', (.018, .014, .011), .22)
 
 OFFSETS = {'skin': (-4.35,0,0), 'bones': (0,0,0), 'muscles': (3.6,0,.1),
            'arteries': (-2.3,0,1.5), 'veins': (2.3,0,1.5), 'nerves': (0,0,-2.2)}
@@ -511,6 +512,9 @@ def build_details():
             join([surface(name,c,sc,CART,n=24,rings=12,wall=.16)],'cartilage_'+name+'_'+side,side+' '+name+' joint cartilage','bones',cavity=True)
         eyeoff=(s*.85,.6,2.5)
         organ('lens_'+side,side+' eye lens',(s*.62,-.658,3.53),(.087,.038,.087),CART,eyeoff)
+        # The exposed half of split view uses the anatomy asset rather than
+        # the exterior sculpt, so it needs the same readable dark pupil.
+        organ('pupil_'+side,side+' pupil',(s*.62,-.708,3.53),(.061,.014,.067),PUPIL,eyeoff)
         organ('retina_'+side,side+' retina',(s*.62,-.465,3.53),(.147,.164,.147),LIVER,eyeoff,wall=.075)
     organ('pineal','Pineal gland',(0,.24,3.38),(.037,.045,.03),GLAND,(.55,.45,2.4))
     organ('thymus','Thymus',(0,-.55,2.77),(.16,.06,.16),GLAND,(.45,.2,3.0),shape=lambda q,t,p:(q.x*(.65+.35*q.z),q.y,q.z))
@@ -520,6 +524,10 @@ def build_details():
     join([surface('white_matter',(s*.355,.08,3.56),(.268,.37,.263),white,n=44,rings=24) for s in [-1,1]],'brain_white_matter','Brain · deep white matter','nerves',(0,1.2,1.8))
     for ob in list(collection.all_objects):
         if ob not in before:ob['detailPass']=True
+
+def build_reproductive():
+    script=Path(__file__).with_name('build_reproductive.py')
+    exec(compile(script.read_text(),str(script),'exec'),{'__file__':str(script),'REPRODUCTIVE_EXPORT':False})
 
 def finish():
     fitter=Path(__file__).with_name('contain_anatomy.py')
@@ -536,6 +544,7 @@ def finish():
         if ob.type!='MESH': continue
         ob.data.calc_loop_triangles();triangles+=len(ob.data.loop_triangles)
         parts.append({'id':ob['partId'],'label':ob['label'],'systems':list(ob['systems']), 'triangles':len(ob.data.loop_triangles),'cavity':bool(ob['cavity'])})
+        if ob.get('variant'):parts[-1].update(variant=ob['variant'],anatomicalEnvelope=ob.get('anatomicalEnvelope'),externalSurface=bool(ob.get('externalSurface')))
     bpy.ops.object.select_all(action='DESELECT')
     for ob in list(collection.all_objects): ob.select_set(True)
     triangulation=[]
@@ -553,7 +562,7 @@ def finish():
     bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'totoro-anatomy.blend'))
     print('ANATOMY_EXPORTED',len(parts),'parts',triangles,'triangles')
 
-passes={'skeleton':build_skeleton,'organs':build_organs,'muscles':build_muscles,'networks':build_networks,'details':build_details,'skins':build_skins,'finish':finish}
+passes={'skeleton':build_skeleton,'organs':build_organs,'muscles':build_muscles,'networks':build_networks,'details':build_details,'skins':build_skins,'reproductive':build_reproductive,'finish':finish}
 if PHASE=='all':
     for name,fn in passes.items():fn();print('PASS_COMPLETE',name,flush=True)
 else:

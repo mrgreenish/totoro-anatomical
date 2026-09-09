@@ -15,6 +15,9 @@ for name in envelopes:
 rows=[]
 for ob in list(bpy.data.collections['ANATOMY'].all_objects):
     if ob.type!='MESH' or ob.get('assemblyGroup')=='skin':continue
+    # Genital tissue belongs to its authored penis/scrotum/vulva envelope,
+    # including the internal tissues enclosed by those external surfaces.
+    if ob.get('anatomicalEnvelope') in ('penis','scrotum','vulva'):continue
     if ob.get('envelopeFit'):continue
     pid=ob['partId'];applying=globals().get('ANATOMY_PHASE')=='fit'
     if applying:

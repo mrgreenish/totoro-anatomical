@@ -1,8 +1,8 @@
 {
   "passed": true,
-  "parts": 264,
-  "triangles": 484316,
-  "bytes": 10774792,
+  "parts": 308,
+  "triangles": 499088,
+  "bytes": 10421640,
   "textures": [
     {
       "name": "cortical_bone-normal",

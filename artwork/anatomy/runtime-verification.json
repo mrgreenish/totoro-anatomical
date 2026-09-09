@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "assertions": 84,
+  "assertions": 102,
   "coverage": [
     "cut coordinates and reverse",
     "system membership",
