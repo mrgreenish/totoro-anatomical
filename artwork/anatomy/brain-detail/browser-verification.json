@@ -1,7 +1,20 @@
 {
   "passed": true,
   "localUrl": "http://localhost:3000/",
-  "viewports": [[1104, 998], [390, 844], [1280, 720]],
+  "viewports": [
+    [
+      1104,
+      998
+    ],
+    [
+      390,
+      844
+    ],
+    [
+      1280,
+      720
+    ]
+  ],
   "checked": [
     "Exploded mode, organs only, brain selection and proximity button",
     "Click to enter isolated scene with visible tissue maps and surface vessels",
@@ -15,10 +28,23 @@
     "Background drag rotates isolated brain",
     "Return after manipulation restores selected brain, filters and separation",
     "Stretch-dependent volume transmission and light-driven subsurface scattering compile without WebGL errors",
-    "Pulled patch retains wet reflections and returns to resting density"
+    "Pulled patch retains wet reflections and returns to resting density",
+    "Hover/contact reveals branching sparks with soft tissue emission",
+    "Hover effect uses compiled physical shaders without browser errors"
   ],
   "correctedDuringReview": "The mesh optimizer removed UVs because materials are bound at runtime. keepAttributes now preserves them, with an explicit asset and runtime assertion.",
-  "offlineReviews": ["three-quarter.png", "side.png", "underside.png", "macro.png"],
-  "performanceObservation": {"medianMs": 10, "p95Ms": 10.7, "pixelRatio": 1, "trianglesIncludingNeuralPaths": 325996, "drawCalls": 64},
+  "offlineReviews": [
+    "three-quarter.png",
+    "side.png",
+    "underside.png",
+    "macro.png"
+  ],
+  "performanceObservation": {
+    "medianMs": 10,
+    "p95Ms": 10.7,
+    "pixelRatio": 1,
+    "trianglesIncludingNeuralPaths": 325996,
+    "drawCalls": 64
+  },
   "limitations": "Performance is a local observation, not a cross-device benchmark. Loading failures, exact numeric camera restoration and reduced motion were tested in the Node integration fixture."
 }

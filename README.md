@@ -51,6 +51,8 @@ Fan-made tribute to the character from *My Neighbor Totoro*. Not affiliated with
 
 ## Detailed brain study
 
+Hover over the detailed brain to reveal branching neural sparks with ivory cores, soft blue-green halos and warm tissue glow. The activity follows the contacted surface, fades on leaving, remains attached while pulling, and also works during touch contact. Pause freezes the firing phase; reduced motion shows a still glow. The effect is an artistic visualization rendered in the tissue material, so it cannot shine through the hidden back of the brain. Run `node scripts/verify-brain-activity.mjs` for hover, contact, pause, reduced-motion and lifecycle checks.
+
 Pulled tissue uses the deformation's surface-area change to reduce optical thickness and increase local volume transmission, then returns to its dense resting material as the springs settle. Thickness-map-driven subsurface scattering responds to the studio lights and their shadows, with warm absorption through thin tissue. This is a real-time scattering approximation, not a path-traced diffusion simulation; the clear fluid coat remains a separate reflective layer.
 
 In the isolated study, press tissue to make a soft dent, drag it to pull, and release for a damped rebound. Vessels, neural paths, surface normals, and shadows follow the same deformation. Drag the background (or Alt-drag) to orbit. Direct manipulation remains available while automatic animation is paused; reduced motion removes the oscillating rebound. Pointer cancellation, losing focus, closing, and resizing release the grab safely. Run `node scripts/verify-brain-touch.mjs` for spring, gesture, shader, and cleanup checks.
