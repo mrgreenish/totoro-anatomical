@@ -5,7 +5,8 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { createTotoroMotion } from './totoro-motion';
 import { createAnatomyExplorer, type AnatomyExplorer } from './totoro-anatomy';
-import type { AnatomyMode, AnatomyState, AnatomySystem } from './anatomy-state';
+import type { AnatomyMode, AnatomyState, AnatomySystem, AnatomyVariant } from './anatomy-state';
+import { createSplitShadowCache } from './split-shadow-cache';
 
 export type SculptureController = {
   setRotate(value: boolean): void;
@@ -15,6 +16,7 @@ export type SculptureController = {
   setCut(value: Partial<AnatomyState['cut']>): void;
   setExplosion(value: number): void;
   setVisibleSystems(value: AnatomySystem[]): void;
+  setAnatomyVariant(value: AnatomyVariant): void;
   selectPart(id: string | null): void;
   openBrainView(): Promise<void>;
   closeBrainView(): void;
@@ -32,6 +34,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   renderer.toneMapping = THREE.AgXToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true;
+  const splitShadowCache = createSplitShadowCache(renderer.shadowMap);
   // PCF avoids variance-shadow light leaks through thin ribs and close tissue.
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene();
@@ -233,6 +236,9 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       key.shadow.camera.left = -shadowExtent; key.shadow.camera.right = shadowExtent;
       key.shadow.camera.updateProjectionMatrix();
     }
+    const splitShadowsEligible = anatomy?.state.mode === 'split'
+      && anatomy.state.brainView.status !== 'open';
+    splitShadowCache.update(splitShadowsEligible, changed);
     renderer.render(anatomy?.detailScene ?? scene, camera);
     if (process.env.NODE_ENV !== 'production' && model && rawDt > 0 && rawDt < .2) {
       frameSamples.push(rawDt * 1000);
@@ -251,8 +257,20 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     const settling = Math.abs(night - nightTarget) > .001 || motion.settling || resetting || anatomySettling;
     if (movingCharacter || (rotating && !anatomy?.active) || changed || settling) frame = requestAnimationFrame(tick); else running = false;
   }
-  const onStart = () => { interactionUntil = Infinity; resetting = false; anatomy?.stopCameraMotion(); wake(); };
-  const onEnd = () => { interactionUntil = performance.now() + 1800; wake(); };
+  const onStart = () => {
+    interactionUntil = Infinity;
+    resetting = false;
+    anatomy?.stopCameraMotion();
+    splitShadowCache.begin(
+      anatomy?.state.mode === 'split' && anatomy.state.brainView.status !== 'open',
+    );
+    wake();
+  };
+  const onEnd = () => {
+    interactionUntil = performance.now() + 1800;
+    splitShadowCache.end();
+    wake();
+  };
   controls.addEventListener('start', onStart); controls.addEventListener('end', onEnd); controls.addEventListener('change', wake);
   const onVisibility = () => { if (document.hidden) { cancelAnimationFrame(frame); running = false; } else wake(); };
   const onContextLost = (event: Event) => { event.preventDefault(); cancelAnimationFrame(frame); running = false; options.onError(); };
@@ -267,6 +285,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     setCut(value) { anatomy?.setCut(value); },
     setExplosion(value) { anatomy?.setExplosion(value); },
     setVisibleSystems(value) { anatomy?.setVisibleSystems(value); },
+    setAnatomyVariant(value) { anatomy?.setAnatomyVariant(value); renderer.shadowMap.needsUpdate = true; },
     selectPart(id) { anatomy?.selectPart(id); },
     async openBrainView() { resetting = false; await anatomy?.openBrainView(); wake(); },
     closeBrainView() { anatomy?.closeBrainView(); wake(); },
@@ -284,7 +303,9 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       } });
       geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose());
       skeletons.forEach(s => s.dispose());
-      environment.dispose(); shadowTexture.dispose(); key.shadow.dispose(); renderer.dispose();
+      environment.dispose(); shadowTexture.dispose(); key.shadow.dispose();
+      splitShadowCache.dispose();
+      renderer.dispose();
     },
   };
   function onKey(event: KeyboardEvent) {

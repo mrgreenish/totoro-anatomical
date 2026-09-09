@@ -3,7 +3,7 @@
 import { useEffect, useRef, type RefObject } from 'react';
 import { Layers3, ScanLine, Sparkles, ArrowLeftRight, Focus, X, ArrowLeft, ArrowUpRight, Brain } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
-import { SYSTEMS, systemVisible } from '@/lib/anatomy-state';
+import { SYSTEMS, partVisible } from '@/lib/anatomy-state';
 import type { AnatomyState, AnatomySystem, AnatomyMode, CutAxis } from '@/lib/anatomy-state';
 import type { SculptureController } from '@/lib/totoro-scene';
 
@@ -34,7 +34,7 @@ export function AnatomyControls({ state, ready, controller }: Props) {
     return () => document.removeEventListener('keydown', escape);
   }, [brainOpen, state.brainView.status, controller]);
   const selected = state.parts.find(p => p.id === state.selectedId);
-  const selectable = state.parts.filter(p => systemVisible(p.systems, state.visibleSystems));
+  const selectable = state.parts.filter(p => partVisible(p, state));
   const toggle = (id: AnatomySystem) => controller.current?.setVisibleSystems(state.visibleSystems.includes(id)
     ? state.visibleSystems.filter(s => s !== id) : [...state.visibleSystems, id]);
   return <>
@@ -60,6 +60,11 @@ export function AnatomyControls({ state, ready, controller }: Props) {
     {active && !brainOpen ? <aside className="anatomy-panel" aria-label="Anatomy controls">
       <div className="anatomy-panel-heading"><div><span className="anatomy-eyebrow">BENEATH THE COAT</span><h2>Anatomy study<span>.</span></h2></div><span className="anatomy-index">02</span></div>
       <p className="anatomy-intro">An imagined anatomy, shaped for a forest spirit.</p>
+      <fieldset className="anatomy-variants cut-directions" aria-label="Reproductive anatomy variant">
+        <legend>Anatomical variant</legend>
+        {(['male', 'female'] as const).map(variant => <button key={variant} type="button" aria-pressed={state.variant === variant}
+          onClick={() => controller.current?.setAnatomyVariant(variant)}>{variant === 'male' ? 'Male' : 'Female'}</button>)}
+      </fieldset>
       <div className="systems-heading"><h3>Body systems</h3><button type="button" onClick={() => controller.current?.setVisibleSystems(SYSTEMS.map(s => s.id))}>Show all</button></div>
       <div className="system-list">
         {SYSTEMS.map(system => <div className={`system-row ${state.visibleSystems.includes(system.id) ? 'is-visible' : ''}`} key={system.id}>

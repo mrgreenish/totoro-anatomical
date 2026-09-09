@@ -1,13 +1,14 @@
 {
   "passed": true,
-  "parts": 264,
-  "triangles": 484316,
+  "parts": 306,
+  "triangles": 495728,
   "systems": [
     "arteries",
     "bones",
     "muscles",
     "nerves",
     "organs",
+    "reproductive",
     "skin",
     "veins"
   ],
@@ -2896,7 +2897,7 @@
       "triangles": 468,
       "nonmanifoldEdges": 0,
       "degenerateFaces": 0,
-      "volume": 0.00067805,
+      "volume": 0.00067948,
       "components": 1,
       "inwardCavities": 0,
       "cavity": true
@@ -2948,7 +2949,7 @@
       "triangles": 468,
       "nonmanifoldEdges": 0,
       "degenerateFaces": 0,
-      "volume": 0.00067798,
+      "volume": 0.00068046,
       "components": 1,
       "inwardCavities": 0,
       "cavity": true
@@ -2964,19 +2965,6 @@
       "volume": 0.01712627,
       "components": 2,
       "inwardCavities": 1,
-      "cavity": true
-    },
-    {
-      "id": "urethra",
-      "systems": [
-        "organs"
-      ],
-      "triangles": 180,
-      "nonmanifoldEdges": 0,
-      "degenerateFaces": 0,
-      "volume": 7.074e-05,
-      "components": 1,
-      "inwardCavities": 0,
       "cavity": true
     },
     {
@@ -3448,6 +3436,565 @@
       "components": 2,
       "inwardCavities": 0,
       "cavity": false
+    },
+    {
+      "id": "male_penis",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 448,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00100519,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "male_scrotum",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 704,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.0037819,
+      "components": 2,
+      "inwardCavities": 1,
+      "cavity": true
+    },
+    {
+      "id": "male_corpora_cavernosa",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 216,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00072817,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "male_corpus_spongiosum",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 336,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00054257,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "male_glans",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 240,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00015725,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "male_urethra",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 352,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00013837,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "male_prostate",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 700,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.0008378,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "male_testis_L",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 288,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.0011951,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "male_epididymis_L",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 224,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 8.903e-05,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "male_ductus_deferens_L",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 264,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00020434,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "male_seminal_vesicle_L",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 216,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00062365,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "male_ejaculatory_duct_L",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 4.006e-05,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "male_bulbourethral_gland_L",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 100,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 2.918e-05,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "male_bulbourethral_duct_L",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 120,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 5.58e-06,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "male_testis_R",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 288,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.0011951,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "male_epididymis_R",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 224,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 8.914e-05,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "male_ductus_deferens_R",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 264,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00020169,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "male_seminal_vesicle_R",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 216,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00062365,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "male_ejaculatory_duct_R",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 4.005e-05,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "male_bulbourethral_gland_R",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 100,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 2.918e-05,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "male_bulbourethral_duct_R",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 120,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 5.57e-06,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "female_mons_pubis",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 224,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00122981,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "female_labia_majora",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 512,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00258276,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "female_labia_minora",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 512,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00055322,
+      "components": 2,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "female_clitoral_glans",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 5.714e-05,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "female_vestibule",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 356,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00052269,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "female_clitoral_body",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 324,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00110042,
+      "components": 3,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "female_uterus",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 756,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00281462,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "female_cervix",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 240,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00063243,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "female_vagina",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 336,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00098742,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "female_urethra",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 160,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 5.306e-05,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "female_ovary_L",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 288,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00060115,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "female_uterine_tube_L",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 288,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00016843,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "female_fimbriae_L",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 160,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 1.212e-05,
+      "components": 5,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "female_vestibular_bulb_L",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00019758,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "female_vestibular_gland_L",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 100,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 4.625e-05,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "female_vestibular_duct_L",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 120,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 6.49e-06,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "female_ovary_R",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 288,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00060115,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "female_uterine_tube_R",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 288,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00016885,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
+    },
+    {
+      "id": "female_fimbriae_R",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 160,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 1.212e-05,
+      "components": 5,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "female_vestibular_bulb_R",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 168,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 0.00019758,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "female_vestibular_gland_R",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 100,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 4.625e-05,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": false
+    },
+    {
+      "id": "female_vestibular_duct_R",
+      "systems": [
+        "reproductive"
+      ],
+      "triangles": 120,
+      "nonmanifoldEdges": 0,
+      "degenerateFaces": 0,
+      "volume": 6.49e-06,
+      "components": 1,
+      "inwardCavities": 0,
+      "cavity": true
     }
   ],
   "scope": "Manifold edges, finite vertices, connected-shell winding, required major parts, and cavity bounds. Intersections and recognizability are also reviewed visually."

@@ -39,7 +39,9 @@ for ob in objects:
 required=['skull','mandible','tooth_roots','sternum','sacrum','brain','brain_white_matter','cerebellum','brainstem','heart','lung_L','lung_R','airways','esophagus','stomach','small_intestine','large_intestine','liver','gallbladder','pancreas','spleen','kidney_L','kidney_R','bladder','pituitary','thyroid','parathyroids','pineal','thymus','diaphragm','arteries_network','veins_network','nervous_network']
 missing=[p for p in required if p not in ids]
 if missing:errors.append({'error':'Missing major part coverage','ids':missing})
-if systems!=set(['skin','muscles','bones','organs','arteries','veins','nerves']):errors.append({'error':'Missing system coverage'})
+expected_systems=set(['skin','muscles','bones','organs','arteries','veins','nerves'])
+if any(ob.get('variant') for ob in objects):expected_systems.add('reproductive')
+if systems!=expected_systems:errors.append({'error':'Missing system coverage'})
 # Cranial and abdominal placement checks use actual mesh bounds.
 def bounds(pid):
     ob=next(o for o in objects if o.get('partId')==pid)

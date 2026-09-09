@@ -1,10 +1,10 @@
 {
-  "version": 1,
+  "version": 2,
   "coordinates": "glTF Y up, front +Z",
   "parts": [
     {
       "id": "skull",
-      "label": "Skull \u00b7 cranial vault & cheek arches",
+      "label": "Skull · cranial vault & cheek arches",
       "systems": [
         "bones"
       ],
@@ -1887,7 +1887,7 @@
     },
     {
       "id": "lung_L",
-      "label": "L lung \u00b7 two lobes",
+      "label": "L lung · two lobes",
       "systems": [
         "organs"
       ],
@@ -1896,7 +1896,7 @@
     },
     {
       "id": "lung_R",
-      "label": "R lung \u00b7 three lobes",
+      "label": "R lung · three lobes",
       "systems": [
         "organs"
       ],
@@ -1905,7 +1905,7 @@
     },
     {
       "id": "heart",
-      "label": "Heart \u00b7 four chambers & valves",
+      "label": "Heart · four chambers & valves",
       "systems": [
         "organs"
       ],
@@ -1994,15 +1994,6 @@
       "cavity": false
     },
     {
-      "id": "ureter_L",
-      "label": "L ureter",
-      "systems": [
-        "organs"
-      ],
-      "triangles": 468,
-      "cavity": true
-    },
-    {
       "id": "kidney_R",
       "label": "R kidney",
       "systems": [
@@ -2030,35 +2021,8 @@
       "cavity": false
     },
     {
-      "id": "ureter_R",
-      "label": "R ureter",
-      "systems": [
-        "organs"
-      ],
-      "triangles": 468,
-      "cavity": true
-    },
-    {
-      "id": "bladder",
-      "label": "Urinary bladder",
-      "systems": [
-        "organs"
-      ],
-      "triangles": 3360,
-      "cavity": true
-    },
-    {
-      "id": "urethra",
-      "label": "Urethra",
-      "systems": [
-        "organs"
-      ],
-      "triangles": 180,
-      "cavity": true
-    },
-    {
       "id": "arteries_network",
-      "label": "Arteries \u00b7 connected vascular tree",
+      "label": "Arteries · connected vascular tree",
       "systems": [
         "arteries"
       ],
@@ -2067,7 +2031,7 @@
     },
     {
       "id": "veins_network",
-      "label": "Veins \u00b7 connected vascular tree",
+      "label": "Veins · connected vascular tree",
       "systems": [
         "veins"
       ],
@@ -2265,7 +2229,7 @@
     },
     {
       "id": "brain_white_matter",
-      "label": "Brain \u00b7 deep white matter",
+      "label": "Brain · deep white matter",
       "systems": [
         "organs",
         "nerves"
@@ -2275,7 +2239,7 @@
     },
     {
       "id": "dermis_Body",
-      "label": "Skin \u00b7 Body",
+      "label": "Skin · Body",
       "systems": [
         "skin"
       ],
@@ -2284,7 +2248,7 @@
     },
     {
       "id": "dermis_Arm_L",
-      "label": "Skin \u00b7 Arm L",
+      "label": "Skin · Arm L",
       "systems": [
         "skin"
       ],
@@ -2293,7 +2257,7 @@
     },
     {
       "id": "dermis_Arm_R",
-      "label": "Skin \u00b7 Arm R",
+      "label": "Skin · Arm R",
       "systems": [
         "skin"
       ],
@@ -2302,7 +2266,7 @@
     },
     {
       "id": "dermis_Foot_L",
-      "label": "Skin \u00b7 Foot L",
+      "label": "Skin · Foot L",
       "systems": [
         "skin"
       ],
@@ -2311,7 +2275,7 @@
     },
     {
       "id": "dermis_Foot_R",
-      "label": "Skin \u00b7 Foot R",
+      "label": "Skin · Foot R",
       "systems": [
         "skin"
       ],
@@ -2320,7 +2284,7 @@
     },
     {
       "id": "dermis_Ear_L",
-      "label": "Skin \u00b7 Ear L",
+      "label": "Skin · Ear L",
       "systems": [
         "skin"
       ],
@@ -2329,7 +2293,7 @@
     },
     {
       "id": "dermis_Ear_R",
-      "label": "Skin \u00b7 Ear R",
+      "label": "Skin · Ear R",
       "systems": [
         "skin"
       ],
@@ -2338,7 +2302,7 @@
     },
     {
       "id": "dermis_Tail",
-      "label": "Skin \u00b7 Tail",
+      "label": "Skin · Tail",
       "systems": [
         "skin"
       ],
@@ -2374,16 +2338,586 @@
     },
     {
       "id": "brain",
-      "label": "Brain \u00b7 cerebral hemispheres",
+      "label": "Brain · cerebral hemispheres",
       "systems": [
         "organs",
         "nerves"
       ],
       "triangles": 47600,
       "cavity": false
+    },
+    {
+      "id": "pupil_L",
+      "label": "L pupil",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "cavity": false
+    },
+    {
+      "id": "pupil_R",
+      "label": "R pupil",
+      "systems": [
+        "organs"
+      ],
+      "triangles": 1680,
+      "cavity": false
+    },
+    {
+      "id": "male_penis",
+      "label": "Penis · skin and prepuce",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 448,
+      "cavity": true,
+      "anatomicalEnvelope": "penis",
+      "externalSurface": true
+    },
+    {
+      "id": "male_scrotum",
+      "label": "Scrotum",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 704,
+      "cavity": true,
+      "anatomicalEnvelope": "scrotum",
+      "externalSurface": true
+    },
+    {
+      "id": "male_corpora_cavernosa",
+      "label": "Penis · paired corpora cavernosa",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 216,
+      "cavity": false,
+      "anatomicalEnvelope": "penis",
+      "externalSurface": false
+    },
+    {
+      "id": "male_corpus_spongiosum",
+      "label": "Penis · corpus spongiosum",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 336,
+      "cavity": true,
+      "anatomicalEnvelope": "penis",
+      "externalSurface": false
+    },
+    {
+      "id": "male_glans",
+      "label": "Penis · glans",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 240,
+      "cavity": true,
+      "anatomicalEnvelope": "penis",
+      "externalSurface": false
+    },
+    {
+      "id": "male_urethra",
+      "label": "Male urethra",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 352,
+      "cavity": true,
+      "anatomicalEnvelope": "penis",
+      "externalSurface": false
+    },
+    {
+      "id": "male_prostate",
+      "label": "Prostate",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 700,
+      "cavity": true,
+      "anatomicalEnvelope": "pelvis",
+      "externalSurface": false
+    },
+    {
+      "id": "male_testis_L",
+      "label": "L testis",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 288,
+      "cavity": false,
+      "anatomicalEnvelope": "scrotum",
+      "externalSurface": false
+    },
+    {
+      "id": "male_epididymis_L",
+      "label": "L epididymis",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 224,
+      "cavity": true,
+      "anatomicalEnvelope": "scrotum",
+      "externalSurface": false
+    },
+    {
+      "id": "male_ductus_deferens_L",
+      "label": "L ductus deferens",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 264,
+      "cavity": true,
+      "anatomicalEnvelope": "pelvis",
+      "externalSurface": false
+    },
+    {
+      "id": "male_seminal_vesicle_L",
+      "label": "L seminal vesicle",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 216,
+      "cavity": false,
+      "anatomicalEnvelope": "pelvis",
+      "externalSurface": false
+    },
+    {
+      "id": "male_ejaculatory_duct_L",
+      "label": "L ejaculatory duct",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 168,
+      "cavity": true,
+      "anatomicalEnvelope": "pelvis",
+      "externalSurface": false
+    },
+    {
+      "id": "male_bulbourethral_gland_L",
+      "label": "L bulbourethral gland",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 100,
+      "cavity": false,
+      "anatomicalEnvelope": "pelvis",
+      "externalSurface": false
+    },
+    {
+      "id": "male_bulbourethral_duct_L",
+      "label": "L bulbourethral duct",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 120,
+      "cavity": true,
+      "anatomicalEnvelope": "pelvis",
+      "externalSurface": false
+    },
+    {
+      "id": "male_testis_R",
+      "label": "R testis",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 288,
+      "cavity": false,
+      "anatomicalEnvelope": "scrotum",
+      "externalSurface": false
+    },
+    {
+      "id": "male_epididymis_R",
+      "label": "R epididymis",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 224,
+      "cavity": true,
+      "anatomicalEnvelope": "scrotum",
+      "externalSurface": false
+    },
+    {
+      "id": "male_ductus_deferens_R",
+      "label": "R ductus deferens",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 264,
+      "cavity": true,
+      "anatomicalEnvelope": "pelvis",
+      "externalSurface": false
+    },
+    {
+      "id": "male_seminal_vesicle_R",
+      "label": "R seminal vesicle",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 216,
+      "cavity": false,
+      "anatomicalEnvelope": "pelvis",
+      "externalSurface": false
+    },
+    {
+      "id": "male_ejaculatory_duct_R",
+      "label": "R ejaculatory duct",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 168,
+      "cavity": true,
+      "anatomicalEnvelope": "pelvis",
+      "externalSurface": false
+    },
+    {
+      "id": "male_bulbourethral_gland_R",
+      "label": "R bulbourethral gland",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 100,
+      "cavity": false,
+      "anatomicalEnvelope": "pelvis",
+      "externalSurface": false
+    },
+    {
+      "id": "male_bulbourethral_duct_R",
+      "label": "R bulbourethral duct",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "male",
+      "triangles": 120,
+      "cavity": true,
+      "anatomicalEnvelope": "pelvis",
+      "externalSurface": false
+    },
+    {
+      "id": "female_mons_pubis",
+      "label": "Mons pubis",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 224,
+      "cavity": false,
+      "anatomicalEnvelope": "vulva",
+      "externalSurface": true
+    },
+    {
+      "id": "female_labia_majora",
+      "label": "Vulva · labia majora",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 512,
+      "cavity": false,
+      "anatomicalEnvelope": "vulva",
+      "externalSurface": true
+    },
+    {
+      "id": "female_labia_minora",
+      "label": "Vulva · labia minora",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 512,
+      "cavity": false,
+      "anatomicalEnvelope": "vulva",
+      "externalSurface": true
+    },
+    {
+      "id": "female_clitoral_glans",
+      "label": "Clitoris · glans",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 168,
+      "cavity": false,
+      "anatomicalEnvelope": "vulva",
+      "externalSurface": true
+    },
+    {
+      "id": "female_vestibule",
+      "label": "Vulva · vestibule",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 356,
+      "cavity": false,
+      "anatomicalEnvelope": "vulva",
+      "externalSurface": true
+    },
+    {
+      "id": "female_clitoral_body",
+      "label": "Clitoris · body and crura",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 324,
+      "cavity": false,
+      "anatomicalEnvelope": "vulva",
+      "externalSurface": false
+    },
+    {
+      "id": "female_uterus",
+      "label": "Uterus",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 756,
+      "cavity": true,
+      "anatomicalEnvelope": "pelvis",
+      "externalSurface": false
+    },
+    {
+      "id": "female_cervix",
+      "label": "Cervix",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 240,
+      "cavity": true,
+      "anatomicalEnvelope": "pelvis",
+      "externalSurface": false
+    },
+    {
+      "id": "female_vagina",
+      "label": "Vagina",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 336,
+      "cavity": true,
+      "anatomicalEnvelope": "vulva",
+      "externalSurface": false
+    },
+    {
+      "id": "female_urethra",
+      "label": "Female urethra",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 160,
+      "cavity": true,
+      "anatomicalEnvelope": "vulva",
+      "externalSurface": false
+    },
+    {
+      "id": "female_ovary_L",
+      "label": "L ovary",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 288,
+      "cavity": false,
+      "anatomicalEnvelope": "pelvis",
+      "externalSurface": false
+    },
+    {
+      "id": "female_uterine_tube_L",
+      "label": "L uterine tube",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 288,
+      "cavity": true,
+      "anatomicalEnvelope": "pelvis",
+      "externalSurface": false
+    },
+    {
+      "id": "female_fimbriae_L",
+      "label": "L fimbriae",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 160,
+      "cavity": false,
+      "anatomicalEnvelope": "pelvis",
+      "externalSurface": false
+    },
+    {
+      "id": "female_vestibular_bulb_L",
+      "label": "L vestibular bulb",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 168,
+      "cavity": false,
+      "anatomicalEnvelope": "vulva",
+      "externalSurface": false
+    },
+    {
+      "id": "female_vestibular_gland_L",
+      "label": "L greater vestibular gland",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 100,
+      "cavity": false,
+      "anatomicalEnvelope": "vulva",
+      "externalSurface": false
+    },
+    {
+      "id": "female_vestibular_duct_L",
+      "label": "L vestibular duct",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 120,
+      "cavity": true,
+      "anatomicalEnvelope": "vulva",
+      "externalSurface": false
+    },
+    {
+      "id": "female_ovary_R",
+      "label": "R ovary",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 288,
+      "cavity": false,
+      "anatomicalEnvelope": "pelvis",
+      "externalSurface": false
+    },
+    {
+      "id": "female_uterine_tube_R",
+      "label": "R uterine tube",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 288,
+      "cavity": true,
+      "anatomicalEnvelope": "pelvis",
+      "externalSurface": false
+    },
+    {
+      "id": "female_fimbriae_R",
+      "label": "R fimbriae",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 160,
+      "cavity": false,
+      "anatomicalEnvelope": "pelvis",
+      "externalSurface": false
+    },
+    {
+      "id": "female_vestibular_bulb_R",
+      "label": "R vestibular bulb",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 168,
+      "cavity": false,
+      "anatomicalEnvelope": "vulva",
+      "externalSurface": false
+    },
+    {
+      "id": "female_vestibular_gland_R",
+      "label": "R greater vestibular gland",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 100,
+      "cavity": false,
+      "anatomicalEnvelope": "vulva",
+      "externalSurface": false
+    },
+    {
+      "id": "female_vestibular_duct_R",
+      "label": "R vestibular duct",
+      "systems": [
+        "reproductive"
+      ],
+      "variant": "female",
+      "triangles": 120,
+      "cavity": true,
+      "anatomicalEnvelope": "vulva",
+      "externalSurface": false
+    },
+    {
+      "id": "bladder",
+      "label": "Urinary bladder",
+      "systems": [
+        "organs"
+      ],
+      "variant": null,
+      "triangles": 3360,
+      "cavity": true,
+      "anatomicalEnvelope": null,
+      "externalSurface": false
+    },
+    {
+      "id": "ureter_L",
+      "label": "L ureter",
+      "systems": [
+        "organs"
+      ],
+      "variant": null,
+      "triangles": 468,
+      "cavity": true,
+      "anatomicalEnvelope": null,
+      "externalSurface": false
+    },
+    {
+      "id": "ureter_R",
+      "label": "R ureter",
+      "systems": [
+        "organs"
+      ],
+      "variant": null,
+      "triangles": 468,
+      "cavity": true,
+      "anatomicalEnvelope": null,
+      "externalSurface": false
     }
   ],
-  "triangles": 484316,
+  "triangles": 499088,
   "materials": {
     "Anatomy_airway": {
       "tint": [
@@ -2570,6 +3104,14 @@
       "texture": null
     },
     "Anatomy_white_matter": {
+      "tint": [
+        1,
+        1,
+        1
+      ],
+      "texture": null
+    },
+    "Anatomy_pupil": {
       "tint": [
         1,
         1,

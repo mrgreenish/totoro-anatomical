@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { clamp01, cutCoordinate, CUT_BOUNDS, defaultAnatomyState, fitDistance, systemVisible } from './anatomy-state';
-import type { AnatomyMode, AnatomyPart, AnatomyState, AnatomySystem } from './anatomy-state';
+import { clamp01, cutCoordinate, CUT_BOUNDS, defaultAnatomyState, fitDistance, partVisible } from './anatomy-state';
+import type { AnatomyMode, AnatomyPart, AnatomyState, AnatomySystem, AnatomyVariant } from './anatomy-state';
 import { brainProximity, createBrainDetail, isBrainOccluder, probeBrainVisibility, type BrainDetail } from './brain-detail';
 
 type Part = AnatomyPart & { node: THREE.Object3D; rest: THREE.Vector3; restScale: THREE.Vector3; offset: THREE.Vector3; meshes: THREE.Mesh[] };
@@ -278,7 +278,7 @@ export function createAnatomyExplorer(o: Options) {
     const active = state.mode !== 'exterior';
     model.visible = active;
     o.exterior.visible = !active || state.visibleSystems.includes('skin');
-    for (const part of parts) part.node.visible = active && systemVisible(part.systems, state.visibleSystems);
+    for (const part of parts) part.node.visible = active && partVisible(part, state);
     for (const m of externalMaterials) setClipping(m, state.mode === 'split');
     for (const m of materials) if (!(m instanceof THREE.MeshBasicMaterial)) {
       // Cap surfaces are on the plane, not clipped by themselves.
@@ -324,7 +324,7 @@ export function createAnatomyExplorer(o: Options) {
     if (model || loadPromise) return loadPromise;
     state.status = 'loading'; emit();
     loadPromise = (async () => {
-      const response = await fetch('/models/totoro-anatomy.glb?v=anatomy-realism-7', { signal: loadAbort.signal });
+      const response = await fetch('/models/totoro-anatomy.glb?v=anatomy-back-containment-2', { signal: loadAbort.signal });
       if (!response.ok) throw new Error('Anatomy unavailable');
       const bytes = await response.arrayBuffer();
       if (disposed || o.signal.aborted) return;
@@ -334,7 +334,7 @@ export function createAnatomyExplorer(o: Options) {
       model.traverse(node => {
         if (!node.userData.partId) return;
         const part: Part = { id: node.userData.partId, label: node.userData.label,
-          systems: node.userData.systems, description: node.userData.description || '', node,
+          systems: node.userData.systems, description: node.userData.description || '', variant: node.userData.variant, node,
           rest: node.position.clone(), restScale: node.scale.clone(), offset: new THREE.Vector3().fromArray(node.userData.explodeOffset), meshes: [] };
         node.traverse(child => {
           if (!(child instanceof THREE.Mesh)) return;
@@ -384,7 +384,7 @@ export function createAnatomyExplorer(o: Options) {
       let capIndex = 0;
       for (const part of parts) for (const mesh of part.meshes) makeCaps(part, mesh, capIndex++);
       capRoot.visible = false;
-      state.parts = parts.map(({ id, label, systems, description }) => ({ id, label, systems, description }));
+      state.parts = parts.map(({ id, label, systems, description, variant }) => ({ id, label, systems, description, variant }));
       state.status = 'ready';
       emit();
     })();
@@ -423,6 +423,9 @@ export function createAnatomyExplorer(o: Options) {
     closeBrainView(); restoringCamera = false;
     const request = ++revision;
     clearSelection(); state.mode = mode; o.onMode?.();
+    // Hide geometry and independent stencil passes synchronously, even if an
+    // earlier anatomy load has not settled yet.
+    if (mode === 'exterior') { applyVisibility(); updateLayout(); }
     if (mode !== 'exterior') {
       try { await load(); } catch (error) {
         if (disposed || o.signal.aborted || request !== revision) return;
@@ -607,6 +610,13 @@ export function createAnatomyExplorer(o: Options) {
     get state() { return state; },
     get detailScene() { return state.brainView.status === 'open' ? detail?.scene : undefined; },
     setMode, setCut, selectPart, update, openBrainView, closeBrainView,
+    setAnatomyVariant(value: AnatomyVariant) {
+      if ((value !== 'male' && value !== 'female') || state.variant === value) return;
+      state.variant = value;
+      // Stop a previous selection flight without reframing the user's cut.
+      fitting = false;
+      applyVisibility(); updateLayout(); invalidate(); emit();
+    },
     stopCameraMotion() { fitting=false; },
     resize() {
       if (state.brainView.status === 'open') { detail?.setInteractive(false); frameBrain(); detail?.setInteractive(true); return; }

@@ -8,6 +8,15 @@ const doc=await new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependen
 const manifest=JSON.parse(await readFile('artwork/anatomy/manifest.json','utf8'));
 const nodes=doc.getRoot().listNodes().filter(n=>n.getExtras().partId);
 const ids=nodes.map(n=>n.getExtras().partId);
+const reproductive=JSON.parse(await readFile('artwork/anatomy/reproductive-manifest.json','utf8'));
+assert(!ids.includes('urethra'),'Generic urethra must be replaced');
+for(const p of reproductive.parts.filter(p=>p.variant)){
+  const node=nodes.find(n=>n.getExtras().partId===p.id);
+  assert(node,`Missing reproductive part ${p.id}`);
+  assert.equal(node.getExtras().variant,p.variant);
+  assert.deepEqual(node.getExtras().systems,['reproductive']);
+  assert(node.getExtras().description&&node.getExtras().anatomicalEnvelope);
+}
 assert.equal(ids.length,new Set(ids).size);
 const byId=(a,b)=>a.localeCompare(b);
 assert.deepEqual([...ids].sort(byId),manifest.parts.map(p=>p.id).sort(byId));

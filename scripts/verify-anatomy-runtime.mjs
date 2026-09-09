@@ -39,14 +39,15 @@ globalThis.window={matchMedia:()=>({matches:true})};
 globalThis.document={createElement:()=>new Element()};
 
 const doc=new Document();const buffer=doc.createBuffer();
-for(const [i,id,system,offset] of [[0,'heart','organs',[1,0,2]],[1,'bone','bones',[0,0,0]]]){
+for(const [i,id,system,offset,variant] of [[0,'heart','organs',[1,0,2]],[1,'bone','bones',[0,0,0]],
+  [0,'male_part','reproductive',[.3,0,1],'male'],[0,'female_part','reproductive',[-.3,0,1],'female']]){
   const geometry=new THREE.BoxGeometry(.5,.8,.5);
   const pos=doc.createAccessor().setType('VEC3').setArray(geometry.attributes.position.array).setBuffer(buffer);
   const idx=doc.createAccessor().setType('SCALAR').setArray(geometry.index.array).setBuffer(buffer);
   const normal=doc.createAccessor().setType('VEC3').setArray(geometry.attributes.normal.array).setBuffer(buffer);
   const material=doc.createMaterial().setBaseColorFactor([.6,.3,.2,1]);
   const mesh=doc.createMesh().addPrimitive(doc.createPrimitive().setAttribute('POSITION',pos).setAttribute('NORMAL',normal).setIndices(idx).setMaterial(material));
-  const node=doc.createNode(id).setMesh(mesh).setTranslation([i-.5,2.5,0]).setExtras({partId:id,label:id,systems:[system],explodeOffset:offset,cap:true});
+  const node=doc.createNode(id).setMesh(mesh).setTranslation([i-.5,2.5,0]).setExtras({partId:id,label:id,systems:[system],explodeOffset:offset,cap:true,...(variant?{variant}:{})});
   (doc.getRoot().listScenes()[0]??doc.createScene()).addChild(node);
 }
 const bytes=await new NodeIO().writeBinary(doc);
@@ -66,11 +67,12 @@ function fixture(){
 const f=fixture();
 await f.api.setMode('split');f.api.update(.1);
 check(f.api.active&&f.api.state.status==='ready','Anatomy loads and activates');
-check(f.api.state.parts.length===2,'Exported identities become selectable parts');
+check(f.api.state.parts.length===4,'Exported identities become selectable parts');
+check(f.api.state.variant==='male','Male is the initial anatomical variant');
 const plane=f.material.clippingPlanes[0];
 const stencilVolumes=[];
 f.scene.traverse(node=>{if(node.isMesh&&node.material.stencilWrite&&!node.material.colorWrite)stencilVolumes.push(node);});
-check(stencilVolumes.length===4,'Both stencil passes are present for each fixture mesh');
+check(stencilVolumes.length===8,'Both stencil passes are present for each fixture mesh');
 for(const axis of ['x','y','z']) for(const flipped of [false,true]) for(const position of [.1,.41,.8]) {
   f.api.setCut({axis,flipped,position});f.api.update(.016);
   check(stencilVolumes.every(node=>node.material.clippingPlanes[0]===plane),
@@ -92,8 +94,39 @@ check(heart.position.distanceTo(baseline)<1e-9,'Repeated explosion returns to th
 f.api.selectPart('heart');check(f.api.state.selectedId==='heart','Visible part is selectable');
 f.api.setVisibleSystems(['bones']);check(f.api.state.selectedId===null,'Hiding a selected part clears selection');
 f.api.selectPart('heart');check(f.api.state.selectedId===null,'Hidden geometry cannot be selected');
+f.api.setVisibleSystems(state.SYSTEMS.map(s=>s.id));f.api.update(1);
+const male=f.scene.getObjectByName('male_part'),female=f.scene.getObjectByName('female_part');
+check(male.visible&&!female.visible,'Only the selected variant renders');
+f.api.selectPart('male_part');
+const savedCamera=f.camera.position.clone(),savedTarget=f.controls.target.clone();
+const savedCut={...f.api.state.cut},savedExplosion=f.api.state.explosion;
+f.api.setAnatomyVariant('female');f.api.update(1);
+check(!male.visible&&female.visible&&f.api.state.selectedId===null,'Switch hides previous variant and clears its selection');
+check(f.camera.position.equals(savedCamera)&&f.controls.target.equals(savedTarget),'Variant switching preserves camera and cancels the previous selection flight');
+assert.deepEqual(f.api.state.cut,savedCut);check(f.api.state.explosion===savedExplosion,'Variant switching preserves cut and separation');
+check(state.partVisible(f.api.state.parts.find(p=>p.id==='female_part'),f.api.state)&&
+  !state.partVisible(f.api.state.parts.find(p=>p.id==='male_part'),f.api.state),'Inspector uses the same variant predicate');
+f.api.selectPart('male_part');check(f.api.state.selectedId===null,'Inactive variant cannot be selected');
+f.api.selectPart('heart');f.api.setAnatomyVariant('male');
+check(f.api.state.selectedId==='heart','Shared selected organs survive a variant switch');
+f.api.setVisibleSystems(['reproductive']);
+check(male.visible&&!female.visible&&!heart.visible,'Reproductive-only filter excludes shared organs and the other variant');
+f.api.setVisibleSystems(['organs']);check(!male.visible&&!female.visible,'Organs filter cannot override reproductive visibility');
+f.api.setVisibleSystems(['reproductive']);
+await f.api.setMode('split');f.api.setCut({axis:'x',position:.38});f.api.update(1);
+const variantMasks=node=>stencilVolumes.filter(v=>v.geometry===node.geometry);
+check(variantMasks(male).every(v=>v.visible)&&variantMasks(female).every(v=>!v.visible),'Section masks exclude inactive variant');
+f.api.setAnatomyVariant('female');
+check(variantMasks(male).every(v=>!v.visible)&&variantMasks(female).every(v=>v.visible),'Switch refreshes section masks synchronously');
+const exteriorTransition=f.api.setMode('exterior');
+check(!male.visible&&!female.visible&&stencilVolumes.every(v=>!v.visible),'Exterior synchronously hides tissues and section masks');
+await exteriorTransition;await f.api.setMode('exploded');
+check(f.api.state.variant==='female','Variant survives Exterior and mode changes');
+for(const amount of [1,0,.8,0]){f.api.setExplosion(amount);f.api.update(1);}
+check(female.position.distanceTo(new THREE.Vector3(-.5,2.5,0))<1e-9,'Variant reassembly restores original transform');
 f.api.reset();f.api.update(1);
-check(f.api.state.mode==='exterior'&&f.api.state.visibleSystems.length===7,'Reset restores exterior and every system');
+check(f.api.state.variant==='male','Reset restores the default male variant');
+check(f.api.state.mode==='exterior'&&f.api.state.visibleSystems.length===state.SYSTEMS.length,'Reset restores exterior and every system');
 check(f.exterior.position.length()===0&&f.material.clippingPlanes.length===0,'Reset removes explosion and clipping from the coat');
 await f.api.setMode('split');
 const handle=f.canvas.parentElement.children.find(e=>e.className==='cut-plane-handle');
@@ -139,6 +172,14 @@ const racing=fixture();const pending=racing.api.setMode('exploded');racing.api.r
 resolveRequest(new Response(bytes));await pending;
 check(racing.api.state.mode==='exterior'&&!racing.api.active,'Late loads cannot undo Reset');
 check(racing.events.at(-1).status==='ready','Late successful loads clear the loading indicator');racing.api.dispose();
+
+const leaving=fixture();const opening=leaving.api.setMode('split');leaving.api.setAnatomyVariant('female');
+await leaving.api.setMode('exterior');resolveRequest(new Response(bytes));await opening;
+const anatomyRoot=leaving.scene.getObjectByName('Totoro_anatomy');
+check(leaving.api.state.mode==='exterior'&&anatomyRoot.visible===false,'A late variant load never reveals anatomy after returning to Exterior');
+await leaving.api.setMode('split');
+check(leaving.scene.getObjectByName('female_part').visible&&!leaving.scene.getObjectByName('male_part').visible,'Variant chosen during loading activates correctly on re-entry');
+leaving.api.dispose();
 
 const cancelled=fixture();const late=cancelled.api.setMode('split');cancelled.api.dispose();resolveRequest(new Response(bytes));await late;
 check(!cancelled.scene.getObjectByName('heart'),'Disposed viewers do not attach a late asset');
