@@ -210,6 +210,11 @@ h1 span { color:#84956f; }
 .is-brain-view .background-word,.is-brain-view .header-note,.is-brain-view .light-button,.is-brain-view .gallery-footer,.is-brain-view .rotate-button,.is-brain-view .control-divider { display:none; }
 .is-brain-view .interaction-area { left:60%;bottom:35px; }
 .is-brain-view .interaction-hint { opacity:1; }
+.is-brain-view .interaction-hint { text-align:center;align-items:flex-start;white-space:normal;font-size:14px;line-height:1.6; }
+.is-brain-view .interaction-hint>svg { margin-top:4px; }
+.brain-orbit-hint { display:block;font-size:12px;color:#a69c99; }
+.sculpture canvas.is-touchable-brain { cursor:grab; }
+.sculpture canvas.is-tissue-grabbed { cursor:grabbing; }
 .is-brain-view .controls { background:#ffffff08;border-color:#ffffff20;box-shadow:0 8px 26px #0003; }
 .is-brain-view .icon-button:hover { background:#ffffff16; }
 .is-brain-view .brand-icon { border-color:#ffffff30; }

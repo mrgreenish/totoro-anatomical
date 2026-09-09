@@ -152,7 +152,8 @@ export function createAnatomyExplorer(o: Options) {
   function emit() { if (!disposed && !o.signal.aborted) o.onState?.({ ...state, brainView: { ...state.brainView }, cut: { ...state.cut }, visibleSystems: [...state.visibleSystems] }); }
   function invalidate() { dirty = true; proximityPending = true; o.wake(); }
   function brainAsset() {
-    detail ??= createBrainDetail({ renderer: o.renderer, environment: o.scene.environment, signal: o.signal });
+    detail ??= createBrainDetail({ renderer: o.renderer, environment: o.scene.environment, signal: o.signal,
+      canvas:o.canvas, camera:o.camera, controls:o.controls, wake:()=>o.wake(), reduced });
     return detail;
   }
   function discardInertia() {
@@ -194,6 +195,7 @@ export function createAnatomyExplorer(o: Options) {
       };
       frameBrain(); handle.hidden = true;
       state.brainView.status = 'open';
+      detail!.setInteractive(true);
     } catch {
       if (request === brainRequest && !disposed && !o.signal.aborted) state.brainView.status = 'error';
     } finally {
@@ -207,6 +209,7 @@ export function createAnatomyExplorer(o: Options) {
   function closeBrainView() {
     ++brainRequest; opening = false;
     if (brainSnapshot) {
+      detail?.setInteractive(false);
       fitting = false; discardInertia();
       const saved = brainSnapshot;
       o.camera.position.copy(saved.position); o.camera.quaternion.copy(saved.quaternion);
@@ -596,6 +599,9 @@ export function createAnatomyExplorer(o: Options) {
     for (const m of mats) for (const value of Object.values(m)) if (value instanceof THREE.Texture) textures.add(value);
     geometries.forEach(g=>g.dispose()); mats.forEach(m=>m.dispose()); textures.forEach(t=>{t.dispose();t.source.data?.close?.();});
   }
+  // A recreated renderer (for example during live preview updates) must
+  // synchronize React's controls with this explorer's fresh initial state.
+  emit();
   return {
     get active() { return !!model && state.mode !== 'exterior'; },
     get state() { return state; },
@@ -603,7 +609,7 @@ export function createAnatomyExplorer(o: Options) {
     setMode, setCut, selectPart, update, openBrainView, closeBrainView,
     stopCameraMotion() { fitting=false; },
     resize() {
-      if (state.brainView.status === 'open') { frameBrain(); return; }
+      if (state.brainView.status === 'open') { detail?.setInteractive(false); frameBrain(); detail?.setInteractive(true); return; }
       if (restoringCamera) { restoringCamera = false; return; }
       if (state.mode !== 'exterior' && model) fit(fitting ? targetPosition.clone().sub(targetLook) : undefined);
     },

@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "assertions": 26,
+  "coverage": [
+    "poke indentation",
+    "screen-plane pull",
+    "bounded deformation",
+    "elastic rebound",
+    "30/60/120 Hz consistency",
+    "reduced motion",
+    "rapid pokes",
+    "pointer capture and cancellation",
+    "background and Alt orbit",
+    "window blur",
+    "close and disposal",
+    "shared material and shadow deformation",
+    "demand-driven rendering"
+  ]
+}

@@ -78,7 +78,7 @@ export default function Home() {
         <div className="edition"><span className="edition-line" />THE FOREST SPIRIT<span className="edition-number">01</span></div>
         <section className={`sculpture ${ready ? 'is-ready' : ''}`} aria-label="Interactive Totoro sculpture">
           <img className="sculpture-poster" src="/totoro-poster.webp?v=refinement-1" alt="A grey Totoro with a wide toothy grin, soft groomed fur, small rounded paws, an ivory belly, seven chevrons, and a green leaf hat." fetchPriority="high" />
-          <canvas ref={canvasRef} tabIndex={0} aria-label={anatomy.brainView.status === 'open' ? 'Detailed brain. Drag or use arrow keys to rotate. Scroll, pinch, or use plus and minus to zoom. Escape returns to anatomy.' : 'Rotate Totoro by dragging or using the arrow keys. Scroll, pinch, or use plus and minus to zoom. Press Home to reset.'} />
+          <canvas ref={canvasRef} tabIndex={0} aria-label={anatomy.brainView.status === 'open' ? 'Detailed brain. Press the tissue to poke, drag it to pull, and release to let go. Drag the background or use arrow keys to rotate. Scroll or pinch to zoom. Escape returns to anatomy.' : 'Rotate Totoro by dragging or using the arrow keys. Scroll, pinch, or use plus and minus to zoom. Press Home to reset.'} />
           {!ready && !error ? <output className="loading-status"><span className="loading-dot" />Waking the forest…</output> : null}
           {error ? <output className="render-error"><p>The interactive view couldn’t wake up.</p><button onClick={() => window.location.reload()}>Try again <ArrowUpRight size={14} /></button></output> : null}
         </section>
@@ -92,7 +92,7 @@ export default function Home() {
         </div>
         <div className="vertical-note" aria-hidden="true"><span>森のともだち</span><span>A FOREST FRIEND</span></div>
         <div className="interaction-area">
-          <div className="interaction-hint"><Hand size={14} strokeWidth={1.5} /><span>Drag to explore<span className="hint-separator">·</span>Scroll to get closer</span></div>
+          <div className="interaction-hint"><Hand size={14} strokeWidth={1.5} /><span>{anatomy.brainView.status === 'open' ? <>Press to poke · Drag tissue to pull<span className="brain-orbit-hint">Drag the background to rotate · Scroll to zoom</span></> : <>Drag to explore<span className="hint-separator">·</span>Scroll to get closer</>}</span></div>
           <div className="controls" aria-label="Sculpture controls">
             <Toggle className="rotate-button" pressed={rotating} disabled={!ready || anatomy.mode !== 'exterior'} onPressedChange={value => { setRotating(value); sculptureRef.current?.setRotate(value); }} aria-label="Auto-rotate">
               <Rotate3D size={18} strokeWidth={1.6} /><span>Auto-rotate</span><span className={`toggle-led ${rotating ? 'active' : ''}`} />

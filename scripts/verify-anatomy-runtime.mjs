@@ -8,7 +8,8 @@ const asModule = source => 'data:text/javascript;base64,' + Buffer.from(source).
 const compile = source => ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
 const stateURL = asModule(compile(await readFile('lib/anatomy-state.ts','utf8')));
 const state = await import(stateURL);
-const detailURL = asModule(compile(await readFile('lib/brain-detail.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g, (_, name) => `from ${JSON.stringify(import.meta.resolve(name))}`));
+const touchURL = asModule(compile(await readFile('lib/brain-touch.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g, (_, name) => `from ${JSON.stringify(import.meta.resolve(name))}`));
+const detailURL = asModule(compile(await readFile('lib/brain-detail.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g, (_, name) => `from ${JSON.stringify(name==='./brain-touch'?touchURL:import.meta.resolve(name))}`));
 const source = compile(await readFile('lib/totoro-anatomy.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g, (_, name) => `from ${JSON.stringify(name==='./anatomy-state'?stateURL:name==='./brain-detail'?detailURL:import.meta.resolve(name))}`);
 const { createAnatomyExplorer } = await import(asModule(source));
 let assertions = 0;
@@ -24,6 +25,7 @@ check(state.systemVisible(['organs','nerves'],['nerves']),'Brain must participat
 check(!state.systemVisible(['bones'],['organs']),'Solo filter excludes other systems');
 
 class Element extends EventTarget {
+  classList={add(){},remove(){},toggle(){}};
   children=[]; attributes={}; style={setProperty(){}};hidden=false;clientWidth=1000;clientHeight=750;
   appendChild(child){this.children.push(child);child.parentElement=this;return child;}
   setAttribute(key,value){this.attributes[key]=value;}
@@ -32,6 +34,7 @@ class Element extends EventTarget {
   getBoundingClientRect(){return {left:0,top:0,width:this.clientWidth,height:this.clientHeight};}
 }
 globalThis.window={matchMedia:()=>({matches:true})};
+// oxlint-disable-next-line typescript/no-deprecated
 globalThis.document={createElement:()=>new Element()};
 
 const doc=new Document();const buffer=doc.createBuffer();
