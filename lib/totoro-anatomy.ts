@@ -4,7 +4,7 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { clamp01, cutCoordinate, CUT_BOUNDS, defaultAnatomyState, fitDistance, systemVisible } from './anatomy-state';
 import type { AnatomyMode, AnatomyPart, AnatomyState, AnatomySystem } from './anatomy-state';
-import { brainProximity, createBrainDetail, type BrainDetail } from './brain-detail';
+import { brainProximity, createBrainDetail, isBrainOccluder, probeBrainVisibility, type BrainDetail } from './brain-detail';
 
 type Part = AnatomyPart & { node: THREE.Object3D; rest: THREE.Vector3; restScale: THREE.Vector3; offset: THREE.Vector3; meshes: THREE.Mesh[] };
 // Textured glTF materials use a white color factor. Section faces need the
@@ -135,6 +135,9 @@ export function createAnatomyExplorer(o: Options) {
     minDistance: number; maxDistance: number; minPolarAngle: number; maxPolarAngle: number;
   } | undefined;
   const pointer = new THREE.Vector2(), raycaster = new THREE.Raycaster();
+  const occluders: THREE.Mesh[] = [];
+  const brainBounds = new THREE.Box3(), brainCenter = new THREE.Vector3(), cameraDirection = new THREE.Vector3();
+  const screenBounds = new THREE.Box2(), screenPoint = new THREE.Vector2(), corner = new THREE.Vector3();
   const externalMaterials = new Set<THREE.Material>();
   o.exterior.traverse(ob => { if (ob instanceof THREE.Mesh) for (const m of (Array.isArray(ob.material) ? ob.material : [ob.material])) externalMaterials.add(m); });
 
@@ -151,14 +154,6 @@ export function createAnatomyExplorer(o: Options) {
   function brainAsset() {
     detail ??= createBrainDetail({ renderer: o.renderer, environment: o.scene.environment, signal: o.signal });
     return detail;
-  }
-  async function preloadBrain() {
-    if (state.brainView.status === 'error' || disposed) return;
-    try { await brainAsset().load(o.canvas.clientWidth); }
-    catch {
-      if (disposed || o.signal.aborted || opening) return;
-      state.brainView.status = 'error'; emit();
-    }
   }
   function discardInertia() {
     const position = o.camera.position.clone(), target = o.controls.target.clone();
@@ -186,7 +181,10 @@ export function createAnatomyExplorer(o: Options) {
     try {
       await brainAsset().load(o.canvas.clientWidth);
       if (!disposed && !o.signal.aborted && request === brainRequest && state.brainView.available) await o.renderer.compileAsync?.(detail!.scene, o.camera);
-      if (disposed || o.signal.aborted || request !== brainRequest || !state.brainView.available) return;
+      if (disposed || o.signal.aborted || request !== brainRequest || !state.brainView.available) {
+        detail?.unload();
+        return;
+      }
       fitting = false; discardInertia();
       brainSnapshot = {
         position: o.camera.position.clone(), target: o.controls.target.clone(), quaternion: o.camera.quaternion.clone(),
@@ -220,43 +218,36 @@ export function createAnatomyExplorer(o: Options) {
       restoringCamera = true;
     }
     handle.hidden = state.mode !== 'split';
+    detail?.unload();
     state.brainView.status = 'closed'; emit(); invalidate();
   }
   function updateBrainAvailability() {
     const brain = parts.find(p => p.id === 'brain');
     let fraction = 0, visible = false;
     if (brain?.node.visible && state.mode !== 'exterior') {
-      const bounds = new THREE.Box3().setFromObject(brain.node);
-      const center = bounds.getCenter(new THREE.Vector3());
-      const direction = center.clone().sub(o.camera.position);
-      if (direction.dot(o.camera.getWorldDirection(new THREE.Vector3())) > 0) {
-        const screen = new THREE.Box2();
-        for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) {
-          const p = new THREE.Vector3(x, y, z).project(o.camera);
-          screen.expandByPoint(new THREE.Vector2(p.x * o.canvas.clientWidth / 2, p.y * o.canvas.clientHeight / 2));
+      brainBounds.setFromObject(brain.node);
+      brainBounds.getCenter(brainCenter);
+      if (brainCenter.sub(o.camera.position).dot(o.camera.getWorldDirection(cameraDirection)) > 0) {
+        screenBounds.makeEmpty();
+        for (const x of [brainBounds.min.x, brainBounds.max.x]) for (const y of [brainBounds.min.y, brainBounds.max.y]) for (const z of [brainBounds.min.z, brainBounds.max.z]) {
+          corner.set(x, y, z).project(o.camera);
+          screenBounds.expandByPoint(screenPoint.set(corner.x * o.canvas.clientWidth / 2, corner.y * o.canvas.clientHeight / 2));
         }
-        const size = screen.getSize(new THREE.Vector2());
+        const size = screenBounds.getSize(screenPoint);
         fraction = Math.max(size.x, size.y) / Math.min(o.canvas.clientWidth, o.canvas.clientHeight);
         if (brainProximity(fraction, true, state.brainView.available)) {
-          const obstacles = parts.filter(p => p.node.visible).flatMap(p => p.meshes);
-          if (o.exterior.visible) o.exterior.traverse(node => { if (node instanceof THREE.Mesh && node.visible) obstacles.push(node); });
-          if (state.mode === 'split') for (const cap of caps) if (cap.cap.visible) obstacles.push(cap.cap);
-          // Actual surface samples handle partial clipping and occlusion. Testing
-          // only the brain's center would fail in the interhemispheric fissure.
-          for (const mesh of brain.meshes) {
-            const positions = mesh.geometry.attributes.position;
-            const stride = Math.max(1, Math.floor(positions.count / 36));
-            for (let i = 0; i < positions.count; i += stride) {
-              const point = new THREE.Vector3().fromBufferAttribute(positions, i).applyMatrix4(mesh.matrixWorld);
-              if (state.mode === 'split' && plane.distanceToPoint(point) < -.001) continue;
-              const projected = point.clone().project(o.camera);
-              if (Math.abs(projected.x) > .94 || Math.abs(projected.y) > .94 || Math.abs(projected.z) > 1) continue;
-              raycaster.setFromCamera(new THREE.Vector2(projected.x, projected.y), o.camera);
-              const hit = raycaster.intersectObjects(obstacles, false).find(h => state.mode !== 'split' || plane.distanceToPoint(h.point) >= -.0001);
-              if (hit && brain.meshes.includes(hit.object as THREE.Mesh)) { visible = true; break; }
-            }
-            if (visible) break;
+          occluders.length = 0;
+          for (const part of parts) {
+            if (!part.node.visible) continue;
+            for (const mesh of part.meshes) if (isBrainOccluder(mesh)) occluders.push(mesh);
           }
+          if (o.exterior.visible) o.exterior.traverse(node => {
+            if (node instanceof THREE.Mesh && isBrainOccluder(node)) occluders.push(node);
+          });
+          // Surface samples handle partial clipping. Caps and fur fibers are
+          // skipped: the clip plane already rejects cut-away tissue, and the
+          // coat hull is the Body mesh rather than 150k+ groom triangles.
+          visible = probeBrainVisibility(o.camera, brain.meshes, occluders, raycaster, state.mode === 'split' ? plane : null);
         }
       }
     }
@@ -265,7 +256,6 @@ export function createAnatomyExplorer(o: Options) {
       state.brainView.available = available;
       if (!available && opening) { ++brainRequest; opening = false; state.brainView.status = 'closed'; }
       emit();
-      if (available) void preloadBrain();
     }
   }
   function clearSelection() {
@@ -505,7 +495,7 @@ export function createAnatomyExplorer(o: Options) {
     }
     // Project the handle using the same camera transform as this frame's render.
     o.camera.lookAt(o.controls.target); o.camera.updateMatrixWorld(true);
-    if (!proximityPosition.equals(o.camera.position) || !proximityTarget.equals(o.controls.target) || dirty) proximityPending = true;
+    if (!proximityPosition.equals(o.camera.position) || !proximityTarget.equals(o.controls.target) || moving) proximityPending = true;
     proximityTime += dt;
     if (proximityPending && proximityTime >= .18) {
       proximityTime = 0; proximityPending = false;

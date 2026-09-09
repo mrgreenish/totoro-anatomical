@@ -6,6 +6,56 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 const BASE = '/models/brain-detail/';
 type NeuralPath = { points: number[][]; phase: number; depth: number };
 type Options = { renderer: THREE.WebGLRenderer; environment: THREE.Texture | null; signal: AbortSignal };
+type Cache = {
+  size: number; bytes: ArrayBuffer; paths: NeuralPath[];
+  color: Blob; normal: Blob; surface: Blob; membrane: Blob; height: Blob;
+};
+const _point = new THREE.Vector3(), _projected = new THREE.Vector3(), _ndc = new THREE.Vector2();
+const _origin = new THREE.Vector3(), _sphere = new THREE.Sphere();
+export const BRAIN_VISIBILITY_SAMPLES = 8;
+
+export function isBrainOccluder(mesh: THREE.Mesh) {
+  return mesh.visible && !mesh.name.includes('fibers') && !mesh.userData.sectionCap;
+}
+
+/** Closest-hit probe that skips fur fibers and section caps. */
+export function probeBrainVisibility(
+  camera: THREE.Camera,
+  brainMeshes: THREE.Mesh[], occluders: THREE.Mesh[], raycaster: THREE.Raycaster, clipPlane: THREE.Plane | null,
+) {
+  camera.getWorldPosition(_origin);
+  for (const mesh of brainMeshes) {
+    const positions = mesh.geometry.attributes.position;
+    if (!positions) continue;
+    const stride = Math.max(1, Math.floor(positions.count / BRAIN_VISIBILITY_SAMPLES));
+    for (let i = 0; i < positions.count; i += stride) {
+      _point.fromBufferAttribute(positions, i).applyMatrix4(mesh.matrixWorld);
+      if (clipPlane && clipPlane.distanceToPoint(_point) < -.001) continue;
+      _projected.copy(_point).project(camera);
+      if (Math.abs(_projected.x) > .94 || Math.abs(_projected.y) > .94 || Math.abs(_projected.z) > 1) continue;
+      _ndc.set(_projected.x, _projected.y);
+      raycaster.setFromCamera(_ndc, camera);
+      const brainHit = firstUnclippedHit(raycaster.intersectObjects(brainMeshes, false), clipPlane);
+      if (!brainHit) continue;
+      const limit = brainHit.distance - 1e-4;
+      let blocked = false;
+      for (const other of occluders) {
+        if (other === mesh || brainMeshes.includes(other) || !isBrainOccluder(other)) continue;
+        if (!other.geometry.boundingSphere) other.geometry.computeBoundingSphere();
+        _sphere.copy(other.geometry.boundingSphere!).applyMatrix4(other.matrixWorld);
+        if (_origin.distanceTo(_sphere.center) - _sphere.radius > limit) continue;
+        const hit = firstUnclippedHit(raycaster.intersectObject(other, false), clipPlane);
+        if (hit && hit.distance < brainHit.distance) { blocked = true; break; }
+      }
+      if (!blocked) return true;
+    }
+  }
+  return false;
+}
+
+function firstUnclippedHit(hits: THREE.Intersection[], clipPlane: THREE.Plane | null) {
+  return clipPlane ? hits.find(h => clipPlane.distanceToPoint(h.point) >= -.0001) : hits[0];
+}
 
 export function detailTextureSize(width: number, maxTextureSize: number) {
   return width < 768 || maxTextureSize < 4096 ? 2048 : 4096;
@@ -30,6 +80,7 @@ export function createBrainDetail(o: Options) {
   const geometries = new Set<THREE.BufferGeometry>();
   const time = { value: 0 };
   let promise: Promise<void> | undefined;
+  let cache: Cache | undefined;
   let ready = false, disposed = false;
   const abort = new AbortController();
   const abortParent = () => abort.abort();
@@ -40,8 +91,7 @@ export function createBrainDetail(o: Options) {
     if (!response.ok) throw new Error('The detailed brain could not load.');
     return response;
   }
-  async function texture(name: string, color = false) {
-    const blob = await (await get(name)).blob();
+  async function texture(blob: Blob, color = false) {
     const bitmap = await createImageBitmap(blob, { imageOrientation: 'none', premultiplyAlpha: 'none' });
     if (disposed) { bitmap.close(); throw new Error('Disposed'); }
     const map = new THREE.Texture(bitmap);
@@ -55,24 +105,35 @@ export function createBrainDetail(o: Options) {
     root.clear(); geometries.forEach(g => g.dispose()); geometries.clear();
     materials.forEach(m => m.dispose()); materials.clear();
     textures.forEach(t => { t.dispose(); (t.image as ImageBitmap)?.close?.(); }); textures.clear();
+    key.shadow.dispose();
     ready = false;
+  }
+  async function fetchCache(size: number) {
+    // Settle every request before cleanup so a late image decode cannot leak.
+    const results = await Promise.allSettled([
+      get('brain-detail.glb').then(r => r.arrayBuffer()),
+      get('neural-paths.json').then(r => r.json() as Promise<NeuralPath[]>),
+      get(`basecolor-${size}.webp`).then(r => r.blob()), get(`normal-${size}.webp`).then(r => r.blob()),
+      get('surface.webp').then(r => r.blob()), get('membrane.webp').then(r => r.blob()), get('height.png').then(r => r.blob()),
+    ] as const);
+    const failure = results.find(r => r.status === 'rejected');
+    if (failure?.status === 'rejected') throw failure.reason;
+    const [bytes, paths, color, normal, surface, membrane, height] = results.map(r => (r as PromiseFulfilledResult<unknown>).value) as [ArrayBuffer, NeuralPath[], Blob, Blob, Blob, Blob, Blob];
+    return { size, bytes, paths, color, normal, surface, membrane, height };
   }
   async function load(width: number) {
     if (ready || disposed) return;
     if (promise) return promise;
-    promise = (async () => {
+    const thisPromise = (async () => {
       const size = detailTextureSize(width, o.renderer.capabilities.maxTextureSize);
-      // Settle every request before cleanup so a late image decode cannot leak.
-      const results = await Promise.allSettled([
-        get('brain-detail.glb').then(r => r.arrayBuffer()),
-        get('neural-paths.json').then(r => r.json() as Promise<NeuralPath[]>),
-        texture(`basecolor-${size}.webp`, true), texture(`normal-${size}.webp`),
-        texture('surface.webp'), texture('membrane.webp'), texture('height.png'),
-      ] as const);
-      const failure = results.find(r => r.status === 'rejected');
-      if (failure?.status === 'rejected') throw failure.reason;
+      if (cache?.size !== size) cache = undefined;
+      cache ??= await fetchCache(size);
+      if (!cache || disposed || o.signal.aborted) throw new Error('Disposed');
+      const [color, normal, surface, membrane, height] = await Promise.all([
+        texture(cache.color, true), texture(cache.normal), texture(cache.surface), texture(cache.membrane), texture(cache.height),
+      ]);
       if (disposed || o.signal.aborted) throw new Error('Disposed');
-      const [bytes, paths, color, normal, surface, membrane, height] = results.map(r => (r as PromiseFulfilledResult<unknown>).value) as [ArrayBuffer, NeuralPath[], THREE.Texture, THREE.Texture, THREE.Texture, THREE.Texture, THREE.Texture];
+      const { bytes, paths } = cache;
       const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parseAsync(bytes, BASE);
       gltf.scene.traverse(node => {
         if (!(node instanceof THREE.Mesh)) return;
@@ -164,16 +225,18 @@ export function createBrainDetail(o: Options) {
       if (disposed || o.signal.aborted) throw new Error('Disposed');
       root.updateMatrixWorld(true); ready = true;
     })();
-    try { await promise; } catch (error) { release(); throw error; }
-    finally { promise = undefined; }
+    promise = thisPromise;
+    try { await thisPromise; } catch (error) { release(); throw error; }
+    finally { if (promise === thisPromise) promise = undefined; }
   }
   return {
     scene, root, load,
     get ready() { return ready; },
+    unload() { if (!disposed && ready) release(); },
     update(dt: number, animated: boolean) { if (animated) time.value += dt; return animated; },
     dispose() {
       if (disposed) return;
-      disposed = true; abort.abort(); o.signal.removeEventListener('abort', abortParent); release();
+      disposed = true; cache = undefined; abort.abort(); o.signal.removeEventListener('abort', abortParent); release();
       key.shadow.dispose();
     },
   };

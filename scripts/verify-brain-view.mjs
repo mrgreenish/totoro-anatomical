@@ -10,7 +10,7 @@ const stateURL=moduleURL(compile(await readFile('lib/anatomy-state.ts','utf8')))
 const detailURL=moduleURL(compile(await readFile('lib/brain-detail.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g,(_,name)=>`from ${JSON.stringify(import.meta.resolve(name))}`));
 const source=compile(await readFile('lib/totoro-anatomy.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g,(_,name)=>`from ${JSON.stringify(name==='./anatomy-state'?stateURL:name==='./brain-detail'?detailURL:import.meta.resolve(name))}`);
 const {createAnatomyExplorer}=await import(moduleURL(source));
-const {brainProximity,detailTextureSize}=await import(detailURL);
+const {brainProximity,detailTextureSize,isBrainOccluder}=await import(detailURL);
 let count=0;const check=(v,msg)=>{assert.ok(v,msg);count++;};
 check(!brainProximity(.299,true,false),'Button hidden below entry threshold');
 check(brainProximity(.30,true,false),'Button appears at entry threshold');
@@ -18,6 +18,9 @@ check(brainProximity(.25,true,true),'Hysteresis holds button');
 check(!brainProximity(.219,true,true),'Button hides below exit threshold');
 check(!brainProximity(1,false,true),'Occluded brain never offers entry');
 check(detailTextureSize(390,8192)===2048&&detailTextureSize(1280,8192)===4096&&detailTextureSize(1280,2048)===2048,'Responsive texture choice');
+check(!isBrainOccluder(Object.assign(new THREE.Mesh(),{name:'Fine_grey_fibers'})),'Fur fibers are not occlusion meshes');
+check(!isBrainOccluder(Object.assign(new THREE.Mesh(),{userData:{sectionCap:true}})),'Section caps are not occlusion meshes');
+check(isBrainOccluder(new THREE.Mesh()),'Tissue meshes remain occluders');
 
 class Element extends EventTarget {
   children=[];attributes={};style={setProperty(){}};hidden=false;clientWidth=1000;clientHeight=750;
@@ -35,11 +38,11 @@ let createdBitmaps=0,closedBitmaps=0;
 globalThis.createImageBitmap=async()=>{createdBitmaps++;return {width:2,height:2,close(){closedBitmaps++;}};};
 
 const doc=new Document(), buffer=doc.createBuffer(),scene=doc.createScene();
-for(const [id,system,geometry] of [['brain','organs',new THREE.SphereGeometry(.5,32,24)],['skull','bones',new THREE.SphereGeometry(.58,24,16)]]) {
+for(const [id,system,geometry,at] of [['brain','organs',new THREE.SphereGeometry(.5,32,24),[0,2.5,0]],['skull','bones',new THREE.SphereGeometry(.58,24,16),[0,2.5,0]],['heart','organs',new THREE.BoxGeometry(.3,.4,.3),[0,1.6,0]]]) {
   const primitive=doc.createPrimitive().setMaterial(doc.createMaterial().setBaseColorFactor([.6,.3,.3,1]));
   for(const [name,attr] of [['POSITION','position'],['NORMAL','normal']]) primitive.setAttribute(name,doc.createAccessor().setType('VEC3').setArray(geometry.attributes[attr].array).setBuffer(buffer));
   primitive.setIndices(doc.createAccessor().setType('SCALAR').setArray(geometry.index.array).setBuffer(buffer));
-  const node=doc.createNode(id).setMesh(doc.createMesh().addPrimitive(primitive)).setTranslation([0,2.5,0]).setExtras({partId:id,label:id,systems:[system],explodeOffset:[.2,.1,.3]});
+  const node=doc.createNode(id).setMesh(doc.createMesh().addPrimitive(primitive)).setTranslation(at).setExtras({partId:id,label:id,systems:[system],explodeOffset:[.2,.1,.3]});
   scene.addChild(node);
 }
 const anatomyBytes=await new NodeIO().writeBinary(doc);
@@ -69,6 +72,7 @@ async function focus(f,systems=['organs']) {
 const f=fixture();
 await focus(f,['organs','bones']);check(!f.api.state.brainView.available,'Skull occludes the close brain');
 f.api.setVisibleSystems(['organs']);f.api.update(1);check(f.api.state.brainView.available,'Exposed selected brain offers entry');
+check(!fetched.some(url=>String(url).includes('brain-detail')),'Proximity does not decode the isolated brain');
 check(!f.api.detailScene&&f.api.state.brainView.status!=='open','Proximity never opens automatically');
 f.api.setVisibleSystems(['bones']);f.api.update(1);check(!f.api.state.brainView.available,'Hidden brain removes the button');
 await focus(f);
@@ -96,6 +100,7 @@ const eventCount=f.events.length;f.api.update(.5);check(f.events.length===eventC
 f.camera.position.set(1,1,1);f.api.resize();check(f.camera.position.length()>1.5,'Detail resize keeps the brain framed');
 f.api.closeBrainView();
 check(!f.api.detailScene&&f.api.state.brainView.status==='closed','Back restores overview rendering');
+check(createdBitmaps===closedBitmaps,'Leaving the study releases decoded maps');
 check(f.camera.position.equals(original.position)&&f.controls.target.equals(original.target),'Back restores exact camera and target');
 check(f.camera.near===original.near&&f.camera.fov===original.fov,'Back restores camera projection');
 check(f.api.state.selectedId===original.selected&&f.api.state.explosion===original.explosion&&JSON.stringify(f.api.state.cut)===JSON.stringify(original.cut)&&JSON.stringify(f.api.state.visibleSystems)===JSON.stringify(original.systems),'Back preserves anatomy settings');
@@ -104,10 +109,17 @@ const requests=fetched.length;await f.api.openBrainView();f.api.closeBrainView()
 await f.api.setMode('split');f.api.setVisibleSystems(['organs']);f.api.selectPart('brain');f.api.setCut({axis:'x',position:0});f.api.update(1);
 check(!f.api.state.brainView.available,'Completely clipped brain cannot open');
 f.api.setCut({axis:'x',position:.5});f.api.update(1);check(f.api.state.brainView.available,'Partially clipped brain can open when exposed');
+const meshProto=THREE.Mesh.prototype;
+// Prototype spies are restored after each assertion.
+// oxlint-disable-next-line typescript/unbound-method
+const origRaycast=meshProto.raycast;let capRays=0;
+meshProto.raycast=function(...args){if(this.userData.sectionCap)capRays++;return origRaycast.apply(this,args);};
+f.api.update(1);meshProto.raycast=origRaycast;
+check(capRays===0,'Section caps are not raycast during proximity');
 await f.api.openBrainView();f.api.reset();f.api.update(1);check(f.api.state.mode==='exterior'&&!f.api.detailScene,'Reset exits detailed view');
 f.api.dispose();f.api.dispose();
 
-// Failed prefetch and explicit retry exercise the same production loader.
+// Failed load and explicit retry exercise the same production loader.
 failDetail=true;const failure=fixture();await focus(failure);await failure.api.openBrainView();
 check(failure.api.state.brainView.status==='error'&&failure.api.state.mode==='exploded','Failure leaves anatomy usable');
 failDetail=false;await failure.api.openBrainView();check(failure.api.state.brainView.status==='open','Retry recovers');failure.api.dispose();
@@ -116,11 +128,25 @@ let resolveDelay;delayDetail=new Promise(r=>{resolveDelay=r;});
 const pending=fixture();await focus(pending);const load=pending.api.openBrainView();pending.api.reset();resolveDelay();delayDetail=undefined;await load;
 check(pending.api.state.mode==='exterior'&&pending.api.state.brainView.status==='closed'&&!pending.api.detailScene,'Reset cancels stale opening');pending.api.dispose();
 
-reduced=false;const animated=fixture();await focus(animated);for(let i=0;i<90;i++)animated.api.update(.05);
+reduced=false;const animated=fixture();await focus(animated);
+const coat=fixture();
+const coatFiber=new THREE.Mesh(new THREE.BoxGeometry(4,4,.3),new THREE.MeshStandardMaterial());
+coatFiber.name='Fine_grey_fibers';coatFiber.position.set(0,2.5,4);coat.exterior.add(coatFiber);
+await coat.api.setMode('split');coat.api.setVisibleSystems(['organs','skin']);coat.api.selectPart('brain');
+let fiberRays=0;meshProto.raycast=function(...args){if(this.name.includes('fibers'))fiberRays++;return origRaycast.apply(this,args);};
+coat.api.update(1);meshProto.raycast=origRaycast;
+check(fiberRays===0,'Fur fibers are not raycast during proximity');
+check(coat.api.state.brainView.available,'Fur in front of the brain does not hide the study');
+coat.api.dispose();
+for(let i=0;i<90;i++)animated.api.update(.05);
+let heartbeatRays=0;meshProto.raycast=function(...args){heartbeatRays++;return origRaycast.apply(this,args);};
+for(let i=0;i<90;i++)animated.api.update(.05);
+meshProto.raycast=origRaycast;
+check(heartbeatRays===0,'A resting camera does not rerun occlusion during heartbeat');
 await animated.api.openBrainView();const pulses=[];animated.api.detailScene.traverse(n=>{if(n.isMesh&&n.material.isShaderMaterial)pulses.push(n.material);});
 animated.api.update(.5,true);const animatedTime=pulses[0].uniforms.brainTime.value;check(animatedTime>0,'Neural activity advances while playing');
 animated.api.update(.5,false);check(pulses[0].uniforms.brainTime.value===animatedTime,'Pause freezes neural activity');animated.api.dispose();
 check(createdBitmaps===closedBitmaps,'Decoded images released exactly once');
-const report={passed:true,assertions:count,coverage:['proximity hysteresis','occlusion and clipping','selection and filters','explicit opening','camera and settings restoration','responsive framing','texture choices and bindings','shader hooks','cached reopening','failure and retry','stale opening cancellation','pause and reduced motion','resource disposal'],scope:'Node integration with real detail GLB and texture files, a DOM fixture, and a stub image decoder. Browser shader compilation and interaction are checked separately.'};
+const report={passed:true,assertions:count,coverage:['proximity hysteresis','occlusion and clipping','selection and filters','explicit opening','camera and settings restoration','responsive framing','texture choices and bindings','shader hooks','cached reopening','failure and retry','stale opening cancellation','pause and reduced motion','resource disposal','no proximity preload','split-view occlusion cost','heartbeat does not retrigger occlusion'],scope:'Node integration with real detail GLB and texture files, a DOM fixture, and a stub image decoder. Browser shader compilation and interaction are checked separately.'};
 await writeFile('artwork/anatomy/brain-detail/runtime-verification.json',JSON.stringify(report,null,2));
 console.log(JSON.stringify(report,null,2));

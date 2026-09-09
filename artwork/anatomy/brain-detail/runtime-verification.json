@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "assertions": 59,
+  "assertions": 68,
   "coverage": [
     "proximity hysteresis",
     "occlusion and clipping",
@@ -14,7 +14,10 @@
     "failure and retry",
     "stale opening cancellation",
     "pause and reduced motion",
-    "resource disposal"
+    "resource disposal",
+    "no proximity preload",
+    "split-view occlusion cost",
+    "heartbeat does not retrigger occlusion"
   ],
   "scope": "Node integration with real detail GLB and texture files, a DOM fixture, and a stub image decoder. Browser shader compilation and interaction are checked separately."
 }
