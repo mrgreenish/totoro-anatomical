@@ -28,7 +28,7 @@ for(const t of doc.getRoot().listTextures()){
   textures.push({name:t.getName(),width:m.width,height:m.height,format:m.format});
 }
 const materials=doc.getRoot().listMaterials();assert(materials.some(m=>m.getNormalTexture()));assert(materials.some(m=>m.getMetallicRoughnessTexture()));
-const tissueNames=['brain','myocardium','lungs','liver','stomach','intestine','kidney','spleen','glands'];
+const tissueNames=['brain','myocardium','lungs','liver','stomach','intestine','kidney','spleen','glands','muscle','cortical_bone','tendon'];
 const tissueAlbedos=new Set();
 for(const name of tissueNames){
   const m=materials.find(m=>m.getName()===`Anatomy_${name}`);

@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "localUrl": "http://localhost:3000/",
+  "viewports": [[1104, 998], [390, 844], [1280, 720]],
+  "checked": [
+    "Exploded mode, organs only, brain selection and proximity button",
+    "Click to enter isolated scene with visible tissue maps and surface vessels",
+    "Keyboard orbit and zoom",
+    "Pause and play controls",
+    "Escape restores anatomy, selected brain and filters",
+    "Cached reopening",
+    "Mobile overview and isolated study layouts",
+    "No browser shader compilation errors or console warnings",
+    "Local tissue pull with fixed camera, quick poke and soft rebound",
+    "Background drag rotates isolated brain",
+    "Return after manipulation restores selected brain, filters and separation"
+  ],
+  "correctedDuringReview": "The mesh optimizer removed UVs because materials are bound at runtime. keepAttributes now preserves them, with an explicit asset and runtime assertion.",
+  "offlineReviews": ["three-quarter.png", "side.png", "underside.png", "macro.png"],
+  "performanceObservation": {"medianMs": 10, "p95Ms": 10.7, "pixelRatio": 1, "trianglesIncludingNeuralPaths": 325996, "drawCalls": 64},
+  "limitations": "Performance is a local observation, not a cross-device benchmark. Loading failures, exact numeric camera restoration and reduced motion were tested in the Node integration fixture."
+}

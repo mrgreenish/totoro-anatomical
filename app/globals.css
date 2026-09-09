@@ -197,7 +197,63 @@ h1 span { color:#84956f; }
 .anatomy-selection-badge>svg { flex-shrink:0; }
 .anatomy-selection-badge button { display:grid;place-items:center;flex-shrink:0;width:26px;height:26px;border:0;border-radius:50%;background:transparent;color:inherit;cursor:pointer; }
 .is-night .anatomy-selection-badge { background:#263d32f5; }
+.brain-entry { position:absolute;z-index:7;left:calc(50% + 140px);bottom:180px;transform:translateX(-50%);display:flex;align-items:center;flex-direction:column;gap:8px; }
+.brain-open,.brain-back { display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:44px;padding:10px 17px;border:1px solid #87947e55;border-radius:30px;background:#f5f8efed;color:var(--ink);font-size:14px;white-space:nowrap;cursor:pointer;box-shadow:0 5px 22px #17231b12;backdrop-filter:blur(18px); }
+.brain-open:hover { background:#fff; }
+.brain-open:disabled { cursor:wait;opacity:.75; }
+.brain-entry-error { color:var(--secondary-ink);font-size:14px; }
+.brain-cancel { border:0;background:transparent;color:var(--secondary-ink);font-size:14px;text-decoration:underline;cursor:pointer;padding:5px 12px; }
+.is-night .brain-open { background:#22352df0; }
+.gallery.is-brain-view { --ink:#eee9e5;--secondary-ink:#b0a7a4;--faint:#ffffff20;background:radial-gradient(ellipse at 52% 46%,#333035 0%,#1c1b20 45%,#101015 100%);height:100svh;min-height:680px;overflow:hidden;padding:0; }
+.is-brain-view .sculpture,.is-brain-view.is-fullscreen .sculpture { position:absolute;inset:125px 3% 125px 20%;width:auto;height:auto;margin:0; }
+.is-brain-view .sculpture canvas { animation:brain-reveal .7s ease-out both; }
+.is-brain-view .background-word,.is-brain-view .header-note,.is-brain-view .light-button,.is-brain-view .gallery-footer,.is-brain-view .rotate-button,.is-brain-view .control-divider { display:none; }
+.is-brain-view .interaction-area { left:60%;bottom:35px; }
+.is-brain-view .interaction-hint { opacity:1; }
+.is-brain-view .interaction-hint { text-align:center;align-items:flex-start;white-space:normal;font-size:14px;line-height:1.6; }
+.is-brain-view .interaction-hint>svg { margin-top:4px; }
+.brain-orbit-hint { display:block;font-size:12px;color:#a69c99; }
+.sculpture canvas.is-touchable-brain { cursor:grab; }
+.sculpture canvas.is-tissue-grabbed { cursor:grabbing; }
+.is-brain-view .controls { background:#ffffff08;border-color:#ffffff20;box-shadow:0 8px 26px #0003; }
+.is-brain-view .icon-button:hover { background:#ffffff16; }
+.is-brain-view .brand-icon { border-color:#ffffff30; }
+.brain-study-heading { position:absolute;inset:115px auto auto 4.4%;z-index:5;max-width:250px; }
+.brain-back { background:#ffffff07;border-color:#ffffff24;color:#e0d9d5;box-shadow:none; }
+.brain-back:hover { background:#ffffff12; }
+.brain-study-title { margin-top:70px;pointer-events:none; }
+.brain-study-title .anatomy-eyebrow { color:#ac9691;font-size:12px;letter-spacing:1.8px; }
+.brain-study-title h2 { font-family:Georgia,serif;font-size:clamp(36px,3.4vw,54px);font-weight:400;line-height:1.08;letter-spacing:-1.8px;margin:15px 0 16px; }
+.brain-study-title h2 span { color:#ab7771; }
+.brain-study-title p { font-size:14px;line-height:1.7;color:#b0a7a4;max-width:170px; }
+.brain-study-note { display:block;color:#9b9090;font-size:12px;line-height:1.7;margin-top:50px;max-width:170px; }
+@keyframes brain-reveal { from { opacity:0; } to { opacity:1; } }
+@media(max-width:700px) {
+  .brain-entry { top:555px;bottom:auto;left:50%; }
+  .gallery.is-brain-view { min-height:620px;height:100svh; }
+  .brain-study-heading { top:90px;left:6%;right:6%;max-width:none; }
+  .brain-study-title { margin-top:22px; }
+  .brain-study-title h2 { font-size:34px;margin:8px 0; }
+  .brain-study-title p { margin:0;max-width:none; }
+  .brain-study-title .anatomy-eyebrow,.brain-study-note { display:none; }
+  .is-brain-view .sculpture,.is-brain-view.is-fullscreen .sculpture { position:absolute;inset:235px 0 120px;width:auto;height:auto;margin:0; }
+  .is-brain-view .interaction-area { left:50%;bottom:25px; }
+}
+@media(prefers-reduced-motion:reduce) { .is-brain-view .sculpture canvas { animation:none; }.gallery.is-brain-view { transition:none; } }
 @media(max-width:700px) {
   .gallery.is-anatomy { display:flow-root;overflow-x:clip; }
   .anatomy-selection-badge { top:145px;left:50%;max-width:calc(100% - 32px); }
+}
+
+/* Soft arrivals and tactile controls echo the sculpture's spring motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .anatomy-panel { animation: anatomy-arrive .65s cubic-bezier(.16,1,.3,1) both; }
+  .anatomy-selection-badge { animation: detail-arrive .4s cubic-bezier(.16,1,.3,1) both; }
+  .anatomy-modebar button, .rotate-button, .light-button, .icon-button {
+    transition: transform .35s cubic-bezier(.22,1,.36,1), background-color .3s ease, color .3s ease, box-shadow .3s ease;
+  }
+  .anatomy-modebar button:hover:not(:disabled), .rotate-button:hover:not(:disabled), .light-button:hover:not(:disabled) { transform: translateY(-2px); }
+  .anatomy-modebar button:active:not(:disabled), .icon-button:active:not(:disabled), .rotate-button:active:not(:disabled) { transform: scale(.94); }
+  @keyframes anatomy-arrive { from { opacity:0; transform:translateX(24px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes detail-arrive { from { opacity:0; translate:0 8px; } to { opacity:1; translate:0 0; } }
 }

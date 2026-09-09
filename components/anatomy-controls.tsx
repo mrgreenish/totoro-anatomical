@@ -1,7 +1,7 @@
 'use client';
 
-import type { RefObject } from 'react';
-import { Layers3, ScanLine, Sparkles, ArrowLeftRight, Focus, X } from 'lucide-react';
+import { useEffect, useRef, type RefObject } from 'react';
+import { Layers3, ScanLine, Sparkles, ArrowLeftRight, Focus, X, ArrowLeft, ArrowUpRight, Brain } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { SYSTEMS, systemVisible } from '@/lib/anatomy-state';
 import type { AnatomyState, AnatomySystem, AnatomyMode, CutAxis } from '@/lib/anatomy-state';
@@ -18,19 +18,46 @@ const AXES: { id: CutAxis; label: string }[] = [
 ];
 export function AnatomyControls({ state, ready, controller }: Props) {
   const active = state.mode !== 'exterior';
+  const brainOpen = state.brainView.status === 'open';
+  const brainButton = useRef<HTMLButtonElement>(null);
+  const backButton = useRef<HTMLButtonElement>(null);
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (brainOpen) backButton.current?.focus({ preventScroll: true });
+    else if (wasOpen.current) brainButton.current?.focus({ preventScroll: true });
+    wasOpen.current = brainOpen;
+    if (!brainOpen && state.brainView.status !== 'loading') return;
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); controller.current?.closeBrainView(); }
+    };
+    document.addEventListener('keydown', escape);
+    return () => document.removeEventListener('keydown', escape);
+  }, [brainOpen, state.brainView.status, controller]);
   const selected = state.parts.find(p => p.id === state.selectedId);
   const selectable = state.parts.filter(p => systemVisible(p.systems, state.visibleSystems));
   const toggle = (id: AnatomySystem) => controller.current?.setVisibleSystems(state.visibleSystems.includes(id)
     ? state.visibleSystems.filter(s => s !== id) : [...state.visibleSystems, id]);
   return <>
-    <fieldset className="anatomy-modebar" aria-label="View mode">
+    {brainOpen ? <div className="brain-study-heading">
+      <button ref={backButton} type="button" className="brain-back" onClick={() => controller.current?.closeBrainView()}><ArrowLeft size={16}/>Back to anatomy</button>
+      <div className="brain-study-title"><span className="anatomy-eyebrow">AN INTIMATE STUDY</span><h2>The living brain<span>.</span></h2><p>Cortex, vessels & quiet impulses</p></div>
+      <span className="brain-study-note">Human-inspired · Fictional anatomy</span>
+    </div> : null}
+    {active && !brainOpen && state.brainView.available ? <div className="brain-entry" aria-live="polite">
+      <button ref={brainButton} type="button" className="brain-open" aria-busy={state.brainView.status === 'loading'} disabled={state.brainView.status === 'loading'} onClick={() => { void controller.current?.openBrainView(); }}>
+        <Brain size={17} strokeWidth={1.5}/><span>{state.brainView.status === 'loading' ? 'Preparing brain view…' : state.brainView.status === 'error' ? 'Retry brain view' : 'Open brain view'}</span>{state.brainView.status === 'loading' ? <span className="loading-dot"/> : <ArrowUpRight size={15}/>}
+      </button>
+      {state.brainView.status === 'error' ? <span className="brain-entry-error">The close-up couldn’t load.</span> : null}
+      {state.brainView.status === 'loading' ? <button type="button" className="brain-cancel" onClick={() => controller.current?.closeBrainView()}>Cancel</button> : null}
+    </div> : null}
+    {!brainOpen ? <fieldset className="anatomy-modebar" aria-label="View mode">
       {MODES.map(({ id, label, icon: Icon }) => <button key={id} type="button" aria-pressed={state.mode === id}
         disabled={!ready} onClick={() => { void controller.current?.setMode(id); }}><Icon size={16} strokeWidth={1.6}/>{label}</button>)}
-    </fieldset>
-    {active && selected ? <output className="anatomy-selection-badge"><Focus size={15}/><span>{selected.label}</span><button type="button" aria-label="Dismiss part highlight" onClick={() => controller.current?.selectPart(null)}><X size={15}/></button></output> : null}
+    </fieldset> : null}
+    {active && !brainOpen && selected ? <output className="anatomy-selection-badge"><Focus size={15}/><span>{selected.label}</span><button type="button" aria-label="Dismiss part highlight" onClick={() => controller.current?.selectPart(null)}><X size={15}/></button></output> : null}
     {state.status === 'loading' ? <output className="anatomy-load"><span className="loading-dot"/>Loading anatomy…</output> : null}
     {state.status === 'error' ? <output className="anatomy-load anatomy-load-error">The anatomy couldn’t load. <button type="button" onClick={() => { void controller.current?.setMode('split'); }}>Retry</button></output> : null}
-    {active ? <aside className="anatomy-panel" aria-label="Anatomy controls">
+    {active && !brainOpen ? <aside className="anatomy-panel" aria-label="Anatomy controls">
       <div className="anatomy-panel-heading"><div><span className="anatomy-eyebrow">BENEATH THE COAT</span><h2>Anatomy study<span>.</span></h2></div><span className="anatomy-index">02</span></div>
       <p className="anatomy-intro">An imagined anatomy, shaped for a forest spirit.</p>
       <div className="systems-heading"><h3>Body systems</h3><button type="button" onClick={() => controller.current?.setVisibleSystems(SYSTEMS.map(s => s.id))}>Show all</button></div>

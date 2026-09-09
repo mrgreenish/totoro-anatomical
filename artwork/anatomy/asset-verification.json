@@ -2,25 +2,31 @@
   "passed": true,
   "parts": 264,
   "triangles": 484316,
-  "bytes": 11077760,
+  "bytes": 10774792,
   "textures": [
     {
-      "name": "bone-normal",
-      "width": 512,
-      "height": 512,
-      "format": "png"
+      "name": "cortical_bone-normal",
+      "width": 1024,
+      "height": 1024,
+      "format": "webp"
     },
     {
-      "name": "bone-roughness",
+      "name": "cortical_bone-albedo",
+      "width": 1024,
+      "height": 1024,
+      "format": "webp"
+    },
+    {
+      "name": "cortical_bone-roughness",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
     },
     {
       "name": "muscle-normal",
-      "width": 512,
-      "height": 512,
-      "format": "png"
+      "width": 1024,
+      "height": 1024,
+      "format": "webp"
     },
     {
       "name": "muscle-albedo",
@@ -32,13 +38,31 @@
       "name": "muscle-roughness",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
+    },
+    {
+      "name": "tendon-normal",
+      "width": 512,
+      "height": 512,
+      "format": "webp"
+    },
+    {
+      "name": "tendon-albedo",
+      "width": 512,
+      "height": 512,
+      "format": "webp"
+    },
+    {
+      "name": "tendon-roughness",
+      "width": 512,
+      "height": 512,
+      "format": "webp"
     },
     {
       "name": "brain-normal",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
     },
     {
       "name": "brain-albedo",
@@ -50,13 +74,13 @@
       "name": "brain-roughness",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
     },
     {
       "name": "glands-normal",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
     },
     {
       "name": "glands-albedo",
@@ -68,13 +92,13 @@
       "name": "glands-roughness",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
     },
     {
       "name": "lungs-normal",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
     },
     {
       "name": "lungs-albedo",
@@ -86,13 +110,13 @@
       "name": "lungs-roughness",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
     },
     {
       "name": "myocardium-normal",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
     },
     {
       "name": "myocardium-albedo",
@@ -104,13 +128,13 @@
       "name": "myocardium-roughness",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
     },
     {
       "name": "stomach-normal",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
     },
     {
       "name": "stomach-albedo",
@@ -122,13 +146,13 @@
       "name": "stomach-roughness",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
     },
     {
       "name": "spleen-normal",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
     },
     {
       "name": "spleen-albedo",
@@ -140,13 +164,13 @@
       "name": "spleen-roughness",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
     },
     {
       "name": "intestine-normal",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
     },
     {
       "name": "intestine-albedo",
@@ -158,13 +182,13 @@
       "name": "intestine-roughness",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
     },
     {
       "name": "kidney-normal",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
     },
     {
       "name": "kidney-albedo",
@@ -176,13 +200,13 @@
       "name": "kidney-roughness",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
     },
     {
       "name": "liver-normal",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
     },
     {
       "name": "liver-albedo",
@@ -194,7 +218,7 @@
       "name": "liver-roughness",
       "width": 512,
       "height": 512,
-      "format": "png"
+      "format": "webp"
     }
   ],
   "tissueAtlases": [
@@ -206,7 +230,10 @@
     "intestine",
     "kidney",
     "spleen",
-    "glands"
+    "glands",
+    "muscle",
+    "cortical_bone",
+    "tendon"
   ],
   "physicalCoatsPresent": true,
   "metadataPreserved": true,

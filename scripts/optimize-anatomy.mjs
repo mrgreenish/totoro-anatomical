@@ -16,7 +16,13 @@ for (const material of doc.getRoot().listMaterials()) {
   const data = manifest.materials[material.getName()];
   if (data?.texture) material.setBaseColorFactor([...data.tint, 1]);
 }
-await doc.transform(textureCompress({ encoder: sharp, slots: /^baseColorTexture$/, targetFormat: 'webp', resize: [1024, 1024], quality: 90 }), dedup(), weld(), prune({ keepExtras: true }), meshopt({ encoder: MeshoptEncoder, level: 'medium' }));
+await doc.transform(
+  textureCompress({ encoder: sharp, slots: /^baseColorTexture$/, targetFormat: 'webp', resize: [1024, 1024], quality: 90 }),
+  // Lossless WebP keeps every normal and roughness texel while making room
+  // for the higher-resolution structural maps in the original 12 MB budget.
+  textureCompress({ encoder: sharp, slots: /^(normalTexture|metallicRoughnessTexture)$/, targetFormat: 'webp', lossless: true }),
+  dedup(), weld(), prune({ keepExtras: true }), meshopt({ encoder: MeshoptEncoder, level: 'medium' }),
+);
 await io.write('public/models/totoro-anatomy.glb', doc);
 const bytes = await readFile('public/models/totoro-anatomy.glb');
 const validation = await validator.validateBytes(new Uint8Array(bytes), { uri: 'totoro-anatomy.glb' });

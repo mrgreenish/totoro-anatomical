@@ -16,6 +16,8 @@ export type SculptureController = {
   setExplosion(value: number): void;
   setVisibleSystems(value: AnatomySystem[]): void;
   selectPart(id: string | null): void;
+  openBrainView(): Promise<void>;
+  closeBrainView(): void;
   reset(): void;
   dispose(): void;
 };
@@ -30,9 +32,10 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   renderer.toneMapping = THREE.AgXToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.VSMShadowMap;
+  // PCF avoids variance-shadow light leaks through thin ribs and close tissue.
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(30, 1, .1, 60);
+  const camera = new THREE.PerspectiveCamera(30, 1, .1, 100);
   const initialPosition = new THREE.Vector3(3.5, 4.0, 12.4);
   const initialTarget = new THREE.Vector3(0, 2.30, 0);
   camera.position.copy(initialPosition);
@@ -123,6 +126,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   const restRotations = new Map<THREE.Object3D, THREE.Quaternion>();
   const localRotation = new THREE.Quaternion();
   const bendAxis = new THREE.Vector3(0, 0, 1);
+  const leafTilt = new THREE.Euler();
   function bend(object: THREE.Object3D | undefined, angle: number) {
     if (!object) return;
     const rest = restRotations.get(object);
@@ -135,13 +139,18 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   const dayKey = new THREE.Color(0xfff4de), nightKey = new THREE.Color(0xbddeff);
   const dayRim = new THREE.Color(0xe8ffc3), nightRim = new THREE.Color(0xc3df9b);
 
+  let viewportWidth = 0, viewportHeight = 0;
   function resize() {
     const width = canvas.clientWidth, height = canvas.clientHeight;
     if (!width || !height || disposed) return;
+    const viewportChanged = width !== viewportWidth || height !== viewportHeight;
+    viewportWidth = width; viewportHeight = height;
     renderer.setPixelRatio(pixelRatio); renderer.setSize(width, height, false);
     camera.aspect = width / height;
     camera.fov = camera.aspect < .8 ? 30 + (.8 - camera.aspect) * 21 : 30;
-    camera.updateProjectionMatrix(); particleMaterial.uniforms.size.value = pixelRatio; anatomy?.resize(); wake();
+    camera.updateProjectionMatrix(); particleMaterial.uniforms.size.value = pixelRatio;
+    if (viewportChanged) anatomy?.resize();
+    wake();
   }
   function wake() {
     if (disposed || options.signal.aborted || document.hidden || running) return;
@@ -174,7 +183,14 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     if (breathBone) breathBone.scale.set(1 + breath * .013, 1 + breath * .004, 1 + breath * .016);
     bend(earLeft, motion.ears.position + (movingCharacter ? Math.sin(elapsed * 1.8) * .016 : 0));
     bend(earRight, motion.ears.position * 1.13 + (movingCharacter ? Math.sin(elapsed * 1.8 + .6) * .019 : 0));
-    if (leaf) { leaf.rotation.z = motion.leaf.position + (movingCharacter ? Math.sin(elapsed * 1.6) * .015 : 0); leaf.rotation.x = -motion.pitch.position * 1.3 + (movingCharacter ? Math.sin(elapsed * 1.2) * .016 : 0); }
+    if (leaf && restRotations.has(leaf)) {
+      // Keep the hat attached: flutter around its authored pose, with enough
+      // clearance and bounded tilt to keep the blade out of the crown.
+      leafTilt.set(
+        THREE.MathUtils.clamp(-motion.pitch.position * .45 + (movingCharacter ? Math.sin(elapsed * 1.2) * .009 : 0), -.025, .025),
+        0, THREE.MathUtils.clamp(motion.leaf.position * .3 + (movingCharacter ? Math.sin(elapsed * 1.6) * .012 : 0), -.035, .035));
+      leaf.quaternion.copy(restRotations.get(leaf)!).multiply(localRotation.setFromEuler(leafTilt));
+    }
     bend(armLeft, (movingCharacter ? Math.sin(elapsed * 1.45) * .017 : 0) + motion.arms.position);
     bend(armRight, (movingCharacter ? -Math.sin(elapsed * 1.45 + .4) * .017 : 0) + motion.arms.position);
     bend(tailBone, -motion.yaw.position * .26 + (movingCharacter ? Math.sin(elapsed * .9 + 1) * .020 : 0));
@@ -193,18 +209,31 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     fill.intensity = THREE.MathUtils.lerp(.65, .4, night); scene.environmentIntensity = THREE.MathUtils.lerp(.48, .28, night);
     plinthMaterial.color.copy(dayStage).lerp(nightStage, night); edgeMaterial.color.copy(plinthMaterial.color);
     particleMaterial.uniforms.opacity.value = anatomy?.active ? 0 : THREE.MathUtils.lerp(.15, .62, night);
-    const anatomySettling = anatomy?.update(dt) ?? false;
+    const anatomySettling = anatomy?.update(dt, animated) ?? false;
     if (anatomy?.active) {
       // Neutral studio light preserves red/brown tissue separation. A lower
       // fill keeps fissures and overlapping organs dimensional; the environment
       // supplies broad, restrained reflections on the moist capsules.
-      key.color.set(0xfff4ed); key.intensity = 2.6;
-      fill.intensity = .48; ambient.intensity = .30;
-      rim.color.set(0xf0f4ff); rim.intensity = 1.25;
-      scene.environmentIntensity = .38;
-      key.shadow.normalBias = .006;
-    } else key.shadow.normalBias = .018;
-    renderer.render(scene, camera);
+      key.color.set(0xfff7f0); key.intensity = 2.35;
+      fill.color.set(0xdce7f5); fill.intensity = .42;
+      ambient.color.set(0xf3f5fa); ambient.groundColor.set(0x514a43); ambient.intensity = .22;
+      rim.color.set(0xe4edff); rim.intensity = 1.65;
+      scene.environmentIntensity = .46;
+      renderer.toneMappingExposure = 1;
+      key.shadow.normalBias = .004;
+    } else {
+      key.shadow.normalBias = .018;
+      fill.color.set(0xc7deef);
+      ambient.color.set(0xf8ffe9); ambient.groundColor.set(0x778371);
+      renderer.toneMappingExposure = 1.05;
+    }
+    // Keep the spread-out muscle and vessel layers inside the shadow volume.
+    const shadowExtent = anatomy?.active ? 8 : 4;
+    if (key.shadow.camera.right !== shadowExtent) {
+      key.shadow.camera.left = -shadowExtent; key.shadow.camera.right = shadowExtent;
+      key.shadow.camera.updateProjectionMatrix();
+    }
+    renderer.render(anatomy?.detailScene ?? scene, camera);
     if (process.env.NODE_ENV !== 'production' && model && rawDt > 0 && rawDt < .2) {
       frameSamples.push(rawDt * 1000);
       if (frameSamples.length === 180) {
@@ -239,6 +268,8 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     setExplosion(value) { anatomy?.setExplosion(value); },
     setVisibleSystems(value) { anatomy?.setVisibleSystems(value); },
     selectPart(id) { anatomy?.selectPart(id); },
+    async openBrainView() { resetting = false; await anatomy?.openBrainView(); wake(); },
+    closeBrainView() { anatomy?.closeBrainView(); wake(); },
     reset() { rotating = false; resetting = true; anatomy?.reset(); motion.reset(); wake(); },
     dispose() {
       if (disposed) return;
@@ -257,6 +288,9 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     },
   };
   function onKey(event: KeyboardEvent) {
+    if (event.key === 'Escape' && anatomy?.state.brainView.status === 'open') {
+      event.preventDefault(); controller.closeBrainView(); return;
+    }
     if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '-', '=', 'Home'].includes(event.key)) return;
     event.preventDefault(); resetting = false; interactionUntil = performance.now() + 1800;
     const spherical = new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target));
@@ -345,6 +379,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       if (object) restRotations.set(object, object.quaternion.clone());
     }
     leaf = model.getObjectByName('Leaf');
+    if (leaf) { restRotations.set(leaf, leaf.quaternion.clone()); leaf.position.y += .10; }
     for (const name of ['Eyelids_L', 'Eyelids_R']) {
       const object = model.getObjectByName(name);
       if (object instanceof THREE.Mesh && object.morphTargetDictionary?.Blink !== undefined) {

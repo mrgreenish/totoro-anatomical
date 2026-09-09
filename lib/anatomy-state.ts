@@ -2,6 +2,7 @@ export type AnatomyMode = 'exterior' | 'split' | 'exploded';
 export type AnatomySystem = 'skin' | 'muscles' | 'bones' | 'organs' | 'arteries' | 'veins' | 'nerves';
 export type CutAxis = 'x' | 'y' | 'z';
 export type AnatomyPart = { id: string; label: string; systems: AnatomySystem[]; description: string };
+export type BrainViewState = { available: boolean; status: 'closed' | 'loading' | 'open' | 'error' };
 export type AnatomyState = {
   mode: AnatomyMode;
   status: 'idle' | 'loading' | 'ready' | 'error';
@@ -10,6 +11,7 @@ export type AnatomyState = {
   visibleSystems: AnatomySystem[];
   selectedId: string | null;
   parts: AnatomyPart[];
+  brainView: BrainViewState;
 };
 export const SYSTEMS: { id: AnatomySystem; label: string; color: string }[] = [
   { id: 'skin', label: 'Skin & coat', color: '#9caaa0' },
@@ -23,7 +25,7 @@ export const SYSTEMS: { id: AnatomySystem; label: string; color: string }[] = [
 export const clamp01 = (value: number) => Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : .5;
 export function defaultAnatomyState(): AnatomyState {
   return { mode: 'exterior', status: 'idle', cut: { axis: 'x', position: .5, flipped: false },
-    explosion: .65, visibleSystems: SYSTEMS.map(s => s.id), selectedId: null, parts: [] };
+    explosion: .65, visibleSystems: SYSTEMS.map(s => s.id), selectedId: null, parts: [], brainView: { available: false, status: 'closed' } };
 }
 export function systemVisible(systems: AnatomySystem[], visible: AnatomySystem[]) {
   return systems.some(system => visible.includes(system));
