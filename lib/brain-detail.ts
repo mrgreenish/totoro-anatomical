@@ -4,6 +4,7 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { applyTissueTouch, createBrainTouch, TOUCH_GLSL } from './brain-touch';
+import { createBrainActivity } from './brain-activity';
 
 const BASE = '/models/brain-detail/';
 type NeuralPath = { points: number[][]; phase: number; depth: number };
@@ -80,6 +81,7 @@ export function createBrainDetail(o: Options) {
   const rim = new THREE.DirectionalLight(0xf0d6d4, 1.5); rim.position.set(1.5, 1, -2);
   scene.add(ambient, key, fill, rim);
   const root = new THREE.Group(); scene.add(root);
+  const activity = createBrainActivity({ canvas:o.canvas, camera:o.camera, root, wake:()=>o.wake(), reduced:o.reduced });
   const touch = createBrainTouch({ canvas:o.canvas, camera:o.camera, controls:o.controls, root, wake:()=>o.wake(), reduced:o.reduced });
   const textures = new Set<THREE.Texture>();
   const materials = new Set<THREE.Material>();
@@ -108,6 +110,7 @@ export function createBrainDetail(o: Options) {
     return map;
   }
   function release() {
+    activity.setEnabled(false);
     touch.setEnabled(false);
     root.clear(); geometries.forEach(g => g.dispose()); geometries.clear();
     materials.forEach(m => m.dispose()); materials.clear();
@@ -225,8 +228,8 @@ export function createBrainDetail(o: Options) {
         material.name = name; materials.add(material);
         const compileTissue = material.onBeforeCompile.bind(material);
         const cacheKey = material.customProgramCacheKey();
-        material.onBeforeCompile = (shader, renderer) => { compileTissue(shader,renderer); applyTissueTouch(shader,touch.springs); };
-        material.customProgramCacheKey = () => `${cacheKey}-squash-v1`;
+        material.onBeforeCompile = (shader, renderer) => { compileTissue(shader,renderer); applyTissueTouch(shader,touch.springs); if(material.map)activity.apply(shader); };
+        material.customProgramCacheKey = () => `${cacheKey}-squash-hover-neurons-v2`;
         const depth = new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking});
         depth.onBeforeCompile = shader => applyTissueTouch(shader,touch.springs);
         depth.customProgramCacheKey = () => 'brain-squash-shadow-v1';
@@ -250,17 +253,17 @@ export function createBrainDetail(o: Options) {
         geometries.add(geometry);
         const material = new THREE.ShaderMaterial({
           transparent: true, depthWrite: false, depthTest: true,
-          uniforms: { brainTime: time, tissueTouchCenters:{value:touch.springs.centers}, tissueTouchOffsets:{value:touch.springs.offsets} },
+          uniforms: { brainTime: time, brainHoverLevel:activity.uniforms.brainHoverLevel, tissueTouchCenters:{value:touch.springs.centers}, tissueTouchOffsets:{value:touch.springs.offsets} },
           vertexShader: `${TOUCH_GLSL}\nattribute float phase; attribute float tissueDepth;
             varying vec2 vUv; varying float vPhase; varying float vDepth;
             void main() { vUv=uv; vPhase=phase; vDepth=tissueDepth;
               gl_Position=projectionMatrix*viewMatrix*vec4(softTissuePosition((modelMatrix*vec4(position,1.0)).xyz),1.0); }`,
-          fragmentShader: `uniform float brainTime; varying vec2 vUv; varying float vPhase; varying float vDepth;
+          fragmentShader: `uniform float brainTime; uniform float brainHoverLevel; varying vec2 vUv; varying float vPhase; varying float vDepth;
             void main() {
               float head = mod(brainTime*.16+vPhase,1.65)-.25;
               float impulse=exp(-pow((vUv.x-head)/.048,2.0));
               float softEdge=pow(sin(vUv.y*3.14159265),2.0);
-              float alpha=impulse*softEdge*exp(-vDepth*1.8)*.55;
+              float alpha=impulse*softEdge*exp(-vDepth*1.8)*.38*brainHoverLevel;
               gl_FragColor=vec4(vec3(1.0,.81,.60),alpha);
               #include <tonemapping_fragment>
               #include <colorspace_fragment>
@@ -278,13 +281,14 @@ export function createBrainDetail(o: Options) {
   return {
     scene, root, load,
     get ready() { return ready; },
-    setInteractive(value: boolean) { touch.setEnabled(value); },
+    setInteractive(value: boolean) { activity.setEnabled(value); touch.setEnabled(value); },
     unload() { if (!disposed && ready) release(); },
-    update(dt: number, animated: boolean) { if (animated) time.value += dt; return touch.update(dt) || animated; },
+    update(dt: number, animated: boolean) { if (animated) time.value += dt; const active=activity.update(dt,animated); return touch.update(dt) || active || animated; },
     dispose() {
       if (disposed) return;
       disposed = true; cache = undefined; abort.abort(); o.signal.removeEventListener('abort', abortParent); release();
       touch.dispose();
+      activity.dispose();
       key.shadow.dispose();
     },
   };
