@@ -94,7 +94,10 @@ for(const material of tissueMaterials){
   check(material.map&&material.normalMap&&material.roughnessMap&&material.aoMap&&material.bumpMap&&material.clearcoatMap,'All surface maps bound');
   check(material.map.colorSpace===THREE.SRGBColorSpace&&material.normalMap.colorSpace===THREE.NoColorSpace,'Color and data maps use correct transfer functions');
   const shader={uniforms:{},vertexShader:THREE.ShaderLib.physical.vertexShader,fragmentShader:THREE.ShaderLib.physical.fragmentShader};material.onBeforeCompile(shader);
-  check(shader.fragmentShader.includes('float relief')&&shader.fragmentShader.includes('float thickness')&&shader.uniforms.brainHeight,'Physical shader hooks match installed Three chunks');
+  check(shader.fragmentShader.includes('float relief')&&shader.fragmentShader.includes('brainOpticalDepth')&&shader.uniforms.brainHeight,'Physical shader hooks match installed Three chunks');
+  check(material.transmission>0&&material.transmission<.03&&material.thicknessMap===material.clearcoatMap&&!material.transparent,'Volume transmission starts nearly opaque, with coordinated thickness and no alpha sorting');
+  check(shader.vertexShader.includes('vTissueArea=softTissueArea')&&shader.fragmentShader.includes('material.transmission = transmission + .46 * brainStretch()')&&shader.fragmentShader.includes('material.thickness = thickness / max(1.0,vTissueArea)'),'Surface stretch drives local transmission and thinning');
+  check(shader.fragmentShader.includes('#define RE_Direct RE_Direct_Brain')&&shader.fragmentShader.includes('light.color*tissue.diffuseColor*transport'),'Subsurface scattering is attached to actual direct-light transport');
 }
 const time=pulseMaterials[0].uniforms.brainTime.value;
 f.api.update(.5,true);check(pulseMaterials[0].uniforms.brainTime.value===time,'Reduced motion freezes pulses');
