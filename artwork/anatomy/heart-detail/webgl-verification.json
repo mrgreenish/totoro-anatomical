@@ -1,0 +1,62 @@
+{
+  "passed": true,
+  "scope": "Isolated headless Chrome on the local Mac at DPR 1; mobile is viewport emulation, not a physical-phone benchmark.",
+  "errors": [],
+  "opaque": {
+    "stats": "{\"medianMs\":16.699999999999818,\"p95Ms\":16.799999999999955,\"pixelRatio\":1,\"triangles\":250335,\"drawCalls\":8,\"width\":1037,\"height\":795,\"eyelids\":2,\"rig\":true,\"asset\":\"heart-study-1\"}",
+    "heading": "The living heart.",
+    "canvas": {
+      "x": 360,
+      "y": 95,
+      "width": 1036.8125,
+      "height": 795,
+      "top": 95,
+      "right": 1396.8125,
+      "bottom": 890,
+      "left": 360
+    }
+  },
+  "blood": {
+    "stats": "{\"medianMs\":16.69999999999891,\"p95Ms\":16.799999999999272,\"pixelRatio\":1,\"triangles\":469605,\"drawCalls\":25,\"width\":1037,\"height\":795,\"eyelids\":2,\"rig\":true,\"asset\":\"heart-study-1\"}",
+    "phase": "Ventricular filling",
+    "controls": [
+      {
+        "checked": true,
+        "disabled": false
+      },
+      {
+        "checked": true,
+        "disabled": false
+      },
+      {
+        "checked": true,
+        "disabled": false
+      }
+    ],
+    "overflow": false
+  },
+  "mobile": {
+    "stats": "{\"medianMs\":16.699999999999818,\"p95Ms\":16.799999999999955,\"pixelRatio\":1,\"triangles\":265561,\"drawCalls\":25,\"width\":390,\"height\":439,\"eyelids\":2,\"rig\":true,\"asset\":\"heart-study-1\"}",
+    "overflow": false,
+    "canvas": {
+      "x": 0,
+      "y": 290,
+      "width": 390,
+      "height": 439,
+      "top": 290,
+      "right": 390,
+      "bottom": 729,
+      "left": 0
+    },
+    "controls": {
+      "x": 23.390625,
+      "y": 198.390625,
+      "width": 343.21875,
+      "height": 32,
+      "top": 198.390625,
+      "right": 366.609375,
+      "bottom": 230.390625,
+      "left": 23.390625
+    }
+  }
+}

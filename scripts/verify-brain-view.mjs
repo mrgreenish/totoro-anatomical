@@ -1,19 +1,11 @@
 import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
-import ts from 'typescript';
+import { moduleURLFor } from './load-typescript.mjs';
 import * as THREE from 'three';
 import { Document, NodeIO } from '@gltf-transform/core';
 
-const moduleURL=s=>'data:text/javascript;base64,'+Buffer.from(s).toString('base64');
-const compile=s=>ts.transpileModule(s,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
-const stateURL=moduleURL(compile(await readFile('lib/anatomy-state.ts','utf8')));
-const presentationURL=moduleURL(compile(await readFile('lib/anatomy-presentation.ts','utf8')));
-const tissueURL=moduleURL(compile(await readFile('lib/tissue-materials.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g,(_,name)=>`from ${JSON.stringify(import.meta.resolve(name))}`));
-const touchURL=moduleURL(compile(await readFile('lib/brain-touch.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g,(_,name)=>`from ${JSON.stringify(import.meta.resolve(name))}`));
-const activityURL=moduleURL(compile(await readFile('lib/brain-activity.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g,(_,name)=>`from ${JSON.stringify(import.meta.resolve(name))}`));
-const detailURL=moduleURL(compile(await readFile('lib/brain-detail.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g,(_,name)=>`from ${JSON.stringify(name==='./tissue-materials'?tissueURL:name==='./brain-touch'?touchURL:name==='./brain-activity'?activityURL:import.meta.resolve(name))}`));
-const source=compile(await readFile('lib/totoro-anatomy.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g,(_,name)=>`from ${JSON.stringify(name==='./anatomy-presentation'?presentationURL:name==='./tissue-materials'?tissueURL:name==='./anatomy-state'?stateURL:name==='./brain-detail'?detailURL:import.meta.resolve(name))}`);
-const {createAnatomyExplorer}=await import(moduleURL(source));
+const detailURL=await moduleURLFor('lib/brain-detail.ts');
+const {createAnatomyExplorer}=await import(await moduleURLFor('lib/totoro-anatomy.ts'));
 const {brainProximity,detailTextureSize,isBrainOccluder}=await import(detailURL);
 let count=0;const check=(v,msg)=>{assert.ok(v,msg);count++;};
 check(!brainProximity(.299,true,false),'Button hidden below entry threshold');

@@ -1,0 +1,44 @@
+{
+  "model": "Original procedural human-inspired external and internal heart; no scan or patient data.",
+  "generator": "scripts/build-heart-detail.py",
+  "colorSource": {
+    "file": "tissue-source.png",
+    "method": "Built-in image_gen",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "use": "Continuous object-space projection mixed with geometry-aligned vascular grooves, epicardial fat and multiscale tissue fields."
+  },
+  "maps": {
+    "basecolor": "4096 desktop / 2048 mobile, sRGB",
+    "normal": "2048 tangent-space runtime, quality-95 WebP; full 4096 analytical bake retained",
+    "surface": "2048 linear packed R occlusion, G roughness, B optical thickness"
+  },
+  "geometry": "Surface grids, transported vascular tubes with lumen walls, sulcus-aligned coronaries and fat, four chambers, eleven valve leaflets, chordae and trabeculae. Meshopt and error-bounded simplification.",
+  "fluid": "Illustrative pulsatile advection with one-way valve gates, velocity profiles, curved filling/ejection trajectories, chamber recirculation and advected bulk density. This is not a Navier\u2013Stokes/CFD solution, patient-specific simulation or medical reference.",
+  "cells": "Instanced biconcave erythrocytes, deliberately enlarged. 560 desktop / 240 mobile.",
+  "references": [
+    {
+      "title": "University of Minnesota, Atlas of Human Cardiac Anatomy \u2014 Right ventricle",
+      "url": "https://www.vhlab.umn.edu/atlas/right-ventricle/index.shtml",
+      "use": "Anterior position and pulmonary circulation"
+    },
+    {
+      "title": "University of Minnesota \u2014 Tricuspid valve",
+      "url": "https://www.vhlab.umn.edu/atlas/right-ventricle/tricuspid-valve/index.shtml",
+      "use": "AV opening in diastole and closure in systole"
+    },
+    {
+      "title": "University of Minnesota \u2014 Physiology tutorial",
+      "url": "https://www.vhlab.umn.edu/atlas/physiology-tutorial/the-human-heart.shtml",
+      "use": "Chamber sequence, mitral/aortic route and cardiac cycle"
+    },
+    {
+      "title": "Anatomy, Thorax, Heart \u2014 NCBI Bookshelf",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK470256/",
+      "use": "Coronary branches and external landmarks"
+    }
+  ],
+  "validation": "asset-verification.json, runtime-verification.json, webgl-verification.json; offline Cycles renders and actual WebGL screenshots are separately named."
+}

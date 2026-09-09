@@ -206,20 +206,20 @@ h1 span { color:#84956f; }
 .brain-entry-error { color:var(--secondary-ink);font-size:14px; }
 .brain-cancel { border:0;background:transparent;color:var(--secondary-ink);font-size:14px;text-decoration:underline;cursor:pointer;padding:5px 12px; }
 .is-night .brain-open { background:#22352df0; }
-.gallery.is-brain-view { --ink:#eee9e5;--secondary-ink:#b0a7a4;--faint:#ffffff20;background:radial-gradient(ellipse at 52% 46%,#333035 0%,#1c1b20 45%,#101015 100%);height:100svh;min-height:680px;overflow:hidden;padding:0; }
-.is-brain-view .sculpture,.is-brain-view.is-fullscreen .sculpture { position:absolute;inset:125px 3% 125px 20%;width:auto;height:auto;margin:0; }
-.is-brain-view .sculpture canvas { animation:brain-reveal .7s ease-out both; }
-.is-brain-view .background-word,.is-brain-view .header-note,.is-brain-view .light-button,.is-brain-view .gallery-footer,.is-brain-view .rotate-button,.is-brain-view .control-divider { display:none; }
-.is-brain-view .interaction-area { left:60%;bottom:35px; }
-.is-brain-view .interaction-hint { opacity:1; }
-.is-brain-view .interaction-hint { text-align:center;align-items:flex-start;white-space:normal;font-size:14px;line-height:1.6; }
-.is-brain-view .interaction-hint>svg { margin-top:4px; }
+.gallery.is-organ-view { --ink:#eee9e5;--secondary-ink:#b0a7a4;--faint:#ffffff20;background:radial-gradient(ellipse at 52% 46%,#333035 0%,#1c1b20 45%,#101015 100%);height:100svh;min-height:680px;overflow:hidden;padding:0; }
+.is-organ-view .sculpture,.is-organ-view.is-fullscreen .sculpture { position:absolute;inset:125px 3% 125px 20%;width:auto;height:auto;margin:0; }
+.is-organ-view .sculpture canvas { animation:brain-reveal .7s ease-out both; }
+.is-organ-view .background-word,.is-organ-view .header-note,.is-organ-view .light-button,.is-organ-view .gallery-footer,.is-organ-view .rotate-button,.is-organ-view .control-divider { display:none; }
+.is-organ-view .interaction-area { left:60%;bottom:35px; }
+.is-organ-view .interaction-hint { opacity:1; }
+.is-organ-view .interaction-hint { text-align:center;align-items:flex-start;white-space:normal;font-size:14px;line-height:1.6; }
+.is-organ-view .interaction-hint>svg { margin-top:4px; }
 .brain-orbit-hint { display:block;font-size:12px;color:#a69c99; }
 .sculpture canvas.is-touchable-brain { cursor:grab; }
 .sculpture canvas.is-tissue-grabbed { cursor:grabbing; }
-.is-brain-view .controls { background:#ffffff08;border-color:#ffffff20;box-shadow:0 8px 26px #0003; }
-.is-brain-view .icon-button:hover { background:#ffffff16; }
-.is-brain-view .brand-icon { border-color:#ffffff30; }
+.is-organ-view .controls { background:#ffffff08;border-color:#ffffff20;box-shadow:0 8px 26px #0003; }
+.is-organ-view .icon-button:hover { background:#ffffff16; }
+.is-organ-view .brand-icon { border-color:#ffffff30; }
 .brain-study-heading { position:absolute;inset:115px auto auto 4.4%;z-index:5;max-width:250px; }
 .brain-back { background:#ffffff07;border-color:#ffffff24;color:#e0d9d5;box-shadow:none; }
 .brain-back:hover { background:#ffffff12; }
@@ -232,16 +232,16 @@ h1 span { color:#84956f; }
 @keyframes brain-reveal { from { opacity:0; } to { opacity:1; } }
 @media(max-width:700px) {
   .brain-entry { top:555px;bottom:auto;left:50%; }
-  .gallery.is-brain-view { min-height:620px;height:100svh; }
+  .gallery.is-organ-view { min-height:620px;height:100svh; }
   .brain-study-heading { top:90px;left:6%;right:6%;max-width:none; }
   .brain-study-title { margin-top:22px; }
   .brain-study-title h2 { font-size:34px;margin:8px 0; }
   .brain-study-title p { margin:0;max-width:none; }
   .brain-study-title .anatomy-eyebrow,.brain-study-note { display:none; }
-  .is-brain-view .sculpture,.is-brain-view.is-fullscreen .sculpture { position:absolute;inset:235px 0 120px;width:auto;height:auto;margin:0; }
-  .is-brain-view .interaction-area { left:50%;bottom:25px; }
+  .is-organ-view .sculpture,.is-organ-view.is-fullscreen .sculpture { position:absolute;inset:235px 0 120px;width:auto;height:auto;margin:0; }
+  .is-organ-view .interaction-area { left:50%;bottom:25px; }
 }
-@media(prefers-reduced-motion:reduce) { .is-brain-view .sculpture canvas { animation:none; }.gallery.is-brain-view { transition:none; } }
+@media(prefers-reduced-motion:reduce) { .is-organ-view .sculpture canvas { animation:none; }.gallery.is-organ-view { transition:none; } }
 @media(max-width:700px) {
   .gallery.is-anatomy { display:flow-root;overflow-x:clip; }
   .anatomy-selection-badge { top:145px;left:50%;max-width:calc(100% - 32px); }
@@ -270,3 +270,41 @@ h1 span { color:#84956f; }
 .brain-shortcut-area .brain-cancel { padding-left:0; }
 .is-night .brain-shortcut { background:#344940;border-color:#81987955; }
 .is-night .brain-shortcut:hover:not(:disabled) { background:#425d4e; }
+
+/* Heart study shares the brain's quiet specimen stage. */
+.gallery.is-heart-view { background:radial-gradient(ellipse at 58% 45%,#34272c 0%,#1c181e 48%,#100f14 100%); }
+.heart-shortcut-area { margin-top:-7px; }
+.heart-shortcut { background:#efe2dc;border-color:#a8796455; }
+.heart-shortcut:hover:not(:disabled) { background:#e9d6cd; }
+.is-night .heart-shortcut { background:#463338;border-color:#a8796466; }
+.is-heart-view .sculpture,.is-heart-view.is-fullscreen .sculpture { inset:95px 3% 110px 25%; }
+.heart-study-heading { max-width:270px; }
+.heart-study-heading .brain-study-title { margin-top:42px; }
+.heart-study-heading .brain-study-note { margin-top:24px; }
+.heart-controls { margin-top:30px; }
+.heart-rhythm { display:flex;align-items:center;gap:9px;color:#d1aaa3;font-size:14px; }
+.heart-phase { display:block;min-height:20px;margin:6px 0 22px;color:#9d8c90;font-size:12px; }
+.heart-view-options { display:grid;gap:14px;border:0;padding:0;margin:0; }
+.heart-view-option { display:flex;align-items:center;gap:10px;font-size:14px;color:#d9cecc;cursor:pointer; }
+.heart-view-option input { width:17px;height:17px;margin:0;accent-color:#b8766c; }
+.heart-view-option:has(input:disabled) { opacity:.40;cursor:default; }
+.heart-flow-key { margin-top:22px;padding-top:17px;border-top:1px solid #ffffff15;display:grid;gap:9px;font-size:12px;color:#bca7a7; }
+.heart-flow-key>span { display:flex;align-items:center;gap:8px; }
+.heart-flow-key i { width:15px;height:4px;border-radius:3px;background:#853149; }
+.heart-flow-key i.oxygenated { background:#d45643; }
+.heart-flow-note { margin:14px 0 0;font-size:12px;line-height:1.7;color:#9d8c90; }
+.is-heart-view .interaction-area { width:calc(100% - 48px);max-width:400px; }
+@media(max-width:760px) {
+  .heart-study-heading { max-width:none; }
+  .heart-study-heading .brain-study-title { margin-top:16px; }
+  .heart-study-heading .brain-study-title h2 { font-size:30px; }
+  .heart-study-heading .brain-study-title p { display:none; }
+  .heart-controls { margin-top:16px; }
+  .heart-rhythm { position:absolute;right:0;top:14px;font-size:12px; }
+  .heart-phase { display:none; }
+  .heart-view-options { grid-template-columns:repeat(3,1fr);gap:8px; }
+  .heart-view-option { font-size:12px;gap:6px;min-height:32px; }
+  .heart-flow-key { display:flex;justify-content:center;gap:15px;padding-top:0;border:0;margin-top:10px;font-size:12px; }
+  .heart-flow-note { margin-top:6px;text-align:center; }
+  .is-heart-view .sculpture,.is-heart-view.is-fullscreen .sculpture { inset:290px 0 115px; }
+}

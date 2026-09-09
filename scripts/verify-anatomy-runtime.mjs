@@ -1,20 +1,11 @@
 import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
-import ts from 'typescript';
+import { moduleURLFor } from './load-typescript.mjs';
 import * as THREE from 'three';
 import { Document, NodeIO } from '@gltf-transform/core';
 
-const asModule = source => 'data:text/javascript;base64,' + Buffer.from(source).toString('base64');
-const compile = source => ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-const stateURL = asModule(compile(await readFile('lib/anatomy-state.ts','utf8')));
-const state = await import(stateURL);
-const presentationURL=asModule(compile(await readFile('lib/anatomy-presentation.ts','utf8')));
-const tissueURL=asModule(compile(await readFile('lib/tissue-materials.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g,(_,name)=>`from ${JSON.stringify(import.meta.resolve(name))}`));
-const touchURL = asModule(compile(await readFile('lib/brain-touch.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g, (_, name) => `from ${JSON.stringify(import.meta.resolve(name))}`));
-const activityURL=asModule(compile(await readFile('lib/brain-activity.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g,(_,name)=>`from ${JSON.stringify(import.meta.resolve(name))}`));
-const detailURL = asModule(compile(await readFile('lib/brain-detail.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g, (_, name) => `from ${JSON.stringify(name==='./tissue-materials'?tissueURL:name==='./brain-touch'?touchURL:name==='./brain-activity'?activityURL:import.meta.resolve(name))}`));
-const source = compile(await readFile('lib/totoro-anatomy.ts','utf8')).replace(/from ['"]([^'"]+)['"]/g, (_, name) => `from ${JSON.stringify(name==='./anatomy-presentation'?presentationURL:name==='./tissue-materials'?tissueURL:name==='./anatomy-state'?stateURL:name==='./brain-detail'?detailURL:import.meta.resolve(name))}`);
-const { createAnatomyExplorer } = await import(asModule(source));
+const state=await import(await moduleURLFor('lib/anatomy-state.ts'));
+const {createAnatomyExplorer}=await import(await moduleURLFor('lib/totoro-anatomy.ts'));
 let assertions = 0;
 function check(value, message) { assert(value,message); assertions++; }
 for (const axis of ['x','y','z']) {

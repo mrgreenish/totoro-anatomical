@@ -5,6 +5,8 @@ import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { clamp01, cutCoordinate, CUT_BOUNDS, defaultAnatomyState, fitDistance, partVisible } from './anatomy-state';
 import type { AnatomyMode, AnatomyPart, AnatomyState, AnatomySystem, AnatomyVariant } from './anatomy-state';
 import { brainProximity, createBrainDetail, isBrainOccluder, probeBrainVisibility, type BrainDetail } from './brain-detail';
+import type { HeartDetail, HeartViewOptions } from './heart-detail';
+import type { OrganStudy } from './anatomy-state';
 import { COAT_OFFSET, REVEAL_DURATION, museumEase, presentationOffset, presentationPhase, revealProgress, type PresentationPhase } from './anatomy-presentation';
 import { applyTissuePreset, BRAIN_SURFACE, createHeartTissueMaterial, sectionTint } from './tissue-materials';
 
@@ -132,7 +134,11 @@ export function createAnatomyExplorer(o: Options) {
     if (!fitting) { o.camera.position.copy(targetPosition); o.controls.target.copy(targetLook); }
   }
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let detail: BrainDetail | undefined;
+  let detail: BrainDetail | HeartDetail | undefined;
+  let brainDetail: BrainDetail | undefined, heartDetail: HeartDetail | undefined;
+  let detailKind: OrganStudy = 'brain';
+  const view = (kind = detailKind) => kind === 'brain' ? state.brainView : state.heartView;
+  const studyOpen = () => state.brainView.status === 'open' || state.heartView.status === 'open';
   let brainRequest = 0, proximityTime = .2, proximityPending = true;
   const proximityPosition = new THREE.Vector3(Infinity, Infinity, Infinity);
   const proximityTarget = new THREE.Vector3(Infinity, Infinity, Infinity);
@@ -160,12 +166,18 @@ export function createAnatomyExplorer(o: Options) {
   o.canvas.parentElement?.appendChild(handle);
   let dragging: { id: number; position: number; x: number; y: number; dx: number; dy: number; screenPosition: number; wa: number; wb: number; camera: THREE.Vector3; target: THREE.Vector3 } | undefined;
 
-  function emit() { if (!disposed && !o.signal.aborted) o.onState?.({ ...state, brainView: { ...state.brainView }, cut: { ...state.cut }, visibleSystems: [...state.visibleSystems] }); }
+  function emit() { if (!disposed && !o.signal.aborted) o.onState?.({ ...state, brainView: { ...state.brainView }, heartView: { ...state.heartView }, cut: { ...state.cut }, visibleSystems: [...state.visibleSystems] }); }
   function invalidate() { dirty = true; proximityPending = true; o.wake(); }
-  function brainAsset() {
-    detail ??= createBrainDetail({ renderer: o.renderer, environment: o.scene.environment, signal: o.signal,
-      canvas:o.canvas, camera:o.camera, controls:o.controls, wake:()=>o.wake(), reduced });
-    return detail;
+  async function organAsset(kind: OrganStudy) {
+    const options = { renderer: o.renderer, environment: o.scene.environment, signal: o.signal,
+      canvas:o.canvas, camera:o.camera, controls:o.controls, wake:()=>o.wake(), reduced };
+    if(kind === 'brain')return brainDetail ??= createBrainDetail(options);
+    if(!heartDetail) {
+      const {createHeartDetail}=await import('./heart-detail');
+      if(disposed||o.signal.aborted)throw new Error('Disposed');
+      heartDetail=createHeartDetail(options);
+    }
+    return heartDetail;
   }
   function discardInertia() {
     const position = o.camera.position.clone(), target = o.controls.target.clone();
@@ -174,32 +186,35 @@ export function createAnatomyExplorer(o: Options) {
     o.controls.enableDamping = damping; o.controls.autoRotate = rotate;
     o.camera.position.copy(position); o.controls.target.copy(target);
   }
-  function frameBrain() {
+  function frameDetail() {
     const bounds = new THREE.Box3().setFromObject(detail!.root);
     const size = bounds.getSize(new THREE.Vector3()); bounds.getCenter(targetLook);
     const distance = fitDistance(size.x, size.y, size.z, o.camera.fov, o.camera.aspect);
-    targetPosition.copy(targetLook).addScaledVector(new THREE.Vector3(1.2, .85, 2.1).normalize(), distance);
-    o.controls.minDistance = 1.05; o.controls.maxDistance = distance * 2.5;
+    targetPosition.copy(targetLook).addScaledVector((detailKind === 'brain' ? new THREE.Vector3(1.2, .85, 2.1) : new THREE.Vector3(.28, .20, 2.8)).normalize(), distance);
+    o.controls.minDistance = detailKind === 'brain' ? 1.05 : .68; o.controls.maxDistance = distance * 2.5;
     o.controls.minPolarAngle = .025; o.controls.maxPolarAngle = Math.PI - .025;
     // A fresh framing within the isolated scene avoids flying through the body.
     o.camera.position.copy(targetPosition); o.controls.target.copy(targetLook);
     o.camera.near = .025; o.camera.far = 100; o.camera.updateProjectionMatrix();
     o.camera.lookAt(targetLook); o.camera.updateMatrixWorld(true);
   }
-  async function openBrainView(entry: 'contextual' | 'shortcut' = 'contextual') {
-    if (state.mode === 'exterior' || state.status !== 'ready' || (entry === 'contextual' && !state.brainView.available)
-      || opening || state.brainView.status === 'open' || disposed) return;
+  async function openOrganView(kind: OrganStudy, entry: 'contextual' | 'shortcut' = 'contextual') {
+    if (state.mode === 'exterior' || state.status !== 'ready' || (entry === 'contextual' && !view(kind).available)
+      || opening || studyOpen() || disposed) return;
+    detailKind = kind;
     const request = ++brainRequest;
-    opening = true; openingEntry = entry; state.brainView.status = 'loading'; emit();
+    opening = true; openingEntry = entry; view(kind).status = 'loading'; emit();
     const valid = () => !disposed && !o.signal.aborted && request === brainRequest && state.mode !== 'exterior'
-      && (entry === 'shortcut' || state.brainView.available);
+      && (entry === 'shortcut' || view(kind).available);
     const loading = brainLoadQueue.then(async () => {
       if (!valid()) return;
-      const asset = brainAsset();
+      const asset = await organAsset(kind);
+      if(!valid())return;
       await asset.load(o.canvas.clientWidth);
       if (!valid()) { asset.unload(); return; }
       await o.renderer.compileAsync?.(asset.scene, o.camera);
       if (!valid()) { asset.unload(); return; }
+      detail = asset;
       fitting = false; discardInertia();
       brainSnapshot = {
         position: o.camera.position.clone(), target: o.controls.target.clone(), quaternion: o.camera.quaternion.clone(),
@@ -207,22 +222,22 @@ export function createAnatomyExplorer(o: Options) {
         minDistance: o.controls.minDistance, maxDistance: o.controls.maxDistance,
         minPolarAngle: o.controls.minPolarAngle, maxPolarAngle: o.controls.maxPolarAngle,
       };
-      frameBrain(); handle.hidden = true;
-      state.brainView.status = 'open';
+      frameDetail(); handle.hidden = true;
+      view(kind).status = 'open';
       detail!.setInteractive(true);
     });
     brainLoadQueue = loading.catch(() => {});
     try { await loading; } catch {
-      if (request === brainRequest && !disposed && !o.signal.aborted) state.brainView.status = 'error';
+      if (request === brainRequest && !disposed && !o.signal.aborted) view(kind).status = 'error';
     } finally {
       if (request === brainRequest && !disposed) {
         opening = false;
-        if (state.brainView.status === 'loading') state.brainView.status = 'closed';
+        if (view(kind).status === 'loading') view(kind).status = 'closed';
         emit(); invalidate();
       }
     }
   }
-  function closeBrainView() {
+  function closeDetailView() {
     ++brainRequest; opening = false;
     if (brainSnapshot) {
       detail?.setInteractive(false);
@@ -238,10 +253,10 @@ export function createAnatomyExplorer(o: Options) {
     }
     handle.hidden = state.mode !== 'split';
     detail?.unload();
-    state.brainView.status = 'closed'; emit(); invalidate();
+    state.brainView.status = state.heartView.status = 'closed'; emit(); invalidate();
   }
-  function updateBrainAvailability() {
-    const brain = parts.find(p => p.id === 'brain');
+  function updateOrganAvailability(kind: OrganStudy) {
+    const brain = parts.find(p => p.id === kind);
     let fraction = 0, visible = false;
     if (brain?.node.visible && state.mode !== 'exterior') {
       brainBounds.setFromObject(brain.node);
@@ -254,7 +269,7 @@ export function createAnatomyExplorer(o: Options) {
         }
         const size = screenBounds.getSize(screenPoint);
         fraction = Math.max(size.x, size.y) / Math.min(o.canvas.clientWidth, o.canvas.clientHeight);
-        if (brainProximity(fraction, true, state.brainView.available)) {
+        if (brainProximity(fraction, true, view(kind).available)) {
           occluders.length = 0;
           for (const part of parts) {
             if (!part.node.visible) continue;
@@ -270,10 +285,10 @@ export function createAnatomyExplorer(o: Options) {
         }
       }
     }
-    const available = brainProximity(fraction, visible, state.brainView.available);
-    if (available !== state.brainView.available) {
-      state.brainView.available = available;
-      if (!available && opening && openingEntry === 'contextual') closeBrainView();
+    const available = brainProximity(fraction, visible, view(kind).available);
+    if (available !== view(kind).available) {
+      view(kind).available = available;
+      if (!available && opening && detailKind === kind && openingEntry === 'contextual') closeDetailView();
       emit();
     }
   }
@@ -434,7 +449,7 @@ export function createAnatomyExplorer(o: Options) {
     updateLayout();
   }
   async function setMode(mode: AnatomyMode) {
-    closeBrainView(); restoringCamera = false;
+    closeDetailView(); restoringCamera = false;
     revealing = false;
     const request = ++revision;
     clearSelection(); state.mode = mode; o.onMode?.();
@@ -491,7 +506,7 @@ export function createAnatomyExplorer(o: Options) {
   function update(dt: number, animated = true) {
     if (disposed) return false;
     animationEnabled = animated;
-    if (state.brainView.status === 'open') return detail?.update(dt, animated && !reduced) ?? false;
+    if (studyOpen()) return detail?.update(dt, animated && !reduced) ?? false;
     const target = state.mode === 'exploded' ? state.explosion : 0;
     const moving = revealing;
     if (revealing) {
@@ -533,7 +548,8 @@ export function createAnatomyExplorer(o: Options) {
     if (proximityPending && proximityTime >= .18) {
       proximityTime = 0; proximityPending = false;
       proximityPosition.copy(o.camera.position); proximityTarget.copy(o.controls.target);
-      updateBrainAvailability();
+      updateOrganAvailability('brain');
+      updateOrganAvailability('heart');
     }
     if (state.mode === 'split' && model) {
       const [a,b,wa,wb] = handleEndpoints();
@@ -548,14 +564,14 @@ export function createAnatomyExplorer(o: Options) {
     return moving || fitting || pumping || proximityPending;
   }
   function setCut(cut: Partial<AnatomyState['cut']>) {
-    if (state.brainView.status === 'open' || opening) closeBrainView();
+    if (studyOpen() || opening) closeDetailView();
     const changeDirection = cut.axis !== undefined && cut.axis !== state.cut.axis || cut.flipped !== undefined && cut.flipped !== state.cut.flipped;
     state.cut = { ...state.cut, ...cut, position: clamp01(cut.position ?? state.cut.position) };
     applyPlane(); invalidate(); emit();
     if (changeDirection) fit(cutDirection());
   }
   function selectPart(id: string | null) {
-    if (state.brainView.status === 'open' || opening) closeBrainView();
+    if (studyOpen() || opening) closeDetailView();
     clearSelection();
     const part = parts.find(p => p.id === id && p.node.visible);
     if (part) {
@@ -577,7 +593,7 @@ export function createAnatomyExplorer(o: Options) {
   const onDown = (event: PointerEvent) => { if (event.isPrimary) pointerDown = { x: event.clientX, y: event.clientY, id: event.pointerId }; };
   const onUp = (event: PointerEvent) => {
     const start = pointerDown; pointerDown = undefined;
-    if (!start || start.id !== event.pointerId || state.brainView.status === 'open' || state.mode !== 'exploded' || Math.hypot(event.clientX-start.x,event.clientY-start.y)>5) return;
+    if (!start || start.id !== event.pointerId || studyOpen() || state.mode !== 'exploded' || Math.hypot(event.clientX-start.x,event.clientY-start.y)>5) return;
     const rect = o.canvas.getBoundingClientRect();
     pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);
     raycaster.setFromCamera(pointer,o.camera);
@@ -639,11 +655,15 @@ export function createAnatomyExplorer(o: Options) {
   return {
     get active() { return !!model && state.mode !== 'exterior'; },
     get state() { return state; },
-    get detailScene() { return state.brainView.status === 'open' ? detail?.scene : undefined; },
-    setMode, setCut, selectPart, update, openBrainView, closeBrainView,
+    get detailScene() { return studyOpen() ? detail?.scene : undefined; },
+    setMode, setCut, selectPart, update,
+    openBrainView: (entry?: 'contextual' | 'shortcut') => openOrganView('brain', entry),
+    openHeartView: (entry?: 'contextual' | 'shortcut') => openOrganView('heart', entry),
+    closeBrainView: closeDetailView, closeHeartView: closeDetailView,
+    setHeartViewOptions(options: Partial<HeartViewOptions>) { heartDetail?.setOptions(options); invalidate(); },
     setAnatomyVariant(value: AnatomyVariant) {
       if ((value !== 'male' && value !== 'female') || state.variant === value) return;
-      if (state.brainView.status === 'open' || opening) closeBrainView();
+      if (studyOpen() || opening) closeDetailView();
       state.variant = value;
       // Stop a previous selection flight without reframing the user's cut.
       fitting = false;
@@ -660,12 +680,12 @@ export function createAnatomyExplorer(o: Options) {
       invalidate();
     },
     resize() {
-      if (state.brainView.status === 'open') { detail?.setInteractive(false); frameBrain(); detail?.setInteractive(true); return; }
+      if (studyOpen()) { detail?.setInteractive(false); frameDetail(); detail?.setInteractive(true); return; }
       if (restoringCamera) { restoringCamera = false; return; }
       if (state.mode !== 'exterior' && model) fitDestination(fitting ? targetPosition.clone().sub(targetLook) : undefined);
     },
     setExplosion(value: number) {
-      if (state.brainView.status === 'open' || opening) closeBrainView();
+      if (studyOpen() || opening) closeDetailView();
       state.explosion=clamp01(value);
       // Fit the final expanded bounds without rebuilding any geometry.
       for (let i = 0; i < 3; i++) expansionFrom[i] = expansion[i];
@@ -677,19 +697,19 @@ export function createAnatomyExplorer(o: Options) {
       updateLayout(); invalidate(); emit();
     },
     setVisibleSystems(visible: AnatomySystem[]) {
-      if (state.brainView.status === 'open' || opening) closeBrainView();
+      if (studyOpen() || opening) closeDetailView();
       state.visibleSystems=[...new Set(visible)]; applyVisibility(); invalidate(); emit();
       if (state.mode==='exploded') fitDestination();
     },
     reset() {
-      closeBrainView(); restoringCamera = false;
+      closeDetailView(); restoringCamera = false;
       ++revision; clearSelection(); const status=state.status, manifest=state.parts;
       state={...defaultAnatomyState(),status,parts:manifest}; revealing=false; expansion.fill(0); applyPlane(); applyVisibility();updateLayout();
       targetPosition.copy(initialPosition);targetLook.copy(initialTarget);startCamera();emit();invalidate();o.onMode?.();
     },
     dispose() {
       if(disposed)return;disposed=true;++revision;dragEnd();handle.remove();
-      ++brainRequest; detail?.dispose();
+      ++brainRequest; brainDetail?.dispose(); heartDetail?.dispose();
       loadAbort.abort();o.signal.removeEventListener('abort',abortLoad);
       o.canvas.removeEventListener('pointerdown',onDown);o.canvas.removeEventListener('pointerup',onUp);
       if(model){disposeObject(model);model.removeFromParent();}

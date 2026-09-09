@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "assertions": 7939,
+  "flowCpuMilliseconds": {
+    "median": 0.3865000000000691,
+    "p95": 0.7477499999999964
+  },
+  "coverage": [
+    "actual desktop and mobile assets",
+    "shared cardiac cycle",
+    "one-way valve barriers",
+    "bounded continuous transport",
+    "part shader hooks",
+    "instanced cells",
+    "pause and reduced motion",
+    "lazy load and cache",
+    "failure, retry, partial decode cleanup",
+    "stale loading cancellation",
+    "camera and settings restoration",
+    "brain coexistence",
+    "resource disposal"
+  ],
+  "scope": "Node integration and CPU advection timing; not a clinical flow solver or a GPU frame-rate measurement."
+}

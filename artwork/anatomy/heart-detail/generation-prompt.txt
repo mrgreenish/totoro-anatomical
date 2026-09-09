@@ -1,0 +1,10 @@
+Mode: Built-in image_gen; exactly one generation call.
+
+Use case: scientific-educational
+Asset type: physically based 3D material source; a single flat diffuse albedo texture image for projection onto anatomical heart geometry.
+Primary request: Generate exactly one square 2048 by 2048 image, or the highest supported square resolution, of an extreme macro continuous fresh human cardiac epicardium over myocardium.
+Subject/material: Natural deep muted burgundy and red-brown muscle tissue with very fine branching superficial red capillaries, irregular subtle longitudinal muscle grain, tiny pores, restrained organic mottling, and very subtle connective tissue threads. Clinically plausible tissue surface. Fine veins should be sparse and naturally branching rather than ornamental. No large identifiable artery or vessel.
+Composition/framing: The continuous flat organic tissue surface fills the entire frame edge to edge, viewed straight on, without a horizon, edges, borders, background, or an organ silhouette. Uniform magnification and sharp surface detail everywhere.
+Lighting: Completely flat diffuse color/albedo information under perfectly even cross-polarized illumination, physically useful as an unlit base-color map. No directional lighting, no specular highlights, no reflection, no shine, no cast shadows, no ambient occlusion, no vignette, no gradient or brighter center.
+Color palette: Restrained, deep muted burgundy/red-brown cardiac muscle; subtle natural variation, tiny subdued red capillaries and faint muted connective tissue threads.
+Avoid: whole heart, organs, surgery, cuts, wounds, blood pools, exposed anatomy cross-section, large arteries, large white fat deposits, labels, text, watermark, border, decorative web pattern, exaggerated marbling, exaggerated fibrous ridges, baked-in depth or light.

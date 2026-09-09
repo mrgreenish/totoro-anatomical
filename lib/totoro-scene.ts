@@ -6,6 +6,7 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { createTotoroMotion } from './totoro-motion';
 import { createAnatomyExplorer, type AnatomyExplorer } from './totoro-anatomy';
 import type { AnatomyMode, AnatomyState, AnatomySystem, AnatomyVariant } from './anatomy-state';
+import type { HeartViewOptions } from './heart-detail';
 import { createSplitShadowCache } from './split-shadow-cache';
 
 export type SculptureController = {
@@ -20,6 +21,9 @@ export type SculptureController = {
   selectPart(id: string | null): void;
   openBrainView(entry?: 'contextual' | 'shortcut'): Promise<void>;
   closeBrainView(): void;
+  openHeartView(entry?: 'contextual' | 'shortcut'): Promise<void>;
+  closeHeartView(): void;
+  setHeartViewOptions(options: Partial<HeartViewOptions>): void;
   reset(): void;
   dispose(): void;
 };
@@ -238,7 +242,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       key.shadow.camera.updateProjectionMatrix();
     }
     const splitShadowsEligible = anatomy?.state.mode === 'split'
-      && anatomy.state.brainView.status !== 'open';
+      && !anatomy.detailScene;
     splitShadowCache.update(splitShadowsEligible, changed);
     renderer.render(anatomy?.detailScene ?? scene, camera);
     if (process.env.NODE_ENV !== 'production' && model && rawDt > 0 && rawDt < .2) {
@@ -248,7 +252,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
         canvas.dataset.renderStats = JSON.stringify({ medianMs: sorted[90], p95Ms: sorted[171], pixelRatio,
           triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.calls,
           width: canvas.clientWidth, height: canvas.clientHeight, eyelids: eyelids.length,
-          rig: !!breathBone, asset: 'refinement-1' });
+          rig: !!breathBone, asset: anatomy?.state.heartView.status === 'open' ? 'heart-study-1' : anatomy?.state.brainView.status === 'open' ? 'brain-detail-1' : 'refinement-1' });
         frameSamples.length = 0;
       }
     }
@@ -263,7 +267,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     resetting = false;
     anatomy?.stopCameraMotion();
     splitShadowCache.begin(
-      anatomy?.state.mode === 'split' && anatomy.state.brainView.status !== 'open',
+      anatomy?.state.mode === 'split' && !anatomy.detailScene,
     );
     wake();
   };
@@ -290,6 +294,9 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     selectPart(id) { anatomy?.selectPart(id); },
     async openBrainView(entry) { resetting = false; await anatomy?.openBrainView(entry); wake(); },
     closeBrainView() { anatomy?.closeBrainView(); wake(); },
+    async openHeartView(entry) { resetting = false; await anatomy?.openHeartView(entry); wake(); },
+    closeHeartView() { anatomy?.closeHeartView(); wake(); },
+    setHeartViewOptions(value) { anatomy?.setHeartViewOptions(value); wake(); },
     reset() { rotating = false; resetting = true; anatomy?.reset(); motion.reset(); wake(); },
     dispose() {
       if (disposed) return;
@@ -310,7 +317,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     },
   };
   function onKey(event: KeyboardEvent) {
-    if (event.key === 'Escape' && anatomy?.state.brainView.status === 'open') {
+    if (event.key === 'Escape' && anatomy?.detailScene) {
       event.preventDefault(); controller.closeBrainView(); return;
     }
     if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '-', '=', 'Home'].includes(event.key)) return;
