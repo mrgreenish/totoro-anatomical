@@ -7,6 +7,7 @@ import { createTotoroMotion } from './totoro-motion';
 import { createAnatomyExplorer, type AnatomyExplorer } from './totoro-anatomy';
 import type { AnatomyMode, AnatomyState, AnatomySystem, AnatomyVariant } from './anatomy-state';
 import type { HeartViewOptions } from './heart-detail';
+import type { EyeViewOptions } from './eye-optics';
 import { createSplitShadowCache } from './split-shadow-cache';
 
 export type SculptureController = {
@@ -24,6 +25,9 @@ export type SculptureController = {
   openHeartView(entry?: 'contextual' | 'shortcut'): Promise<void>;
   closeHeartView(): void;
   setHeartViewOptions(options: Partial<HeartViewOptions>): void;
+  openEyeView(entry?: 'contextual' | 'shortcut'): Promise<void>;
+  closeEyeView(): void;
+  setEyeViewOptions(options: Partial<EyeViewOptions>): void;
   reset(): void;
   dispose(): void;
 };
@@ -252,7 +256,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
         canvas.dataset.renderStats = JSON.stringify({ medianMs: sorted[90], p95Ms: sorted[171], pixelRatio,
           triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.calls,
           width: canvas.clientWidth, height: canvas.clientHeight, eyelids: eyelids.length,
-          rig: !!breathBone, asset: anatomy?.state.heartView.status === 'open' ? 'heart-study-1' : anatomy?.state.brainView.status === 'open' ? 'brain-detail-1' : 'refinement-1' });
+          rig: !!breathBone, asset: anatomy?.state.eyeView.status === 'open' ? 'eye-study-1' : anatomy?.state.heartView.status === 'open' ? 'heart-study-1' : anatomy?.state.brainView.status === 'open' ? 'brain-detail-1' : 'refinement-1' });
         frameSamples.length = 0;
       }
     }
@@ -297,6 +301,9 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     async openHeartView(entry) { resetting = false; await anatomy?.openHeartView(entry); wake(); },
     closeHeartView() { anatomy?.closeHeartView(); wake(); },
     setHeartViewOptions(value) { anatomy?.setHeartViewOptions(value); wake(); },
+    async openEyeView(entry) { resetting = false; await anatomy?.openEyeView(entry); wake(); },
+    closeEyeView() { anatomy?.closeEyeView(); wake(); },
+    setEyeViewOptions(value) { anatomy?.setEyeViewOptions(value); wake(); },
     reset() { rotating = false; resetting = true; anatomy?.reset(); motion.reset(); wake(); },
     dispose() {
       if (disposed) return;

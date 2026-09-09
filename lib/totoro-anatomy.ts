@@ -6,6 +6,8 @@ import { clamp01, cutCoordinate, CUT_BOUNDS, defaultAnatomyState, fitDistance, p
 import type { AnatomyMode, AnatomyPart, AnatomyState, AnatomySystem, AnatomyVariant } from './anatomy-state';
 import { brainProximity, createBrainDetail, isBrainOccluder, probeBrainVisibility, type BrainDetail } from './brain-detail';
 import type { HeartDetail, HeartViewOptions } from './heart-detail';
+import type { EyeDetail } from './eye-detail';
+import type { EyeViewOptions } from './eye-optics';
 import type { OrganStudy } from './anatomy-state';
 import { COAT_OFFSET, REVEAL_DURATION, museumEase, presentationOffset, presentationPhase, revealProgress, type PresentationPhase } from './anatomy-presentation';
 import { applyTissuePreset, BRAIN_SURFACE, createHeartTissueMaterial, sectionTint } from './tissue-materials';
@@ -134,11 +136,12 @@ export function createAnatomyExplorer(o: Options) {
     if (!fitting) { o.camera.position.copy(targetPosition); o.controls.target.copy(targetLook); }
   }
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let detail: BrainDetail | HeartDetail | undefined;
+  let detail: BrainDetail | HeartDetail | EyeDetail | undefined;
   let brainDetail: BrainDetail | undefined, heartDetail: HeartDetail | undefined;
+  let eyeDetail: EyeDetail | undefined;
   let detailKind: OrganStudy = 'brain';
-  const view = (kind = detailKind) => kind === 'brain' ? state.brainView : state.heartView;
-  const studyOpen = () => state.brainView.status === 'open' || state.heartView.status === 'open';
+  const view = (kind = detailKind) => kind === 'brain' ? state.brainView : kind === 'heart' ? state.heartView : state.eyeView;
+  const studyOpen = () => state.brainView.status === 'open' || state.heartView.status === 'open' || state.eyeView.status === 'open';
   let brainRequest = 0, proximityTime = .2, proximityPending = true;
   const proximityPosition = new THREE.Vector3(Infinity, Infinity, Infinity);
   const proximityTarget = new THREE.Vector3(Infinity, Infinity, Infinity);
@@ -166,12 +169,20 @@ export function createAnatomyExplorer(o: Options) {
   o.canvas.parentElement?.appendChild(handle);
   let dragging: { id: number; position: number; x: number; y: number; dx: number; dy: number; screenPosition: number; wa: number; wb: number; camera: THREE.Vector3; target: THREE.Vector3 } | undefined;
 
-  function emit() { if (!disposed && !o.signal.aborted) o.onState?.({ ...state, brainView: { ...state.brainView }, heartView: { ...state.heartView }, cut: { ...state.cut }, visibleSystems: [...state.visibleSystems] }); }
+  function emit() { if (!disposed && !o.signal.aborted) o.onState?.({ ...state, brainView: { ...state.brainView }, heartView: { ...state.heartView }, eyeView: { ...state.eyeView }, cut: { ...state.cut }, visibleSystems: [...state.visibleSystems] }); }
   function invalidate() { dirty = true; proximityPending = true; o.wake(); }
   async function organAsset(kind: OrganStudy) {
     const options = { renderer: o.renderer, environment: o.scene.environment, signal: o.signal,
       canvas:o.canvas, camera:o.camera, controls:o.controls, wake:()=>o.wake(), reduced };
     if(kind === 'brain')return brainDetail ??= createBrainDetail(options);
+    if(kind === 'eye') {
+      if(!eyeDetail) {
+        const {createEyeDetail}=await import('./eye-detail');
+        if(disposed||o.signal.aborted)throw new Error('Disposed');
+        eyeDetail=createEyeDetail(options);
+      }
+      return eyeDetail;
+    }
     if(!heartDetail) {
       const {createHeartDetail}=await import('./heart-detail');
       if(disposed||o.signal.aborted)throw new Error('Disposed');
@@ -187,6 +198,7 @@ export function createAnatomyExplorer(o: Options) {
     o.camera.position.copy(position); o.controls.target.copy(target);
   }
   function frameDetail() {
+    if(detailKind === 'eye' && eyeDetail) { eyeDetail.frame(); return; }
     const bounds = new THREE.Box3().setFromObject(detail!.root);
     const size = bounds.getSize(new THREE.Vector3()); bounds.getCenter(targetLook);
     const distance = fitDistance(size.x, size.y, size.z, o.camera.fov, o.camera.aspect);
@@ -199,6 +211,9 @@ export function createAnatomyExplorer(o: Options) {
     o.camera.lookAt(targetLook); o.camera.updateMatrixWorld(true);
   }
   async function openOrganView(kind: OrganStudy, entry: 'contextual' | 'shortcut' = 'contextual') {
+    // All three studies share one camera snapshot. Switching preserves the
+    // anatomy state and releases the previous study's GPU resources first.
+    if(studyOpen() && kind !== detailKind && !opening) closeDetailView();
     if (state.mode === 'exterior' || state.status !== 'ready' || (entry === 'contextual' && !view(kind).available)
       || opening || studyOpen() || disposed) return;
     detailKind = kind;
@@ -253,7 +268,7 @@ export function createAnatomyExplorer(o: Options) {
     }
     handle.hidden = state.mode !== 'split';
     detail?.unload();
-    state.brainView.status = state.heartView.status = 'closed'; emit(); invalidate();
+    state.brainView.status = state.heartView.status = state.eyeView.status = 'closed'; emit(); invalidate();
   }
   function updateOrganAvailability(kind: OrganStudy) {
     const brain = parts.find(p => p.id === kind);
@@ -659,8 +674,10 @@ export function createAnatomyExplorer(o: Options) {
     setMode, setCut, selectPart, update,
     openBrainView: (entry?: 'contextual' | 'shortcut') => openOrganView('brain', entry),
     openHeartView: (entry?: 'contextual' | 'shortcut') => openOrganView('heart', entry),
-    closeBrainView: closeDetailView, closeHeartView: closeDetailView,
+    openEyeView: (entry?: 'contextual' | 'shortcut') => openOrganView('eye', entry),
+    closeBrainView: closeDetailView, closeHeartView: closeDetailView, closeEyeView: closeDetailView,
     setHeartViewOptions(options: Partial<HeartViewOptions>) { heartDetail?.setOptions(options); invalidate(); },
+    setEyeViewOptions(options: Partial<EyeViewOptions>) { eyeDetail?.setOptions(options); invalidate(); },
     setAnatomyVariant(value: AnatomyVariant) {
       if ((value !== 'male' && value !== 'female') || state.variant === value) return;
       if (studyOpen() || opening) closeDetailView();
@@ -709,7 +726,7 @@ export function createAnatomyExplorer(o: Options) {
     },
     dispose() {
       if(disposed)return;disposed=true;++revision;dragEnd();handle.remove();
-      ++brainRequest; brainDetail?.dispose(); heartDetail?.dispose();
+      ++brainRequest; brainDetail?.dispose(); heartDetail?.dispose(); eyeDetail?.dispose();
       loadAbort.abort();o.signal.removeEventListener('abort',abortLoad);
       o.canvas.removeEventListener('pointerdown',onDown);o.canvas.removeEventListener('pointerup',onUp);
       if(model){disposeObject(model);model.removeFromParent();}

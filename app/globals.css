@@ -308,3 +308,131 @@ h1 span { color:#84956f; }
   .heart-flow-note { margin-top:6px;text-align:center; }
   .is-heart-view .sculpture,.is-heart-view.is-fullscreen .sculpture { inset:290px 0 115px; }
 }
+
+/* One discoverable selector for every isolated organ study. */
+.organ-selector { margin:23px 0 24px; }
+.organ-selector-heading { display:flex;justify-content:space-between;gap:10px;margin-bottom:11px;font-size:14px;font-weight:550; }
+.organ-selector-heading>span:last-child { font-size:12px;font-weight:400;color:var(--secondary-ink); }
+.organ-selector-options { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px; }
+.organ-selector-options button { --organ-accent:#897aa0;display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0;min-height:104px;padding:13px 5px 11px;border:1px solid var(--faint);border-radius:13px;background:#ffffff50;color:var(--ink);transition:background .18s,border-color .18s,transform .18s; }
+.organ-selector-options button[data-organ=heart] { --organ-accent:#ad7064; }
+.organ-selector-options button[data-organ=eye] { --organ-accent:#5b938a; }
+.organ-selector-options button:hover:not(:disabled) { background:#ffffffb0;border-color:var(--organ-accent);transform:translateY(-2px); }
+.organ-selector-icon { display:grid;place-items:center;width:33px;height:33px;border-radius:50%;color:var(--organ-accent);background:color-mix(in srgb,var(--organ-accent) 11%,transparent); }
+.organ-selector-name { font-size:14px;font-weight:550;line-height:1.2; }
+.organ-selector-hint { font-size:12px;line-height:1.3;color:var(--secondary-ink);text-align:center; }
+.organ-selector-status { display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:14px;line-height:1.5;margin:-10px 0 20px; }
+.organ-selector-status button { margin-left:auto;background:none;border:0;padding:5px;color:inherit;text-decoration:underline; }
+.is-night .organ-selector-options button { background:#ffffff08; }
+.organ-selector-compact { position:absolute;right:4.4%;top:30px;z-index:8;margin:0;padding:5px;border:1px solid #ffffff24;border-radius:40px;background:#11192080;backdrop-filter:blur(20px); }
+.organ-selector-compact .organ-selector-options { gap:4px; }
+.organ-selector-compact .organ-selector-options button { flex-direction:row;min-height:38px;padding:5px 15px 5px 8px;border:1px solid transparent;border-radius:25px;background:none;gap:8px; }
+.organ-selector-compact .organ-selector-icon { width:28px;height:28px; }
+.organ-selector-compact .organ-selector-icon svg { width:17px;height:17px; }
+.organ-selector-compact .organ-selector-options button[aria-pressed=true] { background:#ffffff10;border-color:color-mix(in srgb,var(--organ-accent) 60%,transparent); }
+.organ-selector-compact .organ-selector-options button:hover:not(:disabled) { background:#ffffff12;transform:none; }
+.organ-loading-spin { animation:organ-spin 1s linear infinite; }
+@keyframes organ-spin { to { transform:rotate(360deg); } }
+
+/* The eye: a quiet optical bench, with discoveries within reach. */
+.gallery.is-eye-view { --ring:#a2d5cc;background:radial-gradient(ellipse at 68% 44%,#29363b 0%,#172126 40%,#0c1318 100%);min-height:740px; }
+.is-eye-view .sculpture,.is-eye-view.is-fullscreen .sculpture { inset:108px 2% 133px 380px; }
+.eye-study-heading { top:113px;left:4.4%;width:310px;max-width:310px;max-height:calc(100svh - 143px);overflow:auto;scrollbar-width:thin;scrollbar-color:#ffffff30 transparent;padding:3px 9px 24px 3px;overscroll-behavior:contain; }
+.eye-study-heading .brain-study-title { margin-top:26px; }
+.eye-study-heading .brain-study-title h2 { font-size:46px;margin:10px 0 12px; }
+.eye-study-heading .brain-study-title h2 span { color:#a1c9b8; }
+.eye-study-heading .brain-study-title .anatomy-eyebrow { color:#98b2b7; }
+.eye-study-heading .brain-study-title p { max-width:none;margin:0;color:#a5b6bc; }
+.eye-study-controls { margin-top:25px; }
+.eye-view-modes { display:flex;padding:4px;margin:0;min-width:0;border:1px solid #ffffff1b;border-radius:11px;gap:3px; }
+.eye-view-modes button { flex:1;background:none;border:0;border-radius:7px;color:#b3c1c5;min-height:38px;padding:6px 5px;font-size:13px;white-space:nowrap; }
+.eye-view-modes button[aria-pressed=true] { background:#d7e9e616;color:#edf7f3;box-shadow:0 1px 4px #0002; }
+.eye-lessons { display:flex;flex-wrap:wrap;gap:7px;margin:17px 0 22px;padding:0;border:0;min-width:0; }
+.eye-lessons button { display:flex;align-items:center;gap:7px;border:1px solid #ffffff18;border-radius:7px;background:transparent;color:#aabbbf;padding:8px 10px;min-height:36px;font-size:13px; }
+.eye-lessons button:hover { border-color:#9bc2bd88; }
+.eye-lessons button[aria-pressed=true] { background:#91b7ad18;color:#cce7de;border-color:#9bc2bd66; }
+.eye-explanation { padding-top:19px;border-top:1px solid #ffffff1b; }
+.eye-explanation h3 { font-family:Georgia,serif;font-weight:400;font-size:26px;line-height:1.2;letter-spacing:-.4px;margin:13px 0 13px;color:#f2eee4; }
+.eye-explanation p { color:#b3c1c5;font-size:16px;line-height:1.65;margin:0 0 17px; }
+.eye-lesson-kicker { color:#89a6ac;font-size:12px;letter-spacing:1.1px; }
+.eye-part-label { display:block;font-size:14px;color:#adbfc3;margin-bottom:9px; }
+.eye-explanation select { width:100%;min-height:44px;background:#203137;border:1px solid #6c8a8a55;border-radius:9px;color:#e4efeb;padding:10px 12px;font:inherit;font-size:14px;color-scheme:dark; }
+.eye-next-discovery { display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;background:#bed8c50b;border:1px solid #9bbdb335;border-radius:8px;padding:12px;color:#cce2d4;min-height:44px;font-size:14px;margin:18px 0 14px; }
+.eye-next-discovery:hover { background:#bed8c518; }
+.eye-range-group { margin:22px 0; }
+.eye-range-group>label { display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:14px;color:#d2e0df;margin-bottom:12px; }
+.eye-range-group output { color:#94c3b5;font-size:12px;white-space:nowrap; }
+.eye-range-group input[type=range] { display:block;width:100%;margin:0;height:20px;accent-color:#c9d9ba;cursor:pointer; }
+.eye-range-ends { display:flex;justify-content:space-between;font-size:12px;color:#94a7ac;margin-top:7px; }
+.eye-checkbox { display:flex;align-items:center;gap:9px;font-size:14px;color:#c9d8d8;min-height:32px;cursor:pointer; }
+.eye-checkbox input { margin:0;width:16px;height:16px;accent-color:#add0bc; }
+.eye-cell-toggles { display:flex;gap:23px;margin:0;padding:0;border:0;min-width:0; }
+.eye-spectrum input[type=range] { appearance:none;border-radius:8px;height:9px;margin:18px 0;background:linear-gradient(90deg,#8162cf,#578ad3,#60b8ba,#96b860,#d1bd6b,#ca715f); }
+.eye-spectrum input[type=range]::-webkit-slider-thumb { appearance:none;width:18px;height:18px;border:3px solid #e5eee5;border-radius:50%;background:#263941;box-shadow:0 1px 8px #0008; }
+.eye-spectrum input[type=range]::-moz-range-thumb { width:13px;height:13px;border:3px solid #e5eee5;border-radius:50%;background:#263941; }
+.eye-cone-response { display:grid;gap:11px;margin:18px 0 24px; }
+.eye-cone-response>div { display:grid;grid-template-columns:120px 1fr 33px;gap:7px;align-items:center;font-size:12px;color:#c3d0d1; }
+.eye-cone-response meter { width:100%;height:7px;background:#ffffff0a;border-radius:4px;border:0; }
+.eye-cone-response meter::-webkit-meter-bar { background:#ffffff0b;border:0;border-radius:4px; }
+.eye-cone-response meter::-webkit-meter-optimum-value { background:var(--meter-color,#a9c9b9);border-radius:4px; }
+.eye-cone-response>div:last-child>span:last-child { text-align:right; }
+.eye-observation { display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:8px;background:#bad8bd0c;color:#bdcdc7;font-size:14px;line-height:1.6; }
+.eye-observation svg { flex-shrink:0;color:#bad3aa;margin-top:3px; }
+.eye-observation strong { font-weight:550;color:#e0ead9; }
+.eye-explanation .eye-small-note { font-size:13px;color:#9bafb5;line-height:1.65;margin:14px 0 0; }
+.eye-optics-diagram { width:100%;height:auto;display:block;margin:18px 0 12px;color:#9fb3b8;overflow:visible; }
+.eye-explanation .eye-focus-result { font-size:14px;color:#cedcc0;margin:10px 0; }
+.eye-message-steps { list-style:none;margin:20px 0;padding:0;display:grid;gap:12px;font-size:14px;color:#c3d2d1; }
+.eye-message-steps li { display:flex;align-items:center;gap:12px; }
+.eye-message-steps li>span { display:grid;place-items:center;width:24px;height:24px;border:1px solid #a3c4bc40;border-radius:50%;font-size:12px;color:#c7e4cd;flex-shrink:0; }
+.eye-study-foot { margin-top:23px;padding-top:15px;border-top:1px solid #ffffff16; }
+.eye-study-foot>span { display:block;font-size:12px;color:#8da3a9;margin-top:7px; }
+.eye-sources { margin-top:14px;color:#8da3a9;font-size:12px;line-height:1.65; }
+.eye-sources summary { cursor:pointer;min-height:30px;padding:5px 0; }
+.eye-sources a { display:flex;align-items:center;gap:7px;color:#b3c9c6;text-decoration:none;margin:9px 0; }
+.eye-sources a:hover { text-decoration:underline; }
+.eye-label-layer { position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden; }
+.eye-model-label { position:absolute;display:block;transform:translate(-50%,-50%);white-space:nowrap;font-size:12px;letter-spacing:.8px;line-height:1.5;color:#deebe3;background:#0a151cbd;padding:6px 10px;border:1px solid #afc8c833;border-radius:4px;backdrop-filter:blur(8px); }
+.eye-model-label[hidden],.eye-label-layer[hidden] { display:none; }
+.is-eye-view .interaction-area { left:calc(50% + 170px);bottom:29px;max-width:440px;width:calc(100% - 390px); }
+.is-eye-view .brain-orbit-hint { color:#9aadb4; }
+
+@media(min-width:1100px) {
+  .eye-study-heading { width:326px;max-width:326px; }
+  .is-eye-view .sculpture,.is-eye-view.is-fullscreen .sculpture { left:410px; }
+}
+@media(max-width:767px) {
+  .organ-selector-compact { top:25px;right:5%;padding:3px;border-radius:26px; }
+  .organ-selector-compact .organ-selector-options { gap:1px; }
+  .organ-selector-compact .organ-selector-options button { flex-direction:column;gap:2px;padding:5px 9px;min-height:48px; }
+  .organ-selector-compact .organ-selector-icon { width:20px;height:20px;background:none; }
+  .organ-selector-compact .organ-selector-name { font-size:12px; }
+  .is-organ-view .wordmark { font-size:19px;gap:8px; }
+  .is-organ-view .brand-icon { width:31px;height:31px; }
+  .gallery.is-eye-view { height:auto;min-height:100svh;overflow:visible;padding-bottom:25px; }
+  .eye-study-heading { position:relative;top:auto;left:auto;right:auto;width:auto;max-width:none;max-height:none;overflow:visible;margin:0 6%;padding-top:102px; }
+  .eye-study-heading .brain-back { min-height:38px;font-size:13px;padding:7px 12px; }
+  .eye-study-heading .brain-study-title { margin-top:18px; }
+  .eye-study-heading .brain-study-title h2 { font-size:35px; }
+  .eye-study-heading .brain-study-title p { font-size:13px;display:block; }
+  .eye-study-controls { margin-top:410px; }
+  .is-eye-view .sculpture,.is-eye-view.is-fullscreen .sculpture { inset:250px 0 auto;height:295px;min-height:0; }
+  .is-eye-view .interaction-area { position:absolute;left:50%;top:553px;bottom:auto;max-width:90%;width:90%; }
+  .is-eye-view .interaction-hint { font-size:12px;margin-bottom:8px; }
+  .is-eye-view .brain-orbit-hint { display:none; }
+  .is-eye-view .controls { padding:4px 10px;gap:7px; }
+  .is-eye-view .icon-button { width:32px;height:32px; }
+  .eye-study-controls { padding-bottom:10px; }
+  .eye-view-modes button { font-size:14px;min-height:40px; }
+  .eye-lessons { margin-top:15px;gap:6px; }
+  .eye-lessons button { font-size:13px;flex:1 1 auto;justify-content:center;min-height:39px; }
+  .eye-explanation { padding-top:18px; }
+  .eye-explanation h3 { font-size:28px; }
+  .eye-model-label { font-size:12px;letter-spacing:0;padding:4px 6px; }
+  .eye-cone-response>div { grid-template-columns:135px 1fr 35px;font-size:13px; }
+}
+@media(max-width:420px) { .is-organ-view .wordmark>span:last-child { display:none; } }
+@media(prefers-reduced-motion:reduce) {
+  .organ-selector-options button { transition:none; }
+  .organ-loading-spin { animation:none; }
+}
