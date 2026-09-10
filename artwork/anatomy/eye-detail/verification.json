@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "assertions": 71,
+  "scope": "Node runtime integration using actual model code and texture files with mocked DOM, bitmap decode, and renderer. CPU timings exclude GPU rendering; not a browser or phone benchmark.",
+  "surface": {
+    "triangles": 31552,
+    "calls": 5
+  },
+  "cutaway": {
+    "triangles": 64608,
+    "calls": 20
+  },
+  "retina": {
+    "triangles": 58016,
+    "calls": 6
+  },
+  "cpuUpdateMedianMs": 0.0029170000000249274,
+  "cpuUpdateP95Ms": 0.005708999999910702,
+  "decodedBitmaps": 39,
+  "closedBitmaps": 39
+}

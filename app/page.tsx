@@ -63,11 +63,12 @@ export default function Home() {
 
   const brainOpen = anatomy.brainView.status === 'open';
   const heartOpen = anatomy.heartView.status === 'open';
-  const studyOpen = brainOpen || heartOpen;
+  const eyeOpen = anatomy.eyeView.status === 'open';
+  const studyOpen = brainOpen || heartOpen || eyeOpen;
 
   return (
     <TooltipProvider delay={350}>
-      <main ref={mainRef} className={`gallery ${night ? 'is-night' : ''} ${fullscreen ? 'is-fullscreen' : ''} ${anatomy.mode !== 'exterior' ? 'is-anatomy' : ''} ${studyOpen ? 'is-organ-view' : ''} ${brainOpen ? 'is-brain-view' : ''} ${heartOpen ? 'is-heart-view' : ''}`}>
+      <main ref={mainRef} className={`gallery ${night ? 'is-night' : ''} ${fullscreen ? 'is-fullscreen' : ''} ${anatomy.mode !== 'exterior' ? 'is-anatomy' : ''} ${studyOpen ? 'is-organ-view' : ''} ${brainOpen ? 'is-brain-view' : ''} ${heartOpen ? 'is-heart-view' : ''} ${eyeOpen ? 'is-eye-view' : ''}`}>
         <header className="gallery-header">
           <Link className="wordmark" href="/" aria-label="Quiet Forest home">
             <span className="brand-icon"><Leaf size={20} strokeWidth={1.6} /></span>
@@ -82,7 +83,7 @@ export default function Home() {
         <div className="edition"><span className="edition-line" />THE FOREST SPIRIT<span className="edition-number">01</span></div>
         <section className={`sculpture ${ready ? 'is-ready' : ''}`} aria-label="Interactive Totoro sculpture">
           <img className="sculpture-poster" src="/totoro-poster.webp?v=museum-1" width={1100} height={1100} alt="A grey Totoro with a wide toothy grin, soft groomed fur, small rounded paws, an ivory belly, seven chevrons, and a green leaf hat." fetchPriority="high" />
-          <canvas ref={canvasRef} tabIndex={0} aria-label={heartOpen ? 'Detailed heart. Drag or use arrow keys to rotate. Scroll or pinch to zoom. Use Translucent to see pumping blood and enlarged blood cells. Escape returns to anatomy.' : brainOpen ? 'Detailed brain. Hover for neural sparks. Press the tissue to poke, drag it to pull, and release to let go. Drag the background or use arrow keys to rotate. Scroll or pinch to zoom. Escape returns to anatomy.' : 'Rotate Totoro by dragging or using the arrow keys. Scroll, pinch, or use plus and minus to zoom. Press Home to reset.'} />
+          <canvas ref={canvasRef} tabIndex={0} aria-label={eyeOpen ? 'Detailed eye. Drag or use arrow keys to rotate. Scroll or pinch to zoom. Explore eye parts, light, focusing, rods and cones. Escape returns to anatomy.' : heartOpen ? 'Detailed heart. Drag or use arrow keys to rotate. Scroll or pinch to zoom. Use Translucent to see pumping blood and enlarged blood cells. Escape returns to anatomy.' : brainOpen ? 'Detailed brain. Hover for neural sparks. Press the tissue to poke, drag it to pull, and release to let go. Drag the background or use arrow keys to rotate. Scroll or pinch to zoom. Escape returns to anatomy.' : 'Rotate Totoro by dragging or using the arrow keys. Scroll, pinch, or use plus and minus to zoom. Press Home to reset.'} />
           {!ready && !error ? <output className="loading-status"><span className="loading-dot" />Waking the forest…</output> : null}
           {error ? <output className="render-error"><p>The interactive view couldn’t wake up.</p><button onClick={() => window.location.reload()}>Try again <ArrowUpRight size={14} /></button></output> : null}
         </section>
@@ -96,7 +97,7 @@ export default function Home() {
         </div>
         <div className="vertical-note" aria-hidden="true"><span>森のともだち</span><span>A FOREST FRIEND</span></div>
         <div className="interaction-area">
-          <div className="interaction-hint"><Hand size={14} strokeWidth={1.5} /><span>{heartOpen ? <>Drag to rotate · Scroll to zoom<span className="brain-orbit-hint">Turn on Translucent to look inside</span></> : brainOpen ? <>Hover for sparks · Press to poke · Drag to pull<span className="brain-orbit-hint">Drag the background to rotate · Scroll to zoom</span></> : <>Drag to explore<span className="hint-separator">·</span>Scroll to get closer</>}</span></div>
+          <div className="interaction-hint"><Hand size={14} strokeWidth={1.5} /><span>{eyeOpen ? <>Drag to explore · Scroll to get closer<span className="brain-orbit-hint">Try the discoveries to see how sight works</span></> : heartOpen ? <>Drag to rotate · Scroll to zoom<span className="brain-orbit-hint">Turn on Translucent to look inside</span></> : brainOpen ? <>Hover for sparks · Press to poke · Drag to pull<span className="brain-orbit-hint">Drag the background to rotate · Scroll to zoom</span></> : <>Drag to explore<span className="hint-separator">·</span>Scroll to get closer</>}</span></div>
           <div className="controls" aria-label="Sculpture controls">
             <Toggle className="rotate-button" pressed={rotating} disabled={!ready || anatomy.mode !== 'exterior'} onPressedChange={value => { setRotating(value); sculptureRef.current?.setRotate(value); }} aria-label="Auto-rotate">
               <Rotate3D size={18} strokeWidth={1.6} /><span>Auto-rotate</span><span className={`toggle-led ${rotating ? 'active' : ''}`} />

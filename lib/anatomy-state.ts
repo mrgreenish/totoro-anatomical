@@ -4,7 +4,7 @@ export type AnatomySystem = 'skin' | 'muscles' | 'bones' | 'organs' | 'arteries'
 export type CutAxis = 'x' | 'y' | 'z';
 export type AnatomyPart = { id: string; label: string; systems: AnatomySystem[]; description: string; variant?: AnatomyVariant };
 export type BrainViewState = { available: boolean; status: 'closed' | 'loading' | 'open' | 'error' };
-export type OrganStudy = 'brain' | 'heart';
+export type OrganStudy = 'brain' | 'heart' | 'eye';
 export type AnatomyState = {
   mode: AnatomyMode;
   variant: AnatomyVariant;
@@ -16,6 +16,7 @@ export type AnatomyState = {
   parts: AnatomyPart[];
   brainView: BrainViewState;
   heartView: BrainViewState;
+  eyeView: BrainViewState;
 };
 export const SYSTEMS: { id: AnatomySystem; label: string; color: string }[] = [
   { id: 'skin', label: 'Skin & coat', color: '#9caaa0' },
@@ -31,7 +32,7 @@ export const clamp01 = (value: number) => Number.isFinite(value) ? Math.min(1, M
 export function defaultAnatomyState(): AnatomyState {
   return { mode: 'exterior', variant: 'male', status: 'idle', cut: { axis: 'x', position: .5, flipped: false },
     explosion: .65, visibleSystems: SYSTEMS.map(s => s.id), selectedId: null, parts: [],
-    brainView: { available: false, status: 'closed' }, heartView: { available: false, status: 'closed' } };
+    brainView: { available: false, status: 'closed' }, heartView: { available: false, status: 'closed' }, eyeView: { available: false, status: 'closed' } };
 }
 export function systemVisible(systems: AnatomySystem[], visible: AnatomySystem[]) {
   return systems.some(system => visible.includes(system));

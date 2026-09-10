@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "model": "Human-inspired eye for the Quiet Forest anatomy study",
+  "units": "1 unit = approximately 12 mm",
+  "geometry": "Procedural concentric ocular coats, aspheric corneal cap, deformable annular iris, biconvex lens, ciliary processes, zonular fibers, optic nerve, magnified retinal tissue.",
+  "textures": {
+    "sclera": "Deterministic original collagen microrelief and branching episcleral vessels",
+    "retina": "Original pigmented tissue mottling; major retinal vessels are modeled separately",
+    "iris": "Original generated iris albedo; see artwork/anatomy/eye-detail/iris-provenance.md"
+  },
+  "limitations": "Human-inspired educational model, not a clinical simulator. Ray paths are schematic. Lens uses one equivalent refractive index rather than a full gradient. Retinal cells are enlarged and color-coded; population and spectral responses are illustrative.",
+  "sources": [
+    "https://www.nei.nih.gov/learn-about-eye-health/healthy-vision/how-eyes-work",
+    "https://www.nei.nih.gov/eye-health-information/healthy-vision/nei-for-kids/about-eye",
+    "https://www.ncbi.nlm.nih.gov/books/NBK11079/"
+  ]
+}
