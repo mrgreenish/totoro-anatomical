@@ -1,0 +1,75 @@
+{
+  "date": "2026-09-11",
+  "scope": "Codex in-app browser on this host. Viewport emulation is not a physical-phone benchmark. Frame intervals include browser scheduling; they are not isolated GPU timings.",
+  "checks": {
+    "desktopViewport": [
+      1440,
+      1000
+    ],
+    "phoneViewport": [
+      390,
+      844
+    ],
+    "phoneHorizontalOverflow": false,
+    "stickyModelVisibleWhileScrubbing": true,
+    "manualSliderKeyboard": true,
+    "localPlayResumesGlobalPause": true,
+    "directSwitches": [
+      "lungs → brain",
+      "brain → heart",
+      "heart → eye",
+      "eye → lungs"
+    ],
+    "escapeRestoresAnatomyAndLungTriggerFocus": true,
+    "orbitDrag": true,
+    "consoleErrors": 0
+  },
+  "frames": {
+    "surface": {
+      "medianMs": 8.300000000046566,
+      "p95Ms": 16.700000000186265,
+      "pixelRatio": 1,
+      "triangles": 54076,
+      "drawCalls": 12,
+      "studyMode": "surface",
+      "width": 1033,
+      "height": 735,
+      "eyelids": 2,
+      "rig": true,
+      "asset": "lung-study-1"
+    },
+    "airways": {
+      "medianMs": 8.300000000046566,
+      "p95Ms": 16.600000000093132,
+      "pixelRatio": 1,
+      "triangles": 154316,
+      "drawCalls": 15,
+      "studyMode": "airways",
+      "width": 1033,
+      "height": 735,
+      "eyelids": 2,
+      "rig": true,
+      "asset": "lung-study-1"
+    },
+    "alveoli": {
+      "medianMs": 16.699999999953434,
+      "p95Ms": 25.600000000093132,
+      "pixelRatio": 1,
+      "triangles": 122312,
+      "drawCalls": 17,
+      "studyMode": "alveoli",
+      "width": 1033,
+      "height": 735,
+      "eyelids": 2,
+      "rig": true,
+      "asset": "lung-study-1"
+    }
+  },
+  "regressions": {
+    "lungAssertions": 437,
+    "brainAssertions": 107,
+    "heartAssertions": 7939,
+    "eyeAssertions": 71,
+    "allPassed": true
+  }
+}

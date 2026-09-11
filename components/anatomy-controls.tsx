@@ -6,11 +6,12 @@ import { Slider } from '@/components/ui/slider';
 import { SYSTEMS, partVisible } from '@/lib/anatomy-state';
 import type { AnatomyState, AnatomySystem, AnatomyMode, CutAxis, OrganStudy } from '@/lib/anatomy-state';
 import { HeartStudyControls } from '@/components/heart-study-controls';
+import { LungStudyControls } from '@/components/lung-study-controls';
 import { EyeStudyControls } from '@/components/eye-study-controls';
 import { OrganStudySelector } from '@/components/organ-study-selector';
 import type { SculptureController } from '@/lib/totoro-scene';
 
-type Props = { state: AnatomyState; ready: boolean; controller: RefObject<SculptureController | null> };
+type Props = { state: AnatomyState; ready: boolean; controller: RefObject<SculptureController | null>; animated:boolean; onAnimateChange:(value:boolean)=>void };
 const MODES: { id: AnatomyMode; label: string; icon: typeof Sparkles }[] = [
   { id: 'exterior', label: 'Exterior', icon: Sparkles },
   { id: 'split', label: 'Split', icon: ScanLine },
@@ -19,16 +20,17 @@ const MODES: { id: AnatomyMode; label: string; icon: typeof Sparkles }[] = [
 const AXES: { id: CutAxis; label: string }[] = [
   { id: 'x', label: 'Side to side' }, { id: 'z', label: 'Front to back' }, { id: 'y', label: 'Top to bottom' },
 ];
-export function AnatomyControls({ state, ready, controller }: Props) {
+export function AnatomyControls({ state, ready, controller, animated, onAnimateChange }: Props) {
   const active = state.mode !== 'exterior';
   const brainOpen = state.brainView.status === 'open';
   const heartOpen = state.heartView.status === 'open';
   const eyeOpen = state.eyeView.status === 'open';
-  const studyOpen = brainOpen || heartOpen || eyeOpen;
+  const lungOpen = state.lungView.status === 'open';
+  const studyOpen = brainOpen || heartOpen || eyeOpen || lungOpen;
   const heartButton = useRef<HTMLButtonElement>(null);
   const studyButtons = useRef<Partial<Record<OrganStudy, HTMLButtonElement | null>>>({});
   const [study, setStudy] = useState<OrganStudy>('brain');
-  const pending = state.brainView.status === 'loading' || state.heartView.status === 'loading' || state.eyeView.status === 'loading';
+  const pending = state.brainView.status === 'loading' || state.heartView.status === 'loading' || state.eyeView.status === 'loading' || state.lungView.status === 'loading';
   const brainButton = useRef<HTMLButtonElement>(null);
   const activeModeButton = useRef<HTMLButtonElement>(null);
   const [entry, setEntry] = useState<'contextual' | 'shortcut'>('contextual');
@@ -58,18 +60,19 @@ export function AnatomyControls({ state, ready, controller }: Props) {
     setEntry('shortcut'); setStudy(kind);
     if(kind === 'brain') void controller.current?.openBrainView('shortcut');
     else if(kind === 'heart') void controller.current?.openHeartView('shortcut');
-    else void controller.current?.openEyeView('shortcut');
+    else if(kind === 'eye') void controller.current?.openEyeView('shortcut');
+    else void controller.current?.openLungView('shortcut');
   };
   const selectable = state.parts.filter(p => partVisible(p, state));
   const toggle = (id: AnatomySystem) => controller.current?.setVisibleSystems(state.visibleSystems.includes(id)
     ? state.visibleSystems.filter(s => s !== id) : [...state.visibleSystems, id]);
   return <>
     {studyOpen ? <OrganStudySelector state={state} compact onSelect={openStudy}/> : null}
-    {studyOpen ? <div className={`brain-study-heading ${heartOpen ? 'heart-study-heading' : ''} ${eyeOpen ? 'eye-study-heading' : ''}`}>
+    {studyOpen ? <div className={`brain-study-heading ${heartOpen ? 'heart-study-heading' : ''} ${eyeOpen ? 'eye-study-heading' : ''} ${lungOpen ? 'lung-study-heading' : ''}`}>
       <button ref={backButton} type="button" className="brain-back" onClick={() => controller.current?.closeBrainView()}><ArrowLeft size={16}/>Back to anatomy</button>
-      <div className="brain-study-title"><span className="anatomy-eyebrow">AN INTIMATE STUDY</span><h2>The living {eyeOpen ? 'eye' : heartOpen ? 'heart' : 'brain'}<span>.</span></h2><p>{eyeOpen ? 'A little window into the world' : heartOpen ? 'Muscle, vessels & a steady rhythm' : 'Cortex, vessels & quiet impulses'}</p></div>
+      <div className="brain-study-title"><span className="anatomy-eyebrow">AN INTIMATE STUDY</span><h2>The living {lungOpen ? 'lungs' : eyeOpen ? 'eye' : heartOpen ? 'heart' : 'brain'}<span>.</span></h2><p>{lungOpen ? 'Every breath is a little exchange' : eyeOpen ? 'A little window into the world' : heartOpen ? 'Muscle, vessels & a steady rhythm' : 'Cortex, vessels & quiet impulses'}</p></div>
       {heartOpen ? <HeartStudyControls controller={controller}/> : null}
-      {eyeOpen ? <EyeStudyControls controller={controller}/> : <span className="brain-study-note">Human-inspired · Fictional anatomy</span>}
+      {lungOpen ? <LungStudyControls controller={controller} animated={animated} onAnimateChange={onAnimateChange}/> : eyeOpen ? <EyeStudyControls controller={controller}/> : <span className="brain-study-note">Human-inspired · Fictional anatomy</span>}
     </div> : null}
     {active && !studyOpen && state.brainView.available && (state.selectedId !== 'heart' || !state.heartView.available) ? <div className="brain-entry" aria-live="polite">
       <button ref={brainButton} type="button" className="brain-open" aria-busy={state.brainView.status === 'loading'} disabled={pending} onClick={() => openBrain('contextual')}>

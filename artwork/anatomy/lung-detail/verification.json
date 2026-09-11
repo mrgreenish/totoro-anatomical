@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "assertions": 437,
+  "scope": "Actual Three.js model, lifecycle and textures with mocked DOM, decode, renderer. CPU timings exclude GPU work.",
+  "surface": {
+    "triangles": 54076,
+    "calls": 12
+  },
+  "airways": {
+    "triangles": 154316,
+    "calls": 15
+  },
+  "micro": {
+    "triangles": 60564,
+    "calls": 9
+  },
+  "textureBytes": 1150098,
+  "cpuUpdateMedianMs": 0.10837500000002365,
+  "cpuUpdateP95Ms": 0.3310829999999214,
+  "bitmaps": 35,
+  "closed": 35
+}

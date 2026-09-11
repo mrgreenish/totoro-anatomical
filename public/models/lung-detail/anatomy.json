@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "model": "Original procedural human-inspired lung study for Quiet Forest",
+  "textures": {
+    "albedo": {
+      "file": "pleura-photoreal.webp",
+      "method": "Single original image generated with built-in image_gen; artistic lung tissue, not a patient photograph. Mirrored repeat provides a continuous wrap.",
+      "resolution": [
+        1254,
+        1254
+      ],
+      "source": "artwork/anatomy/lung-detail/pleura-source.png",
+      "provenance": "artwork/anatomy/lung-detail/texture-provenance.md"
+    },
+    "microrelief": {
+      "method": "Deterministic periodic cellular tissue; correlated normal and roughness maps.",
+      "resolution": [
+        2048,
+        1024
+      ],
+      "source": "scripts/build-lung-textures.mjs",
+      "seed": "fixed integer hash"
+    }
+  },
+  "anatomy": "Three right lobes, two left lobes, cardiac notch, C-shaped tracheal cartilage, branching bronchi, diaphragm and enlarged alveolar-capillary interface.",
+  "limitations": "Educational model for a fictional character. Air particles, blood cells, membrane thickness and diffusion are enlarged and slowed. Air contains a mixture of gases. Blood is always red; dark red shows less oxygen. Lung tissue is not optically clear; airway mode is an explanatory reveal. Breathing is illustrative, not a physiological or clinical simulation.",
+  "sources": [
+    "https://www.nhlbi.nih.gov/health/lungs/respiratory-system",
+    "https://www.nhlbi.nih.gov/health/lungs/breathing-benefits",
+    "https://www.nhlbi.nih.gov/health/lungs/body-controls-breathing",
+    "https://www.ncbi.nlm.nih.gov/books/NBK470197/"
+  ]
+}

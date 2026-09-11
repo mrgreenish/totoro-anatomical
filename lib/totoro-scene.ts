@@ -8,6 +8,7 @@ import { createAnatomyExplorer, type AnatomyExplorer } from './totoro-anatomy';
 import type { AnatomyMode, AnatomyState, AnatomySystem, AnatomyVariant } from './anatomy-state';
 import type { HeartViewOptions } from './heart-detail';
 import type { EyeViewOptions } from './eye-optics';
+import type { LungSnapshot, LungViewOptions } from './lung-physiology';
 import { createSplitShadowCache } from './split-shadow-cache';
 
 export type SculptureController = {
@@ -28,6 +29,10 @@ export type SculptureController = {
   openEyeView(entry?: 'contextual' | 'shortcut'): Promise<void>;
   closeEyeView(): void;
   setEyeViewOptions(options: Partial<EyeViewOptions>): void;
+  openLungView(entry?: 'contextual' | 'shortcut'): Promise<void>;
+  closeLungView(): void;
+  setLungViewOptions(options: Partial<LungViewOptions>): void;
+  getLungSnapshot(): LungSnapshot | undefined;
   reset(): void;
   dispose(): void;
 };
@@ -255,8 +260,9 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
         const sorted = [...frameSamples].sort((a, b) => a - b);
         canvas.dataset.renderStats = JSON.stringify({ medianMs: sorted[90], p95Ms: sorted[171], pixelRatio,
           triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.calls,
+          studyMode: anatomy?.state.lungView.status === 'open' ? anatomy.getLungSnapshot()?.mode : undefined,
           width: canvas.clientWidth, height: canvas.clientHeight, eyelids: eyelids.length,
-          rig: !!breathBone, asset: anatomy?.state.eyeView.status === 'open' ? 'eye-study-1' : anatomy?.state.heartView.status === 'open' ? 'heart-study-1' : anatomy?.state.brainView.status === 'open' ? 'brain-detail-1' : 'refinement-1' });
+          rig: !!breathBone, asset: anatomy?.state.lungView.status === 'open' ? 'lung-study-1' : anatomy?.state.eyeView.status === 'open' ? 'eye-study-1' : anatomy?.state.heartView.status === 'open' ? 'heart-study-1' : anatomy?.state.brainView.status === 'open' ? 'brain-detail-1' : 'refinement-1' });
         frameSamples.length = 0;
       }
     }
@@ -304,6 +310,10 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     async openEyeView(entry) { resetting = false; await anatomy?.openEyeView(entry); wake(); },
     closeEyeView() { anatomy?.closeEyeView(); wake(); },
     setEyeViewOptions(value) { anatomy?.setEyeViewOptions(value); wake(); },
+    async openLungView(entry) { resetting = false; await anatomy?.openLungView(entry); wake(); },
+    closeLungView() { anatomy?.closeLungView(); wake(); },
+    setLungViewOptions(value) { anatomy?.setLungViewOptions(value); wake(); },
+    getLungSnapshot() { return anatomy?.getLungSnapshot(); },
     reset() { rotating = false; resetting = true; anatomy?.reset(); motion.reset(); wake(); },
     dispose() {
       if (disposed) return;

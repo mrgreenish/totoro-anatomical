@@ -1,0 +1,159 @@
+/* Four labeled studies, with the same switcher in every close-up. */
+.organ-selector-options { grid-template-columns:repeat(2,minmax(0,1fr));gap:8px; }
+.organ-selector-options button { position:relative;flex-direction:row;align-items:center;justify-content:flex-start;min-height:78px;padding:13px 10px;gap:9px;border-radius:11px;text-align:left; }
+.organ-selector-copy { display:flex;flex-direction:column;min-width:0;gap:5px; }
+.organ-selector-hint { text-align:left;font-size:11px; }
+.organ-selector-icon { flex-shrink:0; }
+.organ-selector-options button[data-organ=lung] { --organ-accent:#b47970; }
+.organ-selector-arrow { position:absolute;right:7px;top:7px;color:var(--secondary-ink);opacity:.5; }
+.organ-selector-options button:focus-visible { outline:2px solid var(--organ-accent);outline-offset:3px; }
+.organ-selector-options button:disabled { cursor:wait;opacity:.55; }
+.organ-selector-options button[aria-busy=true] { opacity:1; }
+.organ-selector-compact { display:flex;align-items:center;gap:12px;padding:6px 7px 6px 18px;border-radius:17px; }
+.organ-switch-label { font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:#9da8ad; }
+.organ-selector-compact .organ-selector-options { grid-template-columns:repeat(4,minmax(0,1fr));gap:4px; }
+.organ-selector-compact .organ-selector-options button { min-height:43px;min-width:91px;justify-content:center;padding:6px 12px 6px 8px;border-radius:10px;gap:6px; }
+.organ-selector-compact .organ-selector-options button[aria-pressed=true] { background:#e3dace1a;border-color:#e5d5c146;box-shadow:inset 0 -2px 0 var(--organ-accent); }
+.organ-selector-compact .organ-selector-icon { background:none;color:#ada0bd; }
+.organ-selector-compact button[data-organ=heart] .organ-selector-icon { color:#d49787; }
+.organ-selector-compact button[data-organ=eye] .organ-selector-icon { color:#91c7bb; }
+.organ-selector-compact button[data-organ=lung] .organ-selector-icon { color:#e1afa2; }
+.organ-selector-compact .organ-selector-name { font-size:13px;color:#d4d4d3; }
+.organ-selector-compact button[aria-pressed=true] .organ-selector-name { color:#fff4e5; }
+
+.gallery.is-lung-view { --ring:#dfb2a0;background:radial-gradient(ellipse at 68% 43%,#343a3f 0%,#1c262d 43%,#10191f 100%);min-height:760px; }
+.is-lung-view .sculpture,.is-lung-view.is-fullscreen .sculpture { inset:112px 2% 118px 378px; }
+.lung-study-heading { top:110px;left:4.4%;width:310px;max-width:310px;max-height:calc(100svh - 133px);overflow:auto;scrollbar-width:thin;scrollbar-color:#ffffff30 transparent;padding:3px 9px 24px 3px;overscroll-behavior:contain; }
+.lung-study-heading .brain-study-title { margin-top:22px; }
+.lung-study-heading .brain-study-title h2 { font-size:44px;margin:10px 0;letter-spacing:-1.8px; }
+.lung-study-heading .brain-study-title h2 span { color:#e0b1a1; }
+.lung-study-heading .brain-study-title .anatomy-eyebrow { color:#aab8bc; }
+.lung-study-heading .brain-study-title p { margin:0;color:#a7b6bd;font-size:14px;max-width:none; }
+.lung-study-controls { margin-top:26px; }
+.lung-view-modes { display:flex;margin:0 0 25px;padding:4px;border:1px solid #ffffff20;border-radius:10px;gap:3px;min-width:0; }
+.lung-view-modes button { flex:1;border:0;border-radius:6px;background:none;color:#aebbc1;min-height:41px;padding:7px 4px;font-size:12px;white-space:nowrap; }
+.lung-view-modes button[aria-pressed=true] { background:#e7cabb19;color:#f1e4d6;box-shadow:0 2px 5px #0002; }
+.lung-kicker { color:#97b0b8;font-size:11px;letter-spacing:1px; }
+.lung-discovery h3 { font-family:Georgia,serif;font-weight:400;font-size:27px;line-height:1.2;letter-spacing:-.5px;color:#f2e8db;margin:13px 0 12px; }
+.lung-discovery>p { font-size:15px;line-height:1.7;color:#b8c4c9;margin:0 0 20px; }
+.lung-breath-card { --breath-accent:#acdce6;padding:17px 15px 16px;border:1px solid #94c7d531;border-radius:13px;background:linear-gradient(130deg,#7aabbd13,#7aabbd04); }
+.lung-breath-card.is-exhaling { --breath-accent:#e8c99f;border-color:#c4a27e31;background:linear-gradient(130deg,#c4a27e12,#c4a27e03); }
+.lung-breath-heading { display:flex;align-items:center;gap:12px; }
+.lung-direction { display:grid;place-items:center;background:#ffffff08;border:1px solid #ffffff12;border-radius:50%;width:42px;height:42px;color:var(--breath-accent); }
+.lung-breath-heading>div { display:grid;gap:4px; }
+.lung-breath-heading>div>span { font-size:10px;letter-spacing:1px;color:#95aab4; }
+.lung-breath-heading strong { font-family:Georgia,serif;font-weight:400;font-size:25px;color:var(--breath-accent); }
+.lung-phase-number { margin-left:auto;font-family:Georgia,serif;font-size:29px;color:#ffffff16; }
+.lung-breath-card>p { margin:14px 0 18px;font-size:13px;line-height:1.7;color:#c6d2d5; }
+.lung-expansion-label { display:flex;align-items:center;justify-content:space-between;gap:12px;color:#a2b5be;font-size:10px;margin-bottom:8px; }
+.lung-expansion-label>span:last-child { color:var(--breath-accent);font-variant-numeric:tabular-nums;min-width:30px;text-align:right; }
+.lung-breath-card meter { appearance:none;width:100%;height:4px;display:block;background:#ffffff10;border:0;border-radius:4px; }
+.lung-breath-card meter::-webkit-meter-bar { background:#ffffff10;border:0;border-radius:4px; }
+.lung-breath-card meter::-webkit-meter-optimum-value { background:var(--breath-accent);border-radius:4px; }
+.lung-breath-card meter::-moz-meter-bar { background:var(--breath-accent);border-radius:4px; }
+.lung-air-legend { display:flex;gap:22px;margin:14px 0 2px;font-size:11px;color:#adbec5; }
+.lung-air-legend>span { display:flex;align-items:center;gap:6px; }
+.lung-air-legend i { width:6px;height:6px;border-radius:50%;background:#89dcea; }
+.lung-air-legend>span+span i { background:#e1b67b; }
+.lung-playback { margin-top:22px;padding-top:20px;border-top:1px solid #ffffff17; }
+.lung-playback-actions { display:flex;align-items:center;gap:5px;margin-bottom:22px; }
+.lung-playback-actions button { display:flex;align-items:center;justify-content:center;gap:8px;color:#dce4e1;background:#ffffff06;border:1px solid #ffffff1f;border-radius:8px;min-height:40px;font-size:12px; }
+.lung-play-button { flex:1;padding:8px 9px; }
+.lung-restart { flex:0 0 36px; }
+.lung-speed select { height:40px;max-width:77px;border:1px solid #ffffff1f;background:#1c2a32;color:#bacacf;border-radius:8px;padding:0 5px;font-size:11px;color-scheme:dark; }
+.lung-scrubber-label { display:flex;align-items:center;justify-content:space-between;gap:8px;color:#d3dedd;font-size:12px;margin-bottom:12px; }
+.lung-scrubber-label output { color:#a9c1c8;font-size:11px; }
+.lung-playback input[type=range] { appearance:none;height:5px;border-radius:5px;background:linear-gradient(90deg,#88b7c1 0 40%,#b59772 40% 100%);width:100%;display:block;margin:15px 0;cursor:pointer; }
+.lung-playback input[type=range]::-webkit-slider-thumb { appearance:none;width:16px;height:16px;border:3px solid #e7ded0;background:#34464b;border-radius:50%;box-shadow:0 2px 6px #0006; }
+.lung-playback input[type=range]::-moz-range-thumb { width:11px;height:11px;border:3px solid #e7ded0;background:#34464b;border-radius:50%; }
+.lung-scrubber-ends { display:flex;justify-content:space-between;color:#8fa6b1;font-size:10px;margin-top:-3px; }
+.lung-small-note,.lung-discovery>p.lung-small-note { color:#96aeb8;font-size:12px;line-height:1.7;margin:13px 0 0; }
+.lung-next { display:flex;align-items:center;gap:9px;width:100%;padding:13px 11px;min-height:46px;margin-top:22px;border:1px solid #c7b29b33;border-radius:9px;background:#dbcab10a;color:#dfcbb5;font-size:12px;text-align:left; }
+.lung-next>span { flex:1; }
+.lung-next:hover { background:#dbcab119; }
+.lung-study-foot { margin-top:23px;padding-top:16px;border-top:1px solid #ffffff15; }
+.lung-study-foot label { display:flex;align-items:center;gap:8px;font-size:12px;color:#c0ced0;min-height:32px;cursor:pointer; }
+.lung-study-foot input { accent-color:#d5b89c;width:15px;height:15px;margin:0; }
+.lung-study-foot>span { display:block;font-size:10px;color:#819ca9;margin-top:3px; }
+.lung-exchange-key { display:grid;gap:15px;margin:21px 0; }
+.lung-exchange-key>div { display:flex;align-items:center;gap:10px; }
+.lung-gas { display:grid;place-items:center;min-width:33px;height:33px;border-radius:50%;border:1px solid #8cdee940;background:#8cdee910;color:#a6e2eb;font-size:12px; }
+.lung-gas.carbon { background:#edbe8910;border-color:#edbe8940;color:#edc494; }
+.lung-exchange-key strong { font-weight:500;display:block;font-size:12px;color:#d9e3e1; }
+.lung-exchange-key small { display:block;font-size:11px;color:#8faab5;line-height:1.7;margin-top:4px; }
+.lung-exchange-key svg { color:#a4b9bd;flex-shrink:0;margin-left:auto; }
+.lung-sources { color:#88a1ad;font-size:11px;line-height:1.8;margin-top:13px; }
+.lung-sources summary { cursor:pointer;min-height:32px;padding:5px 0; }
+.lung-sources p { margin:8px 0 12px; }
+.lung-sources a { display:flex;align-items:center;gap:7px;color:#b6c8c9;text-decoration:none;margin:8px 0; }
+.lung-sources a:hover { text-decoration:underline; }
+.lung-label-layer { position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden; }
+.lung-model-label { position:absolute;transform:translate(-50%,-50%);font-size:10px;font-weight:450;letter-spacing:1px;line-height:1.4;color:#c6d4d5;white-space:nowrap;background:#162128ab;border:1px solid #a0bdc029;border-radius:4px;padding:7px 9px;backdrop-filter:blur(8px); }
+.lung-label-layer[hidden],.lung-model-label[hidden] { display:none; }
+.is-lung-view .interaction-area { left:calc(50% + 175px);bottom:27px;max-width:440px;width:calc(100% - 400px); }
+.is-lung-view .brain-orbit-hint { color:#8da4b1; }
+@media(min-width:1500px) {
+  .lung-study-heading { width:326px;max-width:326px; }
+  .is-lung-view .sculpture,.is-lung-view.is-fullscreen .sculpture { left:415px; }
+}
+@media(max-width:900px) and (min-width:761px) {
+  .organ-switch-label { display:none; }
+  .organ-selector-compact { padding-left:7px; }
+  .organ-selector-compact .organ-selector-options button { min-width:74px;padding:6px; }
+}
+@media(max-width:760px) {
+  .organ-selector-compact { top:24px;right:5%;padding:4px;gap:0;border-radius:12px; }
+  .organ-switch-label { display:none; }
+  .organ-selector-compact .organ-selector-options { gap:2px; }
+  .organ-selector-compact .organ-selector-options button { flex-direction:column;min-width:54px;min-height:48px;padding:4px 7px;gap:3px;border-radius:7px; }
+  .organ-selector-compact .organ-selector-name { font-size:11px; }
+  .organ-selector-compact .organ-selector-icon { width:20px;height:20px; }
+  .is-organ-view .wordmark>span:last-child { display:none; }
+  .gallery.is-lung-view { height:auto;min-height:100svh;overflow:visible;padding-bottom:28px; }
+  .lung-study-heading { position:relative;top:auto;left:auto;right:auto;width:auto;max-width:none;max-height:none;overflow:visible;margin:0 6%;padding:101px 0 0; }
+  .lung-study-heading .brain-back { min-height:38px;font-size:13px;padding:7px 12px; }
+  .lung-study-heading .brain-study-title { margin-top:17px; }
+  .lung-study-heading .brain-study-title h2 { font-size:36px;margin:8px 0; }
+  .lung-study-heading .brain-study-title p { display:block;font-size:13px; }
+  .lung-study-controls { margin-top:460px; }
+  .is-lung-view .sculpture,.is-lung-view.is-fullscreen .sculpture { inset:263px 0 auto;height:337px;min-height:0; }
+  .is-lung-view .interaction-area { position:absolute;left:50%;top:612px;bottom:auto;width:90%;max-width:90%; }
+  .is-lung-view .interaction-hint { font-size:12px;margin-bottom:8px; }
+  .is-lung-view .brain-orbit-hint { display:none; }
+  .is-lung-view .controls { padding:4px 10px;gap:7px; }
+  .is-lung-view .icon-button { width:32px;height:32px; }
+  .lung-view-modes button { font-size:13px;min-height:44px; }
+  .lung-discovery>p { font-size:16px; }
+  .lung-discovery h3 { font-size:29px; }
+  .lung-breath-card>p,.lung-playback-actions button { font-size:13px; }
+  .lung-expansion-label { font-size:11px; }
+  .lung-small-note,.lung-discovery>p.lung-small-note { font-size:13px; }
+  .lung-next { font-size:14px; }
+  .lung-model-label { font-size:8px;letter-spacing:.4px;padding:5px 6px; }
+  .lung-exchange-key strong { font-size:14px; }
+  .lung-exchange-key small { font-size:12px; }
+  .lung-playback input[type=range] { height:7px;margin:20px 0; }
+  .lung-playback input[type=range]::-webkit-slider-thumb { width:22px;height:22px; }
+  .lung-study-foot label { font-size:14px;min-height:40px; }
+  .lung-study-foot>span,.lung-sources { font-size:12px; }
+}
+/* On phones the model stays in view while the child moves the breath slider. */
+@media(max-width:760px) {
+  .gallery.is-lung-view { display:flex;flex-direction:column; }
+  .is-lung-view .gallery-header { position:relative;inset:auto;order:0;height:88px;min-height:88px;padding:22px 6%; }
+  .lung-study-heading { display:contents; }
+  .lung-study-heading .brain-back { order:1;align-self:flex-start;margin:13px 6% 0; }
+  .lung-study-heading .brain-study-title { order:2;margin:18px 6% 14px; }
+  .is-lung-view .sculpture,.is-lung-view.is-fullscreen .sculpture { order:3;position:sticky;inset:auto;top:0;z-index:5;flex:0 0 auto;width:100%;height:clamp(255px,42svh,360px);margin:0;background:radial-gradient(ellipse at 60% 47%,#303b43,#1b262e 80%);border-bottom:1px solid #ffffff09; }
+  .is-lung-view .interaction-area { order:4;position:relative;inset:auto;transform:none;margin:12px auto 6px;width:90%; }
+  .lung-study-controls { order:5;margin:18px 6% 0; }
+}
+.lung-breath-hud { position:absolute;right:17px;top:14px;display:flex;align-items:center;gap:9px;color:#b3dce4;font-size:12px;letter-spacing:.2px;background:#152028a8;padding:9px 13px;border:1px solid #c2dde524;border-radius:8px; }
+.lung-breath-hud.is-exhaling { color:#dfc49e; }
+.lung-breath-hud::before { content:'↓';font-size:19px;line-height:1; }
+.lung-breath-hud.is-exhaling::before { content:'↑'; }
+.lung-breath-hud[hidden] { display:none; }
+@media(max-width:760px) { .lung-breath-hud { top:8px;right:12px;padding:6px 9px;font-size:10px; }.lung-breath-hud::before { font-size:15px; } }
+@media(min-width:761px) { .is-lung-view .sculpture,.is-lung-view.is-fullscreen .sculpture { bottom:153px; } }
+@media(max-width:760px) { .lung-model-label { font-size:10px;letter-spacing:0;padding:4px 6px; } }
+@media(max-width:760px) { .is-lung-view .interaction-area { z-index:3; } }
