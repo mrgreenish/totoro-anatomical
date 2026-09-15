@@ -41,6 +41,11 @@ const damp = THREE.MathUtils.damp;
 
 export async function createSculpture(canvas: HTMLCanvasElement, options: Options): Promise<SculptureController> {
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, stencil: true, powerPreference: 'high-performance' });
+  const collectRenderStats = process.env.NODE_ENV !== 'production';
+  // Keep the normal renderer fast in production. Development diagnostics use
+  // manual resets so the counters include the shadow pass as well as the main
+  // scene render.
+  renderer.info.autoReset = !collectRenderStats;
   renderer.localClippingEnabled = true;
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -149,7 +154,16 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     const rest = restRotations.get(object);
     if (rest) object.quaternion.copy(rest).multiply(localRotation.setFromAxisAngle(bendAxis, angle));
   }
-  const frameSamples: number[] = [];
+  type FrameSample = { frameMs: number; updateMs: number; renderMs: number; drawCalls: number; triangles: number };
+  const frameSamples: FrameSample[] = [];
+  let statsAsset: string | undefined;
+  function resetFrameStats() { frameSamples.length = 0; statsAsset = undefined; }
+  function currentAsset() {
+    return anatomy?.state.lungView.status === 'open' ? 'lung-study-1'
+      : anatomy?.state.eyeView.status === 'open' ? 'eye-study-1'
+      : anatomy?.state.heartView.status === 'open' ? 'heart-study-1'
+      : anatomy?.state.brainView.status === 'open' ? 'brain-detail-1' : 'refinement-1';
+  }
   let nextBlink = 3.4, blinkStart = -10;
   let pixelRatio = Math.min(window.devicePixelRatio || 1, 1.8), slowFrames = 0;
   const dayStage = new THREE.Color(0xdbdfcf), nightStage = new THREE.Color(0x3c5054);
@@ -161,8 +175,10 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     const width = canvas.clientWidth, height = canvas.clientHeight;
     if (!width || !height || disposed) return;
     const viewportChanged = width !== viewportWidth || height !== viewportHeight;
+    const previousPixelRatio = renderer.getPixelRatio();
     viewportWidth = width; viewportHeight = height;
     renderer.setPixelRatio(pixelRatio); renderer.setSize(width, height, false);
+    if (viewportChanged || previousPixelRatio !== pixelRatio) resetFrameStats();
     camera.aspect = width / height;
     camera.fov = camera.aspect < .8 ? 30 + (.8 - camera.aspect) * 21 : 30;
     camera.updateProjectionMatrix(); particleMaterial.uniforms.size.value = pixelRatio;
@@ -175,6 +191,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   }
   function tick(now: number) {
     if (disposed) return;
+    const frameStart = performance.now();
     const rawDt = (now - lastTime) / 1000, dt = Math.min(rawDt, .05); lastTime = now;
     const movingCharacter = animated && !anatomy?.active;
     if (movingCharacter) elapsed += dt;
@@ -253,19 +270,33 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     const splitShadowsEligible = anatomy?.state.mode === 'split'
       && !anatomy.detailScene;
     splitShadowCache.update(splitShadowsEligible, changed);
+    const renderStart = performance.now();
+    if (collectRenderStats) renderer.info.reset();
     renderer.render(anatomy?.detailScene ?? scene, camera);
-    if (process.env.NODE_ENV !== 'production' && model && rawDt > 0 && rawDt < .2) {
-      frameSamples.push(rawDt * 1000);
+    const renderMs = performance.now() - renderStart;
+    const updateMs = renderStart - frameStart;
+    if (collectRenderStats && model && rawDt > 0 && rawDt < .2) {
+      const asset = currentAsset();
+      if (statsAsset !== asset) resetFrameStats();
+      statsAsset = asset;
+      frameSamples.push({ frameMs: rawDt * 1000, updateMs, renderMs,
+        drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles });
       if (frameSamples.length === 180) {
-        const sorted = [...frameSamples].sort((a, b) => a - b);
-        canvas.dataset.renderStats = JSON.stringify({ medianMs: sorted[90], p95Ms: sorted[171], pixelRatio,
-          triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.calls,
+        const sortedFrames = [...frameSamples].sort((a, b) => a.frameMs - b.frameMs);
+        const sortedUpdates = [...frameSamples].sort((a, b) => a.updateMs - b.updateMs);
+        const sortedRenders = [...frameSamples].sort((a, b) => a.renderMs - b.renderMs);
+        const last = frameSamples[frameSamples.length - 1];
+        canvas.dataset.renderStats = JSON.stringify({ medianMs: sortedFrames[90].frameMs, p95Ms: sortedFrames[171].frameMs,
+          updateMedianMs: sortedUpdates[90].updateMs, updateP95Ms: sortedUpdates[171].updateMs,
+          renderMedianMs: sortedRenders[90].renderMs, renderP95Ms: sortedRenders[171].renderMs,
+          triangles: last.triangles, drawCalls: last.drawCalls, shadowIncluded: true,
           studyMode: anatomy?.state.lungView.status === 'open' ? anatomy.getLungSnapshot()?.mode : undefined,
           width: canvas.clientWidth, height: canvas.clientHeight, eyelids: eyelids.length,
-          rig: !!breathBone, asset: anatomy?.state.lungView.status === 'open' ? 'lung-study-1' : anatomy?.state.eyeView.status === 'open' ? 'eye-study-1' : anatomy?.state.heartView.status === 'open' ? 'heart-study-1' : anatomy?.state.brainView.status === 'open' ? 'brain-detail-1' : 'refinement-1' });
+          rig: !!breathBone, asset });
         frameSamples.length = 0;
       }
     }
+    if (collectRenderStats) renderer.info.reset();
     // Adapt only after sustained slow frames, preserving crispness on capable devices.
     if (rawDt > .025 && rawDt < .2 && model) slowFrames++; else slowFrames = Math.max(0, slowFrames - 1);
     if (slowFrames > 100 && pixelRatio > 1.1) { pixelRatio = Math.max(1, pixelRatio - .25); slowFrames = 0; resize(); }
@@ -296,23 +327,23 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     setRotate(value) { rotating = value; interactionUntil = 0; wake(); },
     setAnimate(value) { animated = value; anatomy?.setAnimate(value); if (!value) motion.reset(); wake(); },
     setNight(value) { nightTarget = value ? 1 : 0; wake(); },
-    async setMode(value) { resetting = false; motion.reset(); await anatomy?.setMode(value); wake(); },
-    setCut(value) { anatomy?.setCut(value); },
-    setExplosion(value) { anatomy?.setExplosion(value); },
-    setVisibleSystems(value) { anatomy?.setVisibleSystems(value); },
-    setAnatomyVariant(value) { anatomy?.setAnatomyVariant(value); renderer.shadowMap.needsUpdate = true; },
+    async setMode(value) { resetting = false; motion.reset(); resetFrameStats(); await anatomy?.setMode(value); wake(); },
+    setCut(value) { resetFrameStats(); anatomy?.setCut(value); },
+    setExplosion(value) { resetFrameStats(); anatomy?.setExplosion(value); },
+    setVisibleSystems(value) { resetFrameStats(); anatomy?.setVisibleSystems(value); },
+    setAnatomyVariant(value) { resetFrameStats(); anatomy?.setAnatomyVariant(value); renderer.shadowMap.needsUpdate = true; },
     selectPart(id) { anatomy?.selectPart(id); },
-    async openBrainView(entry) { resetting = false; await anatomy?.openBrainView(entry); wake(); },
-    closeBrainView() { anatomy?.closeBrainView(); wake(); },
-    async openHeartView(entry) { resetting = false; await anatomy?.openHeartView(entry); wake(); },
-    closeHeartView() { anatomy?.closeHeartView(); wake(); },
-    setHeartViewOptions(value) { anatomy?.setHeartViewOptions(value); wake(); },
-    async openEyeView(entry) { resetting = false; await anatomy?.openEyeView(entry); wake(); },
-    closeEyeView() { anatomy?.closeEyeView(); wake(); },
-    setEyeViewOptions(value) { anatomy?.setEyeViewOptions(value); wake(); },
-    async openLungView(entry) { resetting = false; await anatomy?.openLungView(entry); wake(); },
-    closeLungView() { anatomy?.closeLungView(); wake(); },
-    setLungViewOptions(value) { anatomy?.setLungViewOptions(value); wake(); },
+    async openBrainView(entry) { resetting = false; resetFrameStats(); await anatomy?.openBrainView(entry); wake(); },
+    closeBrainView() { resetFrameStats(); anatomy?.closeBrainView(); wake(); },
+    async openHeartView(entry) { resetting = false; resetFrameStats(); await anatomy?.openHeartView(entry); wake(); },
+    closeHeartView() { resetFrameStats(); anatomy?.closeHeartView(); wake(); },
+    setHeartViewOptions(value) { resetFrameStats(); anatomy?.setHeartViewOptions(value); wake(); },
+    async openEyeView(entry) { resetting = false; resetFrameStats(); await anatomy?.openEyeView(entry); wake(); },
+    closeEyeView() { resetFrameStats(); anatomy?.closeEyeView(); wake(); },
+    setEyeViewOptions(value) { resetFrameStats(); anatomy?.setEyeViewOptions(value); wake(); },
+    async openLungView(entry) { resetting = false; resetFrameStats(); await anatomy?.openLungView(entry); wake(); },
+    closeLungView() { resetFrameStats(); anatomy?.closeLungView(); wake(); },
+    setLungViewOptions(value) { resetFrameStats(); anatomy?.setLungViewOptions(value); wake(); },
     getLungSnapshot() { return anatomy?.getLungSnapshot(); },
     reset() { rotating = false; resetting = true; anatomy?.reset(); motion.reset(); wake(); },
     dispose() {

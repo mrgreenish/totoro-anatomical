@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { moduleURLFor } from './load-typescript.mjs';
 import * as THREE from 'three';
 import { Document, NodeIO } from '@gltf-transform/core';
@@ -66,6 +66,11 @@ const plane=f.material.clippingPlanes[0];
 const stencilVolumes=[];
 f.scene.traverse(node=>{if(node.isMesh&&node.material.stencilWrite&&!node.material.colorWrite)stencilVolumes.push(node);});
 check(stencilVolumes.length===10,'Both stencil passes are present for each fixture mesh');
+const clippedHeart=f.scene.getObjectByName('heart'),clippedBone=f.scene.getObjectByName('bone');
+check(clippedHeart.visible&&!clippedBone.visible,'Split culling skips a mesh wholly behind the retained half');
+f.api.setCut({axis:'x',flipped:true,position:.5});f.api.update(.016);
+check(!clippedHeart.visible&&clippedBone.visible,'Reversing the retained side restores the opposite half');
+f.api.setCut({axis:'x',flipped:false,position:.5});f.api.update(.016);
 for(const axis of ['x','y','z']) for(const flipped of [false,true]) for(const position of [.1,.41,.8]) {
   f.api.setCut({axis,flipped,position});f.api.update(.016);
   check(stencilVolumes.every(node=>node.material.clippingPlanes[0]===plane),
@@ -245,6 +250,6 @@ globalThis.window.matchMedia=()=>({matches:true});
 const still=fixture();await still.api.setMode('split');still.api.update(.13);
 check(still.scene.getObjectByName('heart').scale.equals(restScale),'Reduced motion leaves the heart at rest');still.api.dispose();
 
-const report={passed:true,assertions,coverage:['cut coordinates and reverse','system membership','GLTF metadata loading','visibility','exact reassembly','selection','reset','keyboard handle','perspective slice alignment and pointer dragging on all axes','failed loading and retry','stale load cancellation','resource cleanup','desktop/mobile framing','heartbeat and section synchronization','pause and reduced motion','animated explosion','staged reveal phases','slider retarget continuity','camera interruption','mode cancellation','30/60/120 Hz reveal consistency'],scope:'Node integration with the real Three.js GLTF loader and a DOM event fixture. GPU rendering and browser layout are separate checks.'};
+const report={passed:true,assertions,coverage:['cut coordinates and reverse','conservative split culling','system membership','GLTF metadata loading','visibility','exact reassembly','selection','reset','keyboard handle','perspective slice alignment and pointer dragging on all axes','failed loading and retry','stale load cancellation','resource cleanup','desktop/mobile framing','heartbeat and section synchronization','pause and reduced motion','animated explosion','staged reveal phases','slider retarget continuity','camera interruption','mode cancellation','30/60/120 Hz reveal consistency'],scope:'Node integration with the real Three.js GLTF loader and a DOM event fixture. GPU rendering and browser layout are separate checks.'};
 await writeFile('artwork/anatomy/runtime-verification.json',JSON.stringify(report,null,2));
 console.log(JSON.stringify(report,null,2));

@@ -78,6 +78,8 @@ export function createLungDetail(o:Options) {
   let mapsCache:LungMaps|undefined,microBuilt=false;
   let blood:THREE.InstancedMesh,oxygen:THREE.InstancedMesh,carbon:THREE.InstancedMesh,bloodTime=0,travel=0,running=false;
   const bloodRoutes:THREE.CatmullRomCurve3[]=[],dummy=new THREE.Object3D(),point=new THREE.Vector3(),tangent=new THREE.Vector3(),axis=new THREE.Vector3(0,1,0),color=new THREE.Color();
+  const lastLabelCamera=new THREE.Vector3(Infinity,Infinity,Infinity),lastLabelQuaternion=new THREE.Quaternion();
+  let lastLabelMode:string|undefined,lastLabelInteractive=false,lastLabelLabels=false,lastLabelInflation=NaN,lastLabelInhaling:boolean|undefined,lastLabelWidth=-1,lastLabelHeight=-1;
   function makeAir(paths:THREE.CatmullRomCurve3[],parent:THREE.Object3D,name:string) {
     const p:number[]=[],along:number[]=[],lane:number[]=[];
     paths.forEach((path,j)=>{const length=path.getLength();if(length<.14&&j%4!==0)return;
@@ -232,13 +234,22 @@ export function createLungDetail(o:Options) {
   }
   const projected=new THREE.Vector3();
   function positionLabels() {
-    labelLayer.hidden=!interactive||!options.labels;if(labelLayer.hidden)return;
-    const c=lungCycle(phase);breathHud.hidden=options.mode==='alveoli';
-    breathHud.textContent=c.inhaling?'Breathe in · more room':'Breathe out · less room';
-    breathHud.className=`lung-breath-hud ${c.inhaling?'':'is-exhaling'}`;
+    const hidden=!interactive||!options.labels;
+    if(labelLayer.hidden!==hidden) labelLayer.hidden=hidden;
+    if(hidden)return;
+    const c=lungCycle(phase),width=o.canvas.clientWidth,height=o.canvas.clientHeight,cameraChanged=!lastLabelCamera.equals(o.camera.position)||!lastLabelQuaternion.equals(o.camera.quaternion);
+    const labelStateChanged=cameraChanged||lastLabelMode!==options.mode||lastLabelInteractive!==interactive||lastLabelLabels!==options.labels||
+      !Number.isFinite(lastLabelInflation)||Math.abs(lastLabelInflation-inflation.value)>.0005||lastLabelInhaling!==c.inhaling||lastLabelWidth!==width||lastLabelHeight!==height;
+    if(!labelStateChanged)return;
+    lastLabelCamera.copy(o.camera.position);lastLabelQuaternion.copy(o.camera.quaternion);lastLabelMode=options.mode;
+    lastLabelInteractive=interactive;lastLabelLabels=options.labels;lastLabelInflation=inflation.value;lastLabelInhaling=c.inhaling;lastLabelWidth=width;lastLabelHeight=height;
+    const hudHidden=options.mode==='alveoli';if(breathHud.hidden!==hudHidden)breathHud.hidden=hudHidden;
+    const hudText=c.inhaling?'Breathe in · more room':'Breathe out · less room';if(breathHud.textContent!==hudText)breathHud.textContent=hudText;
+    const hudClass=`lung-breath-hud ${c.inhaling?'':'is-exhaling'}`;if(breathHud.className!==hudClass)breathHud.className=hudClass;
     for(const item of labels){projected.copy(item.p);if(!item.micro&&item.p.y< -1.5)projected.y-=inflation.value*.28;projected.project(o.camera);
       const visible=item.micro===(options.mode==='alveoli')&&projected.z>-1&&projected.z<1&&Math.abs(projected.x)<.94&&Math.abs(projected.y)<.95;
-      item.el.hidden=!visible;if(visible){item.el.style.left=`${(projected.x*.5+.5)*100}%`;item.el.style.top=`${(-projected.y*.5+.5)*100}%`;}
+      if(item.el.hidden===visible)item.el.hidden=!visible;
+      if(visible){const left=`${(projected.x*.5+.5)*100}%`,top=`${(-projected.y*.5+.5)*100}%`;if(item.el.style.left!==left)item.el.style.left=left;if(item.el.style.top!==top)item.el.style.top=top;}
     }
   }
   function release() {
@@ -247,6 +258,7 @@ export function createLungDetail(o:Options) {
     geometries.forEach(g=>g.dispose());geometries.clear();materials.forEach(m=>m.dispose());materials.clear();
     textures.forEach(t=>{t.dispose();(t.image as ImageBitmap)?.close?.();});textures.clear();
     labels.length=bloodRoutes.length=0;labelLayer.replaceChildren();labelLayer.hidden=true;ready=false;running=false;microBuilt=false;mapsCache=undefined;
+    lastLabelCamera.set(Infinity,Infinity,Infinity);lastLabelMode=undefined;lastLabelInflation=NaN;lastLabelInhaling=undefined;lastLabelWidth=lastLabelHeight=-1;
   }
   async function load(width:number) {
     if(ready||disposed)return;if(promise)return promise;
