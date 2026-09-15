@@ -14,7 +14,7 @@ import type { OrganStudy } from './anatomy-state';
 import { COAT_OFFSET, REVEAL_DURATION, museumEase, presentationOffset, presentationPhase, revealProgress, type PresentationPhase } from './anatomy-presentation';
 import { applyTissuePreset, BRAIN_SURFACE, createHeartTissueMaterial, sectionTint } from './tissue-materials';
 
-type Part = AnatomyPart & { node: THREE.Object3D; rest: THREE.Vector3; restScale: THREE.Vector3; offset: THREE.Vector3; phase: PresentationPhase; meshes: THREE.Mesh[] };
+type Part = AnatomyPart & { node: THREE.Object3D; active: boolean; rest: THREE.Vector3; restScale: THREE.Vector3; offset: THREE.Vector3; phase: PresentationPhase; meshes: THREE.Mesh[] };
 // Textured glTF materials use a white color factor. Section faces need the
 // underlying tissue color instead of that multiplier to avoid white cut walls.
 const tissueSectionColors: Record<string, number> = {
@@ -115,6 +115,7 @@ export function createAnatomyExplorer(o: Options) {
   let state = defaultAnatomyState();
   let model: THREE.Group | undefined, loadPromise: Promise<void> | undefined;
   let disposed = false, revision = 0, dirty = true, fitting = false;
+  let heartPart: Part | undefined;
   let animationEnabled = o.animate ?? true;
   const expansion = [0, 0, 0], expansionFrom = [0, 0, 0];
   let revealTime = 0, revealing = false, entrance = false;
@@ -123,13 +124,16 @@ export function createAnatomyExplorer(o: Options) {
   o.signal.addEventListener('abort', abortLoad, { once: true });
   let selectedMaterials: THREE.MeshStandardMaterial[] = [];
   const parts: Part[] = [], caps: Cap[] = [];
+  const capsByPart = new Map<Part, Cap[]>();
   const materials = new Set<THREE.Material>();
   const planes = [new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0)];
   const plane = planes[0], capRoot = new THREE.Group(); o.scene.add(capRoot);
   const capGeometry = new THREE.PlaneGeometry(20, 20);
+  const capForward = new THREE.Vector3(0, 0, 1), capNormal = new THREE.Vector3();
   const initialPosition = o.camera.position.clone(), initialTarget = o.controls.target.clone();
   const targetPosition = initialPosition.clone(), targetLook = initialTarget.clone();
   let heartbeatTime = 0;
+  const heartScale = new THREE.Vector3();
   let cameraTime = 0;
   const cameraFrom = initialPosition.clone(), lookFrom = initialTarget.clone();
   function startCamera() {
@@ -170,6 +174,9 @@ export function createAnatomyExplorer(o: Options) {
   handle.setAttribute('aria-valuemin', '0'); handle.setAttribute('aria-valuemax', '100');
   const grip = document.createElement('span'); grip.textContent = '↔'; handle.appendChild(grip);
   o.canvas.parentElement?.appendChild(handle);
+  const lastHandleCamera = new THREE.Vector3(Infinity, Infinity, Infinity), lastHandleTarget = new THREE.Vector3(Infinity, Infinity, Infinity);
+  let lastHandleMode: AnatomyMode | undefined, lastHandleAxis: AnatomyState['cut']['axis'] | undefined;
+  let lastHandlePosition = NaN, lastHandleFlipped: boolean | undefined, lastHandleWidth = -1, lastHandleHeight = -1, lastHandleAngle = '', lastHandleValue = '', lastHandleText = '';
   let dragging: { id: number; position: number; x: number; y: number; dx: number; dy: number; screenPosition: number; wa: number; wb: number; camera: THREE.Vector3; target: THREE.Vector3 } | undefined;
 
   function emit() { if (!disposed && !o.signal.aborted) o.onState?.({ ...state, brainView: { ...state.brainView }, heartView: { ...state.heartView }, eyeView: { ...state.eyeView }, lungView: { ...state.lungView }, cut: { ...state.cut }, visibleSystems: [...state.visibleSystems] }); }
@@ -285,7 +292,7 @@ export function createAnatomyExplorer(o: Options) {
   function updateOrganAvailability(kind: OrganStudy) {
     const brain = parts.find(p => p.id === kind);
     let fraction = 0, visible = false;
-    if (brain?.node.visible && state.mode !== 'exterior') {
+    if (brain?.active && state.mode !== 'exterior') {
       brainBounds.setFromObject(brain.node);
       brainBounds.getCenter(brainCenter);
       if (brainCenter.sub(o.camera.position).dot(o.camera.getWorldDirection(cameraDirection)) > 0) {
@@ -299,7 +306,7 @@ export function createAnatomyExplorer(o: Options) {
         if (brainProximity(fraction, true, view(kind).available)) {
           occluders.length = 0;
           for (const part of parts) {
-            if (!part.node.visible) continue;
+            if (!part.active) continue;
             for (const mesh of part.meshes) if (isBrainOccluder(mesh)) occluders.push(mesh);
           }
           if (o.exterior.visible) o.exterior.traverse(node => {
@@ -336,14 +343,18 @@ export function createAnatomyExplorer(o: Options) {
     const active = state.mode !== 'exterior';
     model.visible = active;
     o.exterior.visible = !active || state.visibleSystems.includes('skin');
-    for (const part of parts) part.node.visible = active && partVisible(part, state);
+    for (const part of parts) {
+      const visible = active && partVisible(part, state);
+      part.active = visible;
+      part.node.visible = visible;
+    }
     for (const m of externalMaterials) setClipping(m, state.mode === 'split');
     for (const m of materials) if (!(m instanceof THREE.MeshBasicMaterial)) {
       // Cap surfaces are on the plane, not clipped by themselves.
       if (!m.userData.sectionCap) setClipping(m, state.mode === 'split');
     }
     handle.hidden = !active || state.mode !== 'split';
-    if (state.selectedId && !parts.find(p => p.id === state.selectedId)?.node.visible) clearSelection();
+    if (state.selectedId && !parts.find(p => p.id === state.selectedId)?.active) clearSelection();
     o.controls.minDistance = active ? 1.1 : 7.3; o.controls.maxDistance = active ? 52 : 18;
     o.controls.minPolarAngle = active ? .10 : .45; o.controls.maxPolarAngle = active ? Math.PI - .15 : Math.PI / 2.03;
   }
@@ -373,7 +384,10 @@ export function createAnatomyExplorer(o: Options) {
     back.renderOrder = 100 + index * 3; front.renderOrder = back.renderOrder + 1; cap.renderOrder = back.renderOrder + 2;
     cap.onAfterRender = renderer => renderer.clearStencil();
     capRoot.add(back, front, cap); materials.add(backMat); materials.add(frontMat); materials.add(capMat);
-    caps.push({ source: mesh, part, back, front, cap, box: new THREE.Box3() });
+    const entry = { source: mesh, part, back, front, cap, box: new THREE.Box3() };
+    caps.push(entry);
+    const partCaps = capsByPart.get(part);
+    if (partCaps) partCaps.push(entry); else capsByPart.set(part, [entry]);
   }
 
   function removeModel() {
@@ -392,7 +406,7 @@ export function createAnatomyExplorer(o: Options) {
       model = scene; model.name = 'Totoro_anatomy'; model.visible = false; o.scene.add(model);
       model.traverse(node => {
         if (!node.userData.partId) return;
-        const part: Part = { id: node.userData.partId, label: node.userData.label,
+        const part: Part = { id: node.userData.partId, label: node.userData.label, active: false,
           systems: node.userData.systems, description: node.userData.description || '', variant: node.userData.variant, node,
           rest: node.position.clone(), restScale: node.scale.clone(),
           offset: new THREE.Vector3().fromArray(presentationOffset(node.userData.partId, node.userData.assemblyGroup, node.userData.explodeOffset)),
@@ -429,6 +443,7 @@ export function createAnatomyExplorer(o: Options) {
         if (seen.has(p.id) || parts.some(other => other !== p && other.id === p.id && other.node.getObjectById(p.node.id))) parts.splice(i, 1);
         else seen.add(p.id);
       }
+      heartPart = parts.find(part => part.id === 'heart');
       model.updateMatrixWorld(true);
       let capIndex = 0;
       for (const part of parts) for (const mesh of part.meshes) makeCaps(part, mesh, capIndex++);
@@ -440,7 +455,7 @@ export function createAnatomyExplorer(o: Options) {
     try { await loadPromise; } catch (error) {
       removeModel();
       for (const material of materials) material.dispose();
-      materials.clear(); caps.length = 0; parts.length = 0; capRoot.clear();
+      materials.clear(); caps.length = 0; capsByPart.clear(); parts.length = 0; heartPart = undefined; capRoot.clear();
       state.status = 'error'; emit();
       throw error;
     } finally { loadPromise = undefined; }
@@ -452,7 +467,7 @@ export function createAnatomyExplorer(o: Options) {
     const bounds = new THREE.Box3();
     if (part) bounds.setFromObject(part.node);
     else {
-      for (const p of parts) if (p.node.visible) bounds.expandByObject(p.node);
+      for (const p of parts) if (p.active && p.node.visible) bounds.expandByObject(p.node);
       if (o.exterior.visible) bounds.expandByObject(o.exterior);
     }
     if (bounds.isEmpty()) return;
@@ -507,18 +522,44 @@ export function createAnatomyExplorer(o: Options) {
     updateLayout();
     invalidate(); emit();
   }
+  const clippedEpsilon = .0001;
+  function updateCap(cap: Cap, split: boolean) {
+    const partVisible = cap.part.active;
+    if (!split) {
+      cap.source.visible = partVisible;
+      cap.back.visible = cap.front.visible = cap.cap.visible = false;
+      return;
+    }
+    cap.box.copy(cap.source.geometry.boundingBox!).applyMatrix4(cap.source.matrixWorld);
+    const axis = state.cut.axis;
+    const coordinate = cutCoordinate(axis, state.cut.position);
+    // The plane is axis-aligned. A box is fully clipped only when its
+    // retained-side extent lies strictly behind the live cut plane. Keeping
+    // a small epsilon preserves surfaces that merely touch the cut.
+    const fullyClipped = state.cut.flipped
+      ? cap.box.max[axis] < coordinate - clippedEpsilon
+      : cap.box.min[axis] > coordinate + clippedEpsilon;
+    const intersects = cap.box.intersectsPlane(plane);
+    cap.source.visible = partVisible && !fullyClipped;
+    const visible = partVisible && intersects;
+    cap.back.visible = cap.front.visible = cap.cap.visible = visible;
+    if (!visible) return;
+    cap.back.matrix.copy(cap.source.matrixWorld); cap.front.matrix.copy(cap.source.matrixWorld);
+    cap.cap.position.copy(plane.normal).multiplyScalar(-plane.constant);
+    capNormal.copy(plane.normal).negate();
+    cap.cap.quaternion.setFromUnitVectors(capForward, capNormal);
+  }
+  function updateMovingPart(part: Part) {
+    part.node.updateMatrixWorld(true);
+    if (state.mode !== 'split') return;
+    for (const cap of capsByPart.get(part) ?? []) updateCap(cap, true);
+  }
   function updateLayout() {
     for (const part of parts) part.node.position.copy(part.rest).addScaledVector(part.offset, expansion[part.phase]);
     o.exterior.position.set(COAT_OFFSET[0] * expansion[0], COAT_OFFSET[1] * expansion[0], COAT_OFFSET[2] * expansion[0]);
     model?.updateMatrixWorld(true); o.exterior.updateMatrixWorld(true);
-    for (const c of caps) {
-      const visible = state.mode === 'split' && c.part.node.visible && c.box.copy(c.source.geometry.boundingBox!).applyMatrix4(c.source.matrixWorld).intersectsPlane(plane);
-      c.back.visible = c.front.visible = c.cap.visible = visible;
-      if (!visible) continue;
-      c.back.matrix.copy(c.source.matrixWorld); c.front.matrix.copy(c.source.matrixWorld);
-      c.cap.position.copy(plane.normal).multiplyScalar(-plane.constant);
-      c.cap.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1), plane.normal.clone().negate());
-    }
+    const split = state.mode === 'split';
+    for (const cap of caps) updateCap(cap, split);
     capRoot.visible = state.mode === 'split'; dirty = false;
   }
   function handleEndpoints() {
@@ -545,8 +586,8 @@ export function createAnatomyExplorer(o: Options) {
       revealing = !reduced && animated && revealTime < (entrance ? REVEAL_DURATION : .3);
       dirty = true;
     }
-    const heart = parts.find(part => part.id === 'heart');
-    const pumping = !reduced && animated && state.mode !== 'exterior' && !!heart?.node.visible;
+    const heart = heartPart;
+    const pumping = !reduced && animated && state.mode !== 'exterior' && !!heart?.active;
     if (pumping) heartbeatTime += dt;
     if (heart) {
       // 72 BPM: a quick primary contraction, smaller second beat, soft refill.
@@ -554,9 +595,12 @@ export function createAnatomyExplorer(o: Options) {
       const pulse = (center: number, width: number) => Math.exp(-(((phase - center) / width) ** 2));
       const contraction = pumping ? pulse(.16, .065) + .42 * pulse(.36, .085) : 0;
       const wasContracted = !heart.node.scale.equals(heart.restScale);
-      heart.node.scale.copy(heart.restScale).multiply(new THREE.Vector3(1 - .085 * contraction, 1 + .045 * contraction, 1 - .065 * contraction));
-      // The section stencil must follow the beating surface every frame.
-      if (pumping || wasContracted) dirty = true;
+      heartScale.set(1 - .085 * contraction, 1 + .045 * contraction, 1 - .065 * contraction);
+      heart.node.scale.copy(heart.restScale).multiply(heartScale);
+      // The section stencil must follow the beating surface every frame, but
+      // the rest of the anatomy has not moved and does not need a full layout
+      // rebuild.
+      if (pumping || wasContracted) updateMovingPart(heart);
     }
     if (dirty) updateLayout();
     if (fitting) {
@@ -579,14 +623,26 @@ export function createAnatomyExplorer(o: Options) {
       updateOrganAvailability('heart');
     }
     if (state.mode === 'split' && model) {
-      const [a,b,wa,wb] = handleEndpoints();
-      const p = state.cut.position;
-      const screenPosition = p * wb / ((1 - p) * wa + p * wb);
-      const point = a.clone().lerp(b,screenPosition);
-      handle.style.left = `${point.x}px`; handle.style.top = `${point.y}px`;
-      handle.style.setProperty('--cut-angle', `${Math.atan2(b.y-a.y,b.x-a.x)}rad`);
-      handle.setAttribute('aria-valuenow',String(Math.round(state.cut.position*100)));
-      handle.setAttribute('aria-valuetext',`${Math.round(state.cut.position*100)} percent, ${state.cut.axis === 'x' ? 'side to side' : state.cut.axis === 'y' ? 'top to bottom' : 'front to back'}`);
+      const width=o.canvas.clientWidth,height=o.canvas.clientHeight;
+      const handleChanged=!lastHandleCamera.equals(o.camera.position)||!lastHandleTarget.equals(o.controls.target)||
+        lastHandleMode!==state.mode||lastHandleAxis!==state.cut.axis||lastHandlePosition!==state.cut.position||lastHandleFlipped!==state.cut.flipped||
+        lastHandleWidth!==width||lastHandleHeight!==height;
+      if (handleChanged) {
+        const [a,b,wa,wb] = handleEndpoints();
+        const p = state.cut.position;
+        const screenPosition = p * wb / ((1 - p) * wa + p * wb);
+        const angle=`${Math.atan2(b.y-a.y,b.x-a.x)}rad`;
+        const point = a.lerp(b,screenPosition);
+        const left=`${point.x}px`,top=`${point.y}px`;
+        if(handle.style.left!==left)handle.style.left=left;
+        if(handle.style.top!==top)handle.style.top=top;
+        if(lastHandleAngle!==angle) { handle.style.setProperty('--cut-angle',angle); lastHandleAngle=angle; }
+        const value=String(Math.round(state.cut.position*100)),text=`${Math.round(state.cut.position*100)} percent, ${state.cut.axis === 'x' ? 'side to side' : state.cut.axis === 'y' ? 'top to bottom' : 'front to back'}`;
+        if(lastHandleValue!==value) { handle.setAttribute('aria-valuenow',value); lastHandleValue=value; }
+        if(lastHandleText!==text) { handle.setAttribute('aria-valuetext',text); lastHandleText=text; }
+        lastHandleCamera.copy(o.camera.position);lastHandleTarget.copy(o.controls.target);lastHandleMode=state.mode;lastHandleAxis=state.cut.axis;
+        lastHandlePosition=state.cut.position;lastHandleFlipped=state.cut.flipped;lastHandleWidth=width;lastHandleHeight=height;
+      }
     }
     return moving || fitting || pumping || proximityPending;
   }
@@ -600,7 +656,7 @@ export function createAnatomyExplorer(o: Options) {
   function selectPart(id: string | null) {
     if (studyOpen() || opening) closeDetailView();
     clearSelection();
-    const part = parts.find(p => p.id === id && p.node.visible);
+    const part = parts.find(p => p.id === id && p.active);
     if (part) {
       state.selectedId = part.id;
       for (const mesh of part.meshes) for (const mat of (Array.isArray(mesh.material) ? mesh.material : [mesh.material])) {
@@ -624,7 +680,7 @@ export function createAnatomyExplorer(o: Options) {
     const rect = o.canvas.getBoundingClientRect();
     pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);
     raycaster.setFromCamera(pointer,o.camera);
-    const visible = parts.filter(p => p.node.visible);
+    const visible = parts.filter(p => p.active);
     const hits = raycaster.intersectObjects(visible.flatMap(p => p.meshes),false);
     const part = visible.find(p => p.meshes.includes(hits[0]?.object as THREE.Mesh));
     selectPart(part?.id ?? null);
@@ -730,7 +786,7 @@ export function createAnatomyExplorer(o: Options) {
     },
     setVisibleSystems(visible: AnatomySystem[]) {
       if (studyOpen() || opening) closeDetailView();
-      state.visibleSystems=[...new Set(visible)]; applyVisibility(); invalidate(); emit();
+      state.visibleSystems=[...new Set(visible)]; applyVisibility(); updateLayout(); invalidate(); emit();
       if (state.mode==='exploded') fitDestination();
     },
     reset() {
@@ -747,7 +803,7 @@ export function createAnatomyExplorer(o: Options) {
       if(model){disposeObject(model);model.removeFromParent();}
       for(const m of materials)m.dispose();capGeometry.dispose();capRoot.removeFromParent();
       for(const m of externalMaterials)setClipping(m,false);
-      parts.length=0;caps.length=0;
+      parts.length=0;caps.length=0;capsByPart.clear();heartPart=undefined;
     },
   };
 }

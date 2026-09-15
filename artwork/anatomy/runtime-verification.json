@@ -1,8 +1,9 @@
 {
   "passed": true,
-  "assertions": 113,
+  "assertions": 115,
   "coverage": [
     "cut coordinates and reverse",
+    "conservative split culling",
     "system membership",
     "GLTF metadata loading",
     "visibility",

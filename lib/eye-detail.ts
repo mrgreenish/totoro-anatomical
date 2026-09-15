@@ -72,6 +72,8 @@ export function createEyeDetail(o: Options) {
   let coneBodies:THREE.Mesh,rodBodies:THREE.Mesh;
   let coneTypes:number[]=[];
   const direction=new THREE.Vector3(),projected=new THREE.Vector3();
+  const lastLabelCamera=new THREE.Vector3(Infinity,Infinity,Infinity),lastLabelQuaternion=new THREE.Quaternion();
+  let lastLabelMode:string|undefined,lastLabelInteractive=false,lastLabelLabels=false,lastLabelMobile=false,lastLabelWidth=-1,lastLabelHeight=-1;
   const labelLayer=document.createElement('div');labelLayer.className='eye-label-layer';labelLayer.hidden=true;
   labelLayer.setAttribute('aria-hidden','true');o.canvas.parentElement?.appendChild(labelLayer);
 
@@ -259,8 +261,14 @@ export function createEyeDetail(o: Options) {
     o.camera.near=.025;o.camera.far=100;o.camera.updateProjectionMatrix();o.camera.lookAt(look);o.camera.updateMatrixWorld(true);o.wake();
   }
   function positionLabels() {
-    labelLayer.hidden=!interactive||!options.labels;
-    if(labelLayer.hidden)return;
+    const hidden=!interactive||!options.labels;
+    if(labelLayer.hidden!==hidden)labelLayer.hidden=hidden;
+    if(hidden)return;
+    const width=o.canvas.clientWidth,height=o.canvas.clientHeight;
+    const cameraChanged=!lastLabelCamera.equals(o.camera.position)||!lastLabelQuaternion.equals(o.camera.quaternion);
+    if(!cameraChanged&&lastLabelMode===options.mode&&lastLabelInteractive===interactive&&lastLabelLabels===options.labels&&lastLabelMobile===mobile&&lastLabelWidth===width&&lastLabelHeight===height)return;
+    lastLabelCamera.copy(o.camera.position);lastLabelQuaternion.copy(o.camera.quaternion);lastLabelMode=options.mode;
+    lastLabelInteractive=interactive;lastLabelLabels=options.labels;lastLabelMobile=mobile;lastLabelWidth=width;lastLabelHeight=height;
     for(const item of labels) {
       const retina=options.mode==='retina';
       let visible=(item.mode==='micro')===retina;
@@ -270,14 +278,15 @@ export function createEyeDetail(o: Options) {
       visible=visible&&projected.z>-1&&projected.z<1&&Math.abs(projected.x)<.93&&Math.abs(projected.y)<.93;
       // Globe labels are intended for the cut face; hide interior labels from behind.
       if(!retina&&options.mode==='cutaway'&&o.camera.position.x<.1)visible=false;
-      item.element.hidden=!visible;
-      if(visible){item.element.style.left=`${(projected.x*.5+.5)*100}%`;item.element.style.top=`${(-projected.y*.5+.5)*100}%`;}
+      if(item.element.hidden===visible)item.element.hidden=!visible;
+      if(visible){const left=`${(projected.x*.5+.5)*100}%`,top=`${(-projected.y*.5+.5)*100}%`;if(item.element.style.left!==left)item.element.style.left=left;if(item.element.style.top!==top)item.element.style.top=top;}
     }
   }
   function release() {
     root.traverse(node=>{if(node instanceof THREE.InstancedMesh)node.dispose();});
     globe.clear();micro.clear();rays.clear();signals.clear();shells.length=interiors.length=edges.length=0;parts.clear();
     labelLayer.replaceChildren();labels.length=0;labelLayer.hidden=true;
+    lastLabelCamera.set(Infinity,Infinity,Infinity);lastLabelMode=undefined;lastLabelWidth=lastLabelHeight=-1;
     geometries.forEach(g=>g.dispose());geometries.clear();materials.forEach(m=>m.dispose());materials.clear();
     textures.forEach(t=>{t.dispose();(t.image as ImageBitmap)?.close?.();});textures.clear();ready=false;
   }

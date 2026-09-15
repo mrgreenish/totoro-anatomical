@@ -1,9 +1,9 @@
 {
   "passed": true,
-  "assertions": 7939,
+  "assertions": 7941,
   "flowCpuMilliseconds": {
-    "median": 0.3865000000000691,
-    "p95": 0.7477499999999964
+    "median": 0.4031249999998181,
+    "p95": 2.513208000000077
   },
   "coverage": [
     "actual desktop and mobile assets",

@@ -176,9 +176,14 @@ export function createHeartFlow(anatomy: HeartAnatomy, mobile: boolean, uniforms
     time=seconds;
     const phase=cardiacCycle(time);
     clock.value=time;ejection.value=phase.outflow;
+    const cellsVisible=cells.visible&&root.visible;
     for(let i=0;i<total;i++) {
       const route=routes[i%routes.length];
       if(animated)distances[i]=advanceBlood(distances[i],dt,route,phase,radii[i]);
+      // Cell distances keep advancing while the enlarged-cell layer is
+      // hidden, but the expensive curve lookup and matrix upload can wait
+      // until the layer is visible again.
+      if(i<cellCount&&!cellsVisible)continue;
       const distance=distances[i];
       // Bounded binary search replaces per-particle curve allocation/evaluation.
       let lo=0,hi=SAMPLES-1;
@@ -197,12 +202,20 @@ export function createHeartFlow(anatomy: HeartAnatomy, mobile: boolean, uniforms
         dummy.scale.setScalar(.0125*(.82+.32*((i*.37)%1))*fade);dummy.updateMatrix();cells.setMatrixAt(i,dummy.matrix);
       } else point.toArray(flowPositions,(i-cellCount)*3);
     }
-    cells.instanceMatrix.needsUpdate=true;flowGeometry.attributes.position.needsUpdate=true;
+    if(cellsVisible)cells.instanceMatrix.needsUpdate=true;
+    flowGeometry.attributes.position.needsUpdate=true;
     return root.visible&&animated;
   }
   update(0,false);
   return {root,routes,update,
-    setVisible(visible: boolean,showCells: boolean){root.visible=visible;cells.visible=showCells;},
+    setVisible(visible: boolean,showCells: boolean){
+      const wasRendered=root.visible&&cells.visible;
+      root.visible=visible;
+      cells.visible=showCells;
+      // Populate transforms synchronously on reveal so a paused or freshly
+      // opened study never shows a frame of stale cell positions.
+      if(visible&&showCells&&!wasRendered)update(0,false,time);
+    },
     dispose(){root.removeFromParent();cells.dispose();geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());},
   };
 }

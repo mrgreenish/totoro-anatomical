@@ -79,6 +79,13 @@ check(blood.visible&&valves.every(n=>n.visible)&&wall.material.opacity<.25&&!wal
 const cells=f.api.detailScene.getObjectByName('Enlarged_erythrocytes');check(cells.visible&&cells.count===560,'Cells are one bounded instanced draw');
 const frame=cells.instanceMatrix.array.slice();f.api.update(.05,true);
 check(!cells.instanceMatrix.array.every((x,i)=>x===frame[i]),'Playing advects the cells');
+f.api.setHeartViewOptions({cells:false});
+let hiddenMatrixWrites=0;const setMatrixAt=cells.setMatrixAt.bind(cells);cells.setMatrixAt=(...args)=>{hiddenMatrixWrites++;return setMatrixAt(...args);};
+const hiddenFrame=cells.instanceMatrix.array.slice();f.api.update(.05,true);
+check(hiddenMatrixWrites===0&&hiddenFrame.every((x,i)=>x===cells.instanceMatrix.array[i]),'Hidden cells keep advancing without rebuilding their matrix buffer');
+f.api.setHeartViewOptions({cells:true});
+check(cells.visible&&!hiddenFrame.every((x,i)=>x===cells.instanceMatrix.array[i]),'Revealed cells refresh their transforms before rendering');
+cells.setMatrixAt=setMatrixAt;
 const paused=cells.instanceMatrix.array.slice();f.api.update(.05,false);
 check(cells.instanceMatrix.array.every((x,i)=>x===paused[i]),'Pause freezes fluid positions and cell orientation');
 const timings=[];for(let i=0;i<240;i++){const before=performance.now();f.api.update(1/60,true);timings.push(performance.now()-before);}
