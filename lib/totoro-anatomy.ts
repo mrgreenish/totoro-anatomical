@@ -631,8 +631,9 @@ export function createAnatomyExplorer(o: Options) {
         const [a,b,wa,wb] = handleEndpoints();
         const p = state.cut.position;
         const screenPosition = p * wb / ((1 - p) * wa + p * wb);
+        const angle=`${Math.atan2(b.y-a.y,b.x-a.x)}rad`;
         const point = a.lerp(b,screenPosition);
-        const left=`${point.x}px`,top=`${point.y}px`,angle=`${Math.atan2(b.y-a.y,b.x-a.x)}rad`;
+        const left=`${point.x}px`,top=`${point.y}px`;
         if(handle.style.left!==left)handle.style.left=left;
         if(handle.style.top!==top)handle.style.top=top;
         if(lastHandleAngle!==angle) { handle.style.setProperty('--cut-angle',angle); lastHandleAngle=angle; }
