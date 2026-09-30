@@ -456,7 +456,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   canvas.addEventListener('keydown', onKey); resize();
 
   try {
-    const response = await fetch('/models/totoro.glb?v=refinement-1', { signal: options.signal });
+    const response = await fetch('/models/totoro.glb?v=fur-1', { signal: options.signal });
     if (!response.ok) throw new Error('Model unavailable');
     const bytes = await response.arrayBuffer();
     if (options.signal.aborted) { controller.dispose(); return controller; }
@@ -481,7 +481,10 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
             sheenRoughness: .9, side: fibers ? THREE.DoubleSide : THREE.FrontSide,
           });
           material.name = old.name;
-          material.onBeforeCompile = shader => {
+          // Strands carry their own root-to-tip color, so only the skin beneath the
+          // coat gets procedural fur detail. Skipping it on the strands keeps their
+          // many small fragments cheap.
+          if (!fibers) material.onBeforeCompile = shader => {
             shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vFurPosition;');
             shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvFurPosition = position;');
             shader.fragmentShader = shader.fragmentShader.replace('#include <common>', `#include <common>
@@ -490,25 +493,28 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
               float furNoise(vec3 p) { vec3 i=floor(p),f=fract(p); f=f*f*(3.-2.*f); return mix(mix(mix(furHash(i),furHash(i+vec3(1,0,0)),f.x),mix(furHash(i+vec3(0,1,0)),furHash(i+vec3(1,1,0)),f.x),f.y),mix(mix(furHash(i+vec3(0,0,1)),furHash(i+vec3(1,0,1)),f.x),mix(furHash(i+vec3(0,1,1)),furHash(i+vec3(1,1,1)),f.x),f.y),f.z); }
             `);
             shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
-              // Elongated detail follows the short downward groom. Fade fine
-              // frequencies below a pixel to avoid crawling noise when orbiting.
-              vec3 groom = vFurPosition * vec3(185., 38., 185.);
-              float resolve = 1. - smoothstep(.45, 1.8, length(fwidth(groom)));
-              float strands = furNoise(groom + vec3(0., 0., furNoise(vFurPosition * 9.) * 1.4));
-              float clumps = furNoise(vFurPosition * vec3(24., 9., 24.));
-              float fuzz = mix(.5, strands, resolve);
-              diffuseColor.rgb *= .97 + .045 * clumps + .04 * (fuzz - .5);
+              // Two octaves stretched along the downward groom: combed streaks that
+              // read at gallery distance, and finer strands for close views. Each
+              // fades out once it drops below a pixel, so orbiting never crawls.
+              vec3 combed = vFurPosition * vec3(62., 13., 62.);
+              vec3 strands = vFurPosition * vec3(190., 40., 190.);
+              float sway = furNoise(vFurPosition * 7.);
+              float readsCombed = 1. - smoothstep(.5, 2., length(fwidth(combed)));
+              float readsStrands = 1. - smoothstep(.45, 1.8, length(fwidth(strands)));
+              float fuzz = .6 * mix(.5, furNoise(combed + vec3(0., 0., sway * 2.)), readsCombed)
+                         + .4 * mix(.5, furNoise(strands + vec3(0., 0., sway * 1.4)), readsStrands);
+              diffuseColor.rgb *= .96 + .36 * (fuzz - .5);
             `);
-            if (!fibers) shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+            shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
               vec3 sigmaX = normalize(dFdx(-vViewPosition));
               vec3 sigmaY = normalize(dFdy(-vViewPosition));
               vec3 r1 = cross(sigmaY, normal), r2 = cross(normal, sigmaX);
               float determinant = dot(sigmaX, r1) * faceDirection;
               vec3 gradient = sign(determinant) * (dFdx(fuzz) * r1 + dFdy(fuzz) * r2);
-              normal = normalize(max(abs(determinant), .00001) * normal - gradient * .075);
+              normal = normalize(max(abs(determinant), .00001) * normal - gradient * .11);
             `);
           };
-          material.customProgramCacheKey = () => `groomed-fur-v3-${fibers}`; materialCache.set(cacheKey, material);
+          material.customProgramCacheKey = () => `groomed-fur-v4-${fibers}`; materialCache.set(cacheKey, material);
         }
         object.material = material; replacedMaterials.add(old);
       }

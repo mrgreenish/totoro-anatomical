@@ -7,7 +7,7 @@ An interactive Totoro sculpture created in Blender 5.1, exported to glTF, and re
 - `artwork/totoro.blend`: editable model, materials, studio lighting, and camera.
 - `artwork/totoro-render.png`: transparent Cycles render.
 - `artwork/totoro-raw.glb`: uncompressed export.
-- `public/models/totoro.glb`: Meshopt-compressed browser model (4,844,876 bytes).
+- `public/models/totoro.glb`: Meshopt-compressed browser model (3,287,412 bytes).
 - `scripts/build_totoro.py`: deterministic procedural Blender source.
 - `scripts/totoro_rig.py`: seven-bone deformation rig, UVs and shared skin weights.
 - `scripts/optimize-model.mjs`: export optimization and glTF validation.
@@ -15,7 +15,7 @@ An interactive Totoro sculpture created in Blender 5.1, exported to glTF, and re
 - `scripts/verify_totoro_blender.py`: closed body surfaces and fur attachment in rest and deformed poses.
 - `scripts/render_totoro_views.py`: repeatable front, three-quarter, profile and rear renders.
 
-The sculpt has a wide crescent grin with ten individually curved enamel crowns, a broad nose, smaller inset eyes, lofted cheeks and torso, shaped forearms, five attached claws per hand, lofted paws with flat soles and three short embedded claws, a dense groomed coat and a leaf draped over the crown. Face and profile proportions were studied against [Studio Ghibli's official Totoro stills](https://www.ghibli.jp/works/totoro/), particularly frames 030, 032, 034 and 036. The result is a stylized 3D adaptation; the neutral stance and concealed anatomy are inferred.
+The sculpt has a wide crescent grin with ten individually curved enamel crowns, a broad nose, smaller inset eyes, lofted cheeks and torso, shaped forearms, five attached claws per hand, lofted paws with flat soles and three short embedded claws, a layered coat of clumped locks and guard hairs and a leaf draped over the crown. Face and profile proportions were studied against [Studio Ghibli's official Totoro stills](https://www.ghibli.jp/works/totoro/), particularly frames 030, 032, 034 and 036. The result is a stylized 3D adaptation; the neutral stance and concealed anatomy are inferred.
 
 ## Interaction
 
@@ -25,9 +25,23 @@ Tap Totoro to say hello: he blinks with a springy squash, his ears and leaf hat 
 
 ## Rendering
 
-324,967 model triangles and 57 mesh draws: 29.4% fewer triangles and a 26.7% smaller download than the previous coat. Meshopt compression cuts the 25.6 MB export to 4.84 MB. There are no external texture/HDR requests. A WebP render appears while the GPU programs compile. Shorter bent strands, shared fiber materials, surface-aligned normals and regional vertex colors create a coherent coat across the body, arms and tail. The belly boundary feathers into grey, and the seven chevrons follow the belly surface. The thinner curled leaf clears the crown. Physical sheen, AgX tone mapping, studio reflections and contact shadows finish the real-time render. Versioned model and poster requests refresh the cached sculpture together.
+229,227 model triangles and 57 mesh draws: 29.5% fewer triangles and a 32.2% smaller download (3.29 MB instead of 4.84 MB) than the previous, smoother coat, with visibly more fur. Meshopt compression cuts the 15.7 MB export to 3.29 MB. There are no external texture/HDR requests. A WebP render appears while the GPU programs compile. Clumped locks, guard hairs, shared fiber materials, surface-aligned normals and regional vertex colors create a coherent coat across the body, arms and tail. The belly boundary feathers into grey, and the seven chevrons follow the belly surface. The thinner curled leaf clears the crown. Physical sheen, AgX tone mapping, studio reflections and contact shadows finish the real-time render. Versioned model and poster requests refresh the cached sculpture together.
 
-Both eyelids have a Blink shape key that closes over unchanged eyeballs. Seven bones deform breathing, shoulders, ears and tail; their fur, claws and belly markings share the corresponding skin weights. The head keeps its proportions, and the paws remain planted. Body poles and ear openings are closed. Regional strand parameters, shape keys, UVs and armature modifiers remain editable in the native source. The chosen coat uses fewer mesh strands plus subtle runtime microdetail; baked texture maps and simulated hair were not added.
+Both eyelids have a Blink shape key that closes over unchanged eyeballs. Seven bones deform breathing, shoulders, ears and tail; their fur, claws and belly markings share the corresponding skin weights. The head keeps its proportions, and the paws remain planted. Body poles and ear openings are closed. Regional strand parameters, shape keys, UVs and armature modifiers remain editable in the native source. The coat is generated geometry with procedural microdetail on the skin beneath it; baked texture maps and simulated hair were not added.
+
+### The coat
+
+Every strand is an opaque, tapered ribbon of three to five triangles with an authored surface normal and root-to-tip vertex color, so there is no alpha overdraw. Three layers share each part's fiber mesh (`Fine grey fibers`, `Arm_L fibers` and so on), so the object list and draw count are unchanged:
+
+- **Undercoat.** Short, fine fuzz that softens the outline and fills the gaps.
+- **Locks.** Medium ribbons, wider at the root, grouped into clumps of about five. Each clump follows a guide strand and its tips converge toward the guide's tip, which gives combed locks with darker partings between them.
+- **Wisps.** Sparse long guard hairs that stand off the surface and break the silhouette.
+
+Roots are sampled by surface area, not by height, so the coat has the same density on the hips as on the head. All three layers follow one smooth flow field (down the body, outward across the cheeks and chest, up the ears, back along the tail) with slow swirls for cowlicks. Regional length maps keep the face short so the grin, eyes and nose stay crisp, lengthen the cheek ruff, collar and tail, shorten the fur at the plinth, keep the claws clear, and hold the crown flat under the leaf. Roots are embedded slightly so no cut edge shows, and every random stream is named per part, so the groom is reproducible. Layer recipes and densities are the `LAYERS` and `DENSITY` tables in `scripts/build_totoro.py`.
+
+Cost. The coat has 129,119 strand triangles, down from 224,859, because it spends fewer, larger strands. Larger strands cover more pixels, so the fill cost was checked too: rasterizing the decoded model at the gallery's default camera with 4× MSAA sample positions, the strands touch about 56% more 2 × 2 pixel quads at 1280 × 900 and 32% more at 2560 × 1800 (an upper bound that ignores depth rejection), about +6% and +4% of the exterior's shaded quads. Strand fragments also run a lighter shader than before. This is arithmetic on the model, not a GPU measurement; this container has none, and software-rendered frame times were too noisy to use. The build is reproducible: it no longer depends on Blender's unseeded noise, cached vertex normals or polygon order.
+
+At runtime the strands use their vertex colors only. The skin beneath them gets two procedural octaves stretched along the groom: combed streaks that read at gallery distance and finer strands for close views, each fading out below a pixel so orbiting never crawls.
 
 Animation stays outside React state. Orbit damping and character animation use delta time. Pixel ratio is capped at 1.8; resolution and HDR multisampling stay fixed during slow frames to preserve sharpness. Rendering stops in hidden tabs, and stops after settling when motion is paused. GPU resources and listeners are released on unmount. Reduced-motion preferences disable initial idle animation.
 
@@ -68,7 +82,7 @@ Recreate the model with `blender -b --python scripts/build_totoro.py`, then run 
 
 ## Verification
 
-The compressed file is decoded with the gallery's Three.js loader and Meshopt decoder. Verification checks all named animation parts, finite vertices, transfer/triangle budgets, expected bounds, front-ray visibility of ten teeth and seven markings, normalized skin weights, actual deformed vertices, eyelid closure and initial desktop/mobile camera framing. Results are in `artwork/model-verification.json`. Native Blender checks find no boundary edges on the body or appendages and verify sampled fur roots stay within 0.0034 model units of their surfaces in rest and exaggerated motion poses. The glTF validator reports zero errors and warnings; its unsupported Meshopt extension is checked with the actual Three.js decoder.
+The compressed file is decoded with the gallery's Three.js loader and Meshopt decoder. Verification checks all named animation parts, finite vertices, transfer/triangle budgets, expected bounds, front-ray visibility of ten teeth and seven markings, normalized skin weights, actual deformed vertices, eyelid closure and initial desktop/mobile camera framing. Results are in `artwork/model-verification.json`. Native Blender checks find no boundary edges on the body or appendages and verify sampled fur roots stay within 0.0034 model units of their surfaces in rest and exaggerated motion poses. The check finds each strand's root pair from the mesh topology, so it holds for any strand length or segment count; an exhaustive pass over all 40,881 strands found none more than 0.0066 from its surface. The glTF validator reports zero errors and warnings; its unsupported Meshopt extension is checked with the actual Three.js decoder.
 
 Front, three-quarter, profile and rear Cycles renders were reviewed. The opaque silhouette retains 99.06% overlap with the previous sculpt. Browser QA covered dragging, keyboard orbit/zoom, both lighting modes, auto-rotation, pause/reset, fullscreen and a 390 × 844 viewport without horizontal overflow. A stable desktop observation at DPR 1 measured 10 ms median / 11 ms p95 frame intervals; this is not a hardware-wide performance benchmark. Numerical motion checks pass at 30/60/120 Hz with maximum angular difference below 0.005 radians. TypeScript, lint on changed application/verification files and the production build pass. See `artwork/browser-verification.json` and `artwork/blender-improvement-plan.md` for scope and implementation notes.
 
