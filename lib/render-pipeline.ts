@@ -44,7 +44,8 @@ export const GRADES: Record<GradeName, Grade> = {
   heart: { bloom: .5, threshold: .85, knee: .6, radius: .85, spill: 1, saturation: 1.05, contrast: .14,
     lift: [.012, .005, .007], gain: [1.02, .99, .98], shadows: [1.03, .97, .99], highlights: [1.02, .995, .97],
     vignette: .3, aberration: .5, grain: .016 },
-  eye: { bloom: .55, threshold: .8, knee: .6, radius: .85, spill: 1, saturation: 1.05, contrast: .12,
+  // The white sclera is bright; keep its halo to the wet highlights.
+  eye: { bloom: .3, threshold: 1.6, knee: .5, radius: .8, spill: .6, saturation: 1.05, contrast: .12,
     lift: [.004, .010, .012], gain: [.99, 1.0, 1.02], shadows: [.96, 1.0, 1.03], highlights: [1.02, 1.0, .98],
     vignette: .28, aberration: .45, grain: .014 },
   lung: { bloom: .5, threshold: .85, knee: .6, radius: .85, spill: 1, saturation: 1.04, contrast: .12,
