@@ -16,6 +16,7 @@ import { createForestAtmosphere } from './forest-atmosphere';
 import { createCamphorPlinth } from './camphor-plinth';
 import { createSootSprites } from './soot-sprites';
 import { createForestRain } from './forest-rain';
+import { createFurShading, furKindOf } from './fur-material';
 
 export type SculptureController = {
   setRotate(value: boolean): void;
@@ -138,6 +139,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   const atmosphere = createForestAtmosphere({ scene, camera, forest, mobile });
   const soot = createSootSprites({ scene, camera, canvas, mobile });
   const rain = createForestRain({ scene, camera, mobile, lightDirection: forest.direction });
+  const furShading = createFurShading();
   let raining = false;
   const root = new THREE.Group(); scene.add(root);
   let model: THREE.Group | null = null;
@@ -417,7 +419,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       if (disposed) return;
       disposed = true; cancelAnimationFrame(frame); resizeObserver.disconnect(); controls.dispose();
       anatomy?.dispose();
-      atmosphere.dispose(); soot.dispose(); rain.dispose(); plinth.dispose(); forest.dispose();
+      atmosphere.dispose(); soot.dispose(); rain.dispose(); plinth.dispose(); forest.dispose(); furShading.dispose();
       document.removeEventListener('visibilitychange', onVisibility); canvas.removeEventListener('webglcontextlost', onContextLost); canvas.removeEventListener('keydown', onKey);
       canvas.removeEventListener('pointerdown', onPokeDown); canvas.removeEventListener('pointerup', onPokeUp);
       const geometries = new Set<THREE.BufferGeometry>(), materials = new Set<THREE.Material>();
@@ -462,7 +464,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     if (options.signal.aborted) { controller.dispose(); return controller; }
     const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parseAsync(bytes, '/models/');
     model = gltf.scene;
-    const materialCache = new Map<string, THREE.MeshPhysicalMaterial>();
+    const materialCache = new Map<string, THREE.MeshStandardMaterial>();
     const replacedMaterials = new Set<THREE.Material>();
     model.traverse(object => {
       if (!(object instanceof THREE.Mesh)) return;
@@ -470,51 +472,13 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       object.castShadow = !fibers; object.receiveShadow = !fibers;
       const old = object.material as THREE.MeshStandardMaterial;
       if (/Fur|Belly|Seven chevrons/.test(old.name)) {
-        const cacheKey = `${old.uuid}-${fibers}`;
+        // One material per coat color, strand or skin, and groom region; they share programs.
+        const kind = furKindOf(object.name);
+        const cacheKey = `${old.uuid}-${fibers}-${kind}`;
         let material = materialCache.get(cacheKey);
         if (!material) {
-          const ivory = old.name.includes('Belly');
-          material = new THREE.MeshPhysicalMaterial({
-            color: old.color, vertexColors: object.geometry.hasAttribute('color'),
-            roughness: fibers ? .91 : .96, metalness: 0,
-            sheen: fibers ? .72 : .40, sheenColor: ivory ? 0xd6ceac : 0x8e9a94,
-            sheenRoughness: .9, side: fibers ? THREE.DoubleSide : THREE.FrontSide,
-          });
-          material.name = old.name;
-          // Strands carry their own root-to-tip color, so only the skin beneath the
-          // coat gets procedural fur detail. Skipping it on the strands keeps their
-          // many small fragments cheap.
-          if (!fibers) material.onBeforeCompile = shader => {
-            shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vFurPosition;');
-            shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvFurPosition = position;');
-            shader.fragmentShader = shader.fragmentShader.replace('#include <common>', `#include <common>
-              varying vec3 vFurPosition;
-              float furHash(vec3 p) { p=fract(p*.3183099+vec3(.1,.2,.3)); p*=17.; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }
-              float furNoise(vec3 p) { vec3 i=floor(p),f=fract(p); f=f*f*(3.-2.*f); return mix(mix(mix(furHash(i),furHash(i+vec3(1,0,0)),f.x),mix(furHash(i+vec3(0,1,0)),furHash(i+vec3(1,1,0)),f.x),f.y),mix(mix(furHash(i+vec3(0,0,1)),furHash(i+vec3(1,0,1)),f.x),mix(furHash(i+vec3(0,1,1)),furHash(i+vec3(1,1,1)),f.x),f.y),f.z); }
-            `);
-            shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
-              // Two octaves stretched along the downward groom: combed streaks that
-              // read at gallery distance, and finer strands for close views. Each
-              // fades out once it drops below a pixel, so orbiting never crawls.
-              vec3 combed = vFurPosition * vec3(62., 13., 62.);
-              vec3 strands = vFurPosition * vec3(190., 40., 190.);
-              float sway = furNoise(vFurPosition * 7.);
-              float readsCombed = 1. - smoothstep(.5, 2., length(fwidth(combed)));
-              float readsStrands = 1. - smoothstep(.45, 1.8, length(fwidth(strands)));
-              float fuzz = .6 * mix(.5, furNoise(combed + vec3(0., 0., sway * 2.)), readsCombed)
-                         + .4 * mix(.5, furNoise(strands + vec3(0., 0., sway * 1.4)), readsStrands);
-              diffuseColor.rgb *= .96 + .36 * (fuzz - .5);
-            `);
-            shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
-              vec3 sigmaX = normalize(dFdx(-vViewPosition));
-              vec3 sigmaY = normalize(dFdy(-vViewPosition));
-              vec3 r1 = cross(sigmaY, normal), r2 = cross(normal, sigmaX);
-              float determinant = dot(sigmaX, r1) * faceDirection;
-              vec3 gradient = sign(determinant) * (dFdx(fuzz) * r1 + dFdy(fuzz) * r2);
-              normal = normalize(max(abs(determinant), .00001) * normal - gradient * .11);
-            `);
-          };
-          material.customProgramCacheKey = () => `groomed-fur-v4-${fibers}`; materialCache.set(cacheKey, material);
+          material = furShading.create({ source: old, fibers, kind, vertexColors: object.geometry.hasAttribute('color') });
+          materialCache.set(cacheKey, material);
         }
         object.material = material; replacedMaterials.add(old);
       }

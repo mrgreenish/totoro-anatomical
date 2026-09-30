@@ -1,0 +1,76 @@
+{
+ "scope": "Headless Chromium (Playwright chromium-1194) with ANGLE SwiftShader, a CPU rasterizer, in a Linux container without a GPU. 1280 x 900, DPR 1, daylight, reduced motion, full HDR pipeline (4x MSAA half-float target, bloom, composite). Each sample is one complete synchronous frame: render, then a 1-pixel readback of the canvas, which waits for every pass. Relative checks only; texture filtering runs in software here, and GPU cost was not measured.",
+ "pairedMaterialSwap": {
+  "method": "One page. The old (merged) coat materials are rebuilt from their source next to the new ones and swapped onto the same meshes; variants alternate in ABCD/DCBA order, 3 frames per visit, 4 rounds per view (12 samples each). Compilation happens before timing.",
+  "variants": {
+   "old": "Merged coat: physical material with sheen, three procedural noises on the skin",
+   "new": "This pass",
+   "noTexture": "This pass with the two noise-volume reads replaced by a constant (isolates their cost)",
+   "physicalBrdf": "This pass with the old physical BRDF instead of the fur lobes (isolates the lighting)"
+  },
+  "medianMs": {
+   "default:old": 1344,
+   "default:new": 1391,
+   "default:noTexture": 1333,
+   "default:physicalBrdf": 1345,
+   "nearest:old": 1743,
+   "nearest:new": 1780,
+   "nearest:noTexture": 1719,
+   "nearest:physicalBrdf": 1696
+  }
+ },
+ "againstOriginalCoat": {
+  "method": "Separate browser launches, ABBA order, 4 rounds, 7 frames each (median of medians). v0 is main at 9a087ee, before both fur passes: 324,967 triangles, 4,844,876-byte model. new is this pass on the 229,227-triangle model. \"character\" hides the plinth, atmosphere and soot sprites.",
+  "summary": {
+   "default:full": {
+    "v0": 1520,
+    "new": 1395,
+    "ratio": 0.917
+   },
+   "default:full:min": {
+    "v0": 1470,
+    "new": 1360,
+    "ratio": 0.925
+   },
+   "default:character": {
+    "v0": 1356,
+    "new": 1221,
+    "ratio": 0.901
+   },
+   "default:character:min": {
+    "v0": 1323,
+    "new": 1178,
+    "ratio": 0.891
+   },
+   "nearest:full": {
+    "v0": 1850,
+    "new": 1747,
+    "ratio": 0.945
+   },
+   "nearest:full:min": {
+    "v0": 1827,
+    "new": 1724,
+    "ratio": 0.944
+   },
+   "nearest:character": {
+    "v0": 1828,
+    "new": 1701,
+    "ratio": 0.931
+   },
+   "nearest:character:min": {
+    "v0": 1781,
+    "new": 1677,
+    "ratio": 0.942
+   }
+  }
+ },
+ "noiseCheck": {
+  "method": "The same build measured against itself in separate launches, 2 rounds.",
+  "ratios": {
+   "default:full": 1.019,
+   "default:character": 1.397,
+   "nearest:full": 0.953,
+   "nearest:character": 1.023
+  }
+ }
+}
