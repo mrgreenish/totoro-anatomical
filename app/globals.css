@@ -26,6 +26,9 @@ button:focus-visible,a:focus-visible { outline:2px solid var(--ring); outline-of
 .header-note { position:absolute; left:50%; transform:translateX(-50%); font-size:12px; letter-spacing:2px; color:var(--secondary-ink); }
 .light-button { height:41px!important; min-width:112px; padding:0 15px!important; border-radius:30px!important; gap:9px!important; color:var(--ink); font-size:14px!important; font-weight:450!important; border:1px solid var(--faint); background:#ffffff40!important; }
 .light-button:hover { background:#ffffff85!important; }
+.weather-controls { display:flex; align-items:center; gap:8px; }
+.rain-button { min-width:0!important; }
+.rain-button[aria-pressed=true] { background:#dfe7e6!important; border-color:#9fb1ae; }
 .background-word { position:absolute; z-index:-1; top:16.5%; left:6%; width:91%; text-align:center; color:#8a9b79; opacity:.105; font-size:clamp(130px,20.5vw,370px); font-weight:680; line-height:1; letter-spacing:-.07em; user-select:none; }
 .edition { position:absolute; z-index:2; left:4.5%; top:23%; display:flex; align-items:center; gap:12px; font-size:12px; font-weight:500; letter-spacing:1.4px; color:var(--secondary-ink); }
 .edition-line { display:block; width:24px; height:1px; background:var(--secondary-ink); }
@@ -77,6 +80,11 @@ h1 span { color:#84956f; }
 .is-night .icon-button:hover,.is-night .rotate-button:hover,.is-night .rotate-button[aria-pressed=true] { background:#384b44!important; }
 .is-night .control-divider { background:#ffffff1c; }
 .is-night .light-button { background:#ffffff07!important; }
+.is-night .rain-button[aria-pressed=true] { background:#ffffff17!important; border-color:#ffffff2e; }
+/* A passing shower: overcast paper by day, blue-black by night. */
+.gallery.is-rain:not(.is-organ-view) { background:radial-gradient(ellipse at 62% 42%,#eef1ef 0,#e3e8e6 40%,#d2dad8 100%); }
+.gallery.is-rain.is-night:not(.is-organ-view) { background:radial-gradient(ellipse at 62% 42%,#283840 0,#18242b 43%,#0c151b 100%); }
+.is-rain .background-word { color:#7f918f; }
 .is-night .brand-icon { border-color:#ffffff27; }
 .gallery.is-fullscreen { position:fixed; inset:0; z-index:100; height:100dvh; min-height:0; }
 .is-fullscreen .gallery-header { opacity:.7; }
@@ -91,6 +99,9 @@ h1 span { color:#84956f; }
   .gallery { min-height:780px; }
   .gallery-header { padding:24px 6%; } .wordmark { font-size:20px; gap:9px; } .brand-icon { width:33px; height:33px; }
   .light-button { min-width:100px; height:39px!important; }
+  .weather-controls { gap:6px; }
+  .rain-button { width:39px; padding:0!important; justify-content:center; }
+  .rain-button span { display:none; }
   .edition { display:none; } .edition-line { width:16px; }
   .background-word { left:-5%; top:21%; width:110%; font-size:25vw; }
   .sculpture { inset:142px -4% 270px -4%; }

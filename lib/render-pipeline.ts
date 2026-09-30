@@ -10,7 +10,7 @@ import * as THREE from 'three';
  * coverage and bloom that leaves an object is written as additive light over
  * the gallery background.
  */
-export type GradeName = 'day' | 'night' | 'anatomy' | 'brain' | 'heart' | 'eye' | 'lung';
+export type GradeName = 'day' | 'night' | 'rain' | 'anatomy' | 'brain' | 'heart' | 'eye' | 'lung';
 type Triple = [number, number, number];
 type Grade = {
   bloom: number; threshold: number; knee: number; radius: number;
@@ -30,6 +30,10 @@ export const GRADES: Record<GradeName, Grade> = {
   night: { bloom: .8, threshold: 1.5, knee: .5, radius: .88, spill: 1, saturation: .94, contrast: .14,
     lift: [.002, .005, .009], gain: [.985, 1.0, 1.02], shadows: [.96, 1.0, 1.04], highlights: [1.0, 1.01, .985],
     vignette: .16, aberration: 0, grain: .016 },
+  // A soft, silvery shower: cooler shade, gentler contrast, damp greens.
+  rain: { bloom: .34, threshold: 1.3, knee: .55, radius: .85, spill: .35, saturation: .9, contrast: .1,
+    lift: [.008, .011, .014], gain: [.985, 1.0, 1.015], shadows: [.95, 1.0, 1.05], highlights: [1.0, 1.005, 1.0],
+    vignette: .14, aberration: 0, grain: .016 },
   // Anatomy stays close to neutral so tissue colors remain readable.
   anatomy: { bloom: .2, threshold: 1.3, knee: .6, radius: .75, spill: .2, saturation: 1.03, contrast: .08,
     lift: [.004, .004, .004], gain: [1, 1, 1], shadows: [1, 1, 1], highlights: [1, 1, 1],

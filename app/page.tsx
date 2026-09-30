@@ -4,7 +4,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, Expand, Hand, Leaf, Moon, Pause, Play, RotateCcw, Rotate3D, Sun, X } from 'lucide-react';
+import { ArrowUpRight, CloudRain, Expand, Hand, Leaf, Moon, Pause, Play, RotateCcw, Rotate3D, Sun, X } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { SculptureController } from '@/lib/totoro-scene';
@@ -20,6 +20,7 @@ export default function Home() {
   const [rotating, setRotating] = useState(false);
   const [animated, setAnimated] = useState(true);
   const [night, setNight] = useState(false);
+  const [rain, setRain] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [anatomy, setAnatomy] = useState(defaultAnatomyState);
 
@@ -69,16 +70,21 @@ export default function Home() {
 
   return (
     <TooltipProvider delay={350}>
-      <main ref={mainRef} className={`gallery ${night ? 'is-night' : ''} ${fullscreen ? 'is-fullscreen' : ''} ${anatomy.mode !== 'exterior' ? 'is-anatomy' : ''} ${studyOpen ? 'is-organ-view' : ''} ${brainOpen ? 'is-brain-view' : ''} ${heartOpen ? 'is-heart-view' : ''} ${eyeOpen ? 'is-eye-view' : ''} ${lungOpen ? 'is-lung-view' : ''}`}>
+      <main ref={mainRef} className={`gallery ${night ? 'is-night' : ''} ${rain ? 'is-rain' : ''} ${fullscreen ? 'is-fullscreen' : ''} ${anatomy.mode !== 'exterior' ? 'is-anatomy' : ''} ${studyOpen ? 'is-organ-view' : ''} ${brainOpen ? 'is-brain-view' : ''} ${heartOpen ? 'is-heart-view' : ''} ${eyeOpen ? 'is-eye-view' : ''} ${lungOpen ? 'is-lung-view' : ''}`}>
         <header className="gallery-header">
           <Link className="wordmark" href="/" aria-label="Quiet Forest home">
             <span className="brand-icon"><Leaf size={20} strokeWidth={1.6} /></span>
             <span>quiet forest<span className="wordmark-dot">.</span></span>
           </Link>
           <span className="header-note">A STUDY IN LITTLE WONDERS</span>
-          <Toggle className="light-button" pressed={night} disabled={!ready || studyOpen} onPressedChange={value => { setNight(value); sculptureRef.current?.setNight(value); }} aria-label="Moonlight lighting">
-            {night ? <Moon size={16} /> : <Sun size={16} />}<span>{night ? 'Moonlight' : 'Daylight'}</span>
-          </Toggle>
+          <div className="weather-controls">
+            <Toggle className="light-button rain-button" pressed={rain} disabled={!ready || studyOpen} onPressedChange={value => { setRain(value); sculptureRef.current?.setRain(value); }} aria-label="Rain shower">
+              <CloudRain size={16} /><span>Rain</span>
+            </Toggle>
+            <Toggle className="light-button" pressed={night} disabled={!ready || studyOpen} onPressedChange={value => { setNight(value); sculptureRef.current?.setNight(value); }} aria-label="Moonlight lighting">
+              {night ? <Moon size={16} /> : <Sun size={16} />}<span>{night ? 'Moonlight' : 'Daylight'}</span>
+            </Toggle>
+          </div>
         </header>
         <div className="background-word" aria-hidden="true">TOTORO</div>
         <div className="edition"><span className="edition-line" />THE FOREST SPIRIT<span className="edition-number">01</span></div>

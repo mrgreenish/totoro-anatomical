@@ -24,6 +24,7 @@ const PARS = /* glsl */`
   uniform vec3 forestGlowPositions[ ${FOREST_GLOWS} ];
   uniform vec3 forestGlowColors[ ${FOREST_GLOWS} ];
   uniform float forestGlowFalloff;
+  uniform float forestWetness;
   float forestCanopyOpening( vec3 world ) {
     vec2 p = vec2( dot( world, forestLightRight ), dot( world, forestLightUp ) );
     float t = forestTime;
@@ -49,6 +50,12 @@ const LIGHTS = (() => {
   if (directional < 0 || call < 0 || end < 0) return undefined;
   return /* glsl */`
     vec3 forestWorldPosition = transpose( mat3( viewMatrix ) ) * ( - vViewPosition - viewMatrix[ 3 ].xyz );
+    #ifdef STANDARD
+      // Rain darkens and slicks whatever faces the sky.
+      float forestWet = forestWetness * smoothstep( -.15, .75, ( transpose( mat3( viewMatrix ) ) * normal ).y );
+      material.diffuseColor *= 1. - .34 * forestWet;
+      material.roughness = mix( material.roughness, min( material.roughness, .42 ), forestWet );
+    #endif
     ${chunk.slice(0, call)}
     // The shadow-casting key light is sorted first, so index 0 is the sun.
     #if UNROLLED_LOOP_INDEX == 0
@@ -139,6 +146,7 @@ export function createForestLight(lightPosition: THREE.Vector3, lightTarget: THR
     forestGlowPositions: { value: Array.from({ length: FOREST_GLOWS }, () => new THREE.Vector3()) },
     forestGlowColors: { value: Array.from({ length: FOREST_GLOWS }, () => new THREE.Vector3()) },
     forestGlowFalloff: { value: 7 },
+    forestWetness: { value: 0 },
   };
   /** Adds the canopy and firefly light to a lit built-in material. */
   function patch(material: THREE.Material, extra?: (shader: THREE.WebGLProgramParametersWithUniforms) => void, extraKey = '') {

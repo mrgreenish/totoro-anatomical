@@ -19,6 +19,9 @@ const PARS = /* glsl */`
   varying vec3 vPlinthPosition;
   varying vec3 vPlinthNormal;
   uniform float plinthNight;
+  uniform float plinthWet;
+  uniform float plinthRain;
+  uniform float plinthTime;
   float plinthHash(vec2 p) { vec3 q = fract(vec3(p.xyx) * .1031); q += dot(q, q.yzx + 33.33); return fract((q.x + q.y) * q.z); }
   float plinthNoise(vec2 p) {
     vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
@@ -80,8 +83,26 @@ const SURFACE = /* glsl */`
   surface = mix(surface, mossColor, moss);
   // Night keeps the stage low so the sculpture stays the brightest thing.
   surface *= mix(vec3(1.), vec3(.34, .4, .46), plinthNight);
+  // Soaked wood darkens a little; the water film itself is the clearcoat.
+  surface *= 1. - .16 * plinthWet * (1. - moss * .4);
   diffuseColor.rgb *= surface;
   float plinthHeight = -check * .012 + latewood * .0012 * (1. - barkMask) + furrow * .02 * barkMask + moss * mossBody * .012;
+  // Raindrop rings: each cell of a jittered grid drops at its own rhythm.
+  float plinthRipple = 0.;
+  if (plinthRain > .001 && plinthTop > .5) {
+    vec2 rippleP = plinthP.xz * 5.5;
+    vec2 rippleCell = floor(rippleP);
+    for (int x = -1; x <= 1; x++) for (int y = -1; y <= 1; y++) {
+      vec2 cell = rippleCell + vec2(x, y);
+      float chance = plinthHash(cell);
+      if (chance > .15 + .85 * plinthRain) continue;
+      vec2 origin = cell + .2 + .6 * vec2(plinthHash(cell + 17.), plinthHash(cell + 31.));
+      float life = fract(plinthTime * (.8 + .6 * plinthHash(cell + 5.)) + chance * 7.);
+      float d = length(rippleP - origin), front = life * 1.15;
+      plinthRipple += sin((d - front) * 27.) * smoothstep(.17, 0., abs(d - front)) * (1. - life) * (1. - life);
+    }
+  }
+  plinthHeight += plinthRipple * .0035 * plinthWet;
 `;
 
 export function createCamphorPlinth(forest: ForestLight) {
@@ -94,11 +115,14 @@ export function createCamphorPlinth(forest: ForestLight) {
     position.setXYZ(i, x * scale, position.getY(i), z * scale);
   }
   geometry.computeVertexNormals();
-  const night = { value: 0 };
+  const night = { value: 0 }, wet = { value: 0 }, rain = { value: 0 }, time = { value: 0 };
   const material = new THREE.MeshPhysicalMaterial({ name: 'Camphor plinth', color: 0xffffff, roughness: .58, metalness: 0,
     clearcoat: .3, clearcoatRoughness: .38, sheen: .25, sheenRoughness: .8, sheenColor: 0x5d7a2c, envMapIntensity: .75 });
   material.onBeforeCompile = shader => {
     shader.uniforms.plinthNight = night;
+    shader.uniforms.plinthWet = wet;
+    shader.uniforms.plinthRain = rain;
+    shader.uniforms.plinthTime = time;
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vPlinthPosition;\nvarying vec3 vPlinthNormal;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPlinthPosition = position;\nvPlinthNormal = normal;');
@@ -106,7 +130,8 @@ export function createCamphorPlinth(forest: ForestLight) {
       .replace('#include <common>', `#include <common>\n${PARS}`)
       .replace('#include <color_fragment>', `#include <color_fragment>\n${SURFACE}`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-        roughnessFactor = mix(mix(.5 + .12 * latewood, .9, barkMask), .95, moss) + check * .25;`)
+        roughnessFactor = mix(mix(.5 + .12 * latewood, .9, barkMask), .95, moss) + check * .25;
+        roughnessFactor = mix(roughnessFactor, mix(.12, .45, barkMask), plinthWet);`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
         vec3 plinthDx = dFdx(-vViewPosition), plinthDy = dFdy(-vViewPosition);
         vec3 plinthR1 = cross(plinthDy, normal), plinthR2 = cross(normal, plinthDx);
@@ -116,6 +141,8 @@ export function createCamphorPlinth(forest: ForestLight) {
       .replace('#include <lights_physical_fragment>', `#include <lights_physical_fragment>
         // Oiled end grain carries a thin coat; bark, checks and moss do not.
         material.clearcoat *= plinthTop * (1. - barkMask) * (1. - moss) * (1. - check);
+        material.clearcoat = mix(material.clearcoat, plinthTop * (1. - barkMask * .6), plinthWet);
+        material.clearcoatRoughness = mix(material.clearcoatRoughness, .045, plinthWet);
         material.sheenColor *= moss;`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
         vec2 speckCell = floor(plinthP.xz * 46. + plinthP.y * 31.);
@@ -123,7 +150,7 @@ export function createCamphorPlinth(forest: ForestLight) {
         float speckPulse = .55 + .45 * sin(plinthHash(speckCell + 3.) * 40. + forestTime * (.6 + plinthHash(speckCell + 9.)));
         totalEmissiveRadiance += vec3(.45, 1., .62) * speck * speckPulse * moss * plinthNight * 2.4;`);
   };
-  material.customProgramCacheKey = () => 'camphor-plinth-v1';
+  material.customProgramCacheKey = () => 'camphor-plinth-v2';
   forest.patch(material);
   const mesh = new THREE.Mesh(geometry, material);
   mesh.name = 'Camphor plinth';
@@ -132,6 +159,8 @@ export function createCamphorPlinth(forest: ForestLight) {
   return {
     mesh, material,
     setNight(value: number) { night.value = value; },
+    /** Surface water (0 dry to 1 soaked), current rainfall and the ripple clock. */
+    setWeather(wetness: number, rainfall: number, seconds: number) { wet.value = wetness; rain.value = rainfall; time.value = seconds; },
     dispose() { geometry.dispose(); material.dispose(); },
   };
 }

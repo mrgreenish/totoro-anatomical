@@ -15,11 +15,13 @@ import { createForestLight } from './forest-light';
 import { createForestAtmosphere } from './forest-atmosphere';
 import { createCamphorPlinth } from './camphor-plinth';
 import { createSootSprites } from './soot-sprites';
+import { createForestRain } from './forest-rain';
 
 export type SculptureController = {
   setRotate(value: boolean): void;
   setAnimate(value: boolean): void;
   setNight(value: boolean): void;
+  setRain(value: boolean): void;
   setMode(value: AnatomyMode): Promise<void>;
   setCut(value: Partial<AnatomyState['cut']>): void;
   setExplosion(value: number): void;
@@ -132,6 +134,8 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   const mobile = window.matchMedia('(pointer: coarse)').matches || Math.min(window.innerWidth, window.innerHeight) < 600;
   const atmosphere = createForestAtmosphere({ scene, camera, forest, mobile });
   const soot = createSootSprites({ scene, camera, canvas, mobile });
+  const rain = createForestRain({ scene, camera, mobile, lightDirection: forest.direction });
+  let raining = false;
   const root = new THREE.Group(); scene.add(root);
   let model: THREE.Group | null = null;
   let anatomy: AnatomyExplorer | undefined;
@@ -166,7 +170,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   let nextBlink = 3.4, blinkStart = -10;
   let pixelRatio = Math.min(window.devicePixelRatio || 1, 1.8), slowFrames = 0;
   const dayKey = new THREE.Color(0xfff4de), nightKey = new THREE.Color(0xbddeff);
-  const dayRim = new THREE.Color(0xddeafa), nightRim = new THREE.Color(0xc3df9b);
+  const dayRim = new THREE.Color(0xddeafa), nightRim = new THREE.Color(0xc3df9b), rainKey = new THREE.Color(0xd9e4ee);
 
   let viewportWidth = 0, viewportHeight = 0;
   function resize() {
@@ -242,6 +246,15 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     rim.color.copy(dayRim).lerp(nightRim, night); rim.intensity = THREE.MathUtils.lerp(3.0, 4.5, night);
     fill.intensity = THREE.MathUtils.lerp(.48, .4, night); scene.environmentIntensity = THREE.MathUtils.lerp(.48, .28, night);
     plinth.setNight(night);
+    const rainSettling = rain.update(dt, { animated: movingCharacter, raining, visible: !anatomy?.active, night,
+      wind: atmosphere.wind, viewportWidth: canvas.width, viewportHeight: canvas.height });
+    // Overcast: the sun hides behind cloud and the sky does more of the lighting.
+    const overcast = rain.level;
+    key.intensity *= 1 - .55 * overcast; key.color.lerp(rainKey, overcast * .5);
+    ambient.intensity += .2 * overcast * (1 - .5 * night);
+    rim.intensity *= 1 - .35 * overcast;
+    scene.environmentIntensity += .1 * overcast * (1 - night);
+    plinth.setWeather(rain.wetness, rain.level, rain.time);
     const anatomySettling = anatomy?.update(dt, animated) ?? false;
     if (anatomy?.active) {
       // Neutral studio light preserves red/brown tissue separation. A lower
@@ -271,12 +284,13 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     splitShadowCache.update(splitShadowsEligible, changed);
     const study = anatomy?.state.brainView.status === 'open' ? 'brain' : anatomy?.state.heartView.status === 'open' ? 'heart'
       : anatomy?.state.eyeView.status === 'open' ? 'eye' : anatomy?.state.lungView.status === 'open' ? 'lung' : undefined;
-    const grade: GradeName = study ?? (anatomy?.active ? 'anatomy' : night > .5 ? 'night' : 'day');
+    const grade: GradeName = study ?? (anatomy?.active ? 'anatomy' : night > .5 ? 'night' : rain.level > .5 ? 'rain' : 'day');
     pipeline?.setGrade(grade);
     const grading = pipeline?.update(dt) ?? false;
     const atmosphereSettling = atmosphere.update(dt, { animated: movingCharacter, night, visible: !anatomy?.active,
-      pixelRatio: renderer.getPixelRatio(), viewportWidth: canvas.width, viewportHeight: canvas.height });
-    const sootSettling = soot.update(dt, { animated: movingCharacter, visible: !anatomy?.active, night });
+      pixelRatio: renderer.getPixelRatio(), viewportWidth: canvas.width, viewportHeight: canvas.height,
+      rain: rain.level, wetness: rain.wetness });
+    const sootSettling = soot.update(dt, { animated: movingCharacter, visible: !anatomy?.active, night, rain: rain.level });
     const renderStart = performance.now();
     if (collectRenderStats) renderer.info.reset();
     renderFrame(anatomy?.detailScene ?? scene);
@@ -307,7 +321,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     // Adapt only after sustained slow frames, preserving crispness on capable devices.
     if (rawDt > .025 && rawDt < .2 && model) slowFrames++; else slowFrames = Math.max(0, slowFrames - 1);
     if (slowFrames > 100 && pixelRatio > 1.1) { pixelRatio = Math.max(1, pixelRatio - .25); slowFrames = 0; resize(); }
-    const settling = Math.abs(night - nightTarget) > .001 || motion.settling || resetting || anatomySettling || grading || atmosphereSettling || sootSettling;
+    const settling = Math.abs(night - nightTarget) > .001 || motion.settling || resetting || anatomySettling || grading || atmosphereSettling || sootSettling || rainSettling;
     if (movingCharacter || (rotating && !anatomy?.active) || changed || settling) frame = requestAnimationFrame(tick); else running = false;
   }
   function renderFrame(target: THREE.Scene) {
@@ -338,6 +352,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     setRotate(value) { rotating = value; interactionUntil = 0; wake(); },
     setAnimate(value) { animated = value; anatomy?.setAnimate(value); if (!value) motion.reset(); wake(); },
     setNight(value) { nightTarget = value ? 1 : 0; wake(); },
+    setRain(value) { raining = value; wake(); },
     async setMode(value) { resetting = false; motion.reset(); resetFrameStats(); await anatomy?.setMode(value); wake(); },
     setCut(value) { resetFrameStats(); anatomy?.setCut(value); },
     setExplosion(value) { resetFrameStats(); anatomy?.setExplosion(value); },
@@ -361,7 +376,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       if (disposed) return;
       disposed = true; cancelAnimationFrame(frame); resizeObserver.disconnect(); controls.dispose();
       anatomy?.dispose();
-      atmosphere.dispose(); soot.dispose(); plinth.dispose(); forest.dispose();
+      atmosphere.dispose(); soot.dispose(); rain.dispose(); plinth.dispose(); forest.dispose();
       document.removeEventListener('visibilitychange', onVisibility); canvas.removeEventListener('webglcontextlost', onContextLost); canvas.removeEventListener('keydown', onKey);
       const geometries = new Set<THREE.BufferGeometry>(), materials = new Set<THREE.Material>();
       const skeletons = new Set<THREE.Skeleton>();

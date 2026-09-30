@@ -8,7 +8,11 @@ import { FOREST_GLOWS, type ForestLight } from './forest-light';
  * the character clock, so Pause freezes the whole moment.
  */
 type Options = { scene: THREE.Scene; camera: THREE.PerspectiveCamera; forest: ForestLight; mobile: boolean };
-export type AtmosphereFrame = { animated: boolean; night: number; visible: boolean; pixelRatio: number; viewportWidth: number; viewportHeight: number };
+export type AtmosphereFrame = {
+  animated: boolean; night: number; visible: boolean; pixelRatio: number; viewportWidth: number; viewportHeight: number;
+  /** Current rainfall and lingering surface water, both 0 to 1. */
+  rain: number; wetness: number;
+};
 
 const PLINTH_TOP = -.03, PLINTH_RADIUS = 2.02;
 const FOCUS = new THREE.Vector3(0, 2.3, 0);
@@ -196,7 +200,7 @@ export function createForestAtmosphere(o: Options) {
   const moteMaterial = new THREE.ShaderMaterial({
     name: 'Sunlit dust', transparent: true, depthWrite: false,
     uniforms: { ...forest.uniforms, time: { value: 0 }, pixelScale: { value: 1 }, focus: { value: 13 },
-      intensity: { value: 0 }, color: { value: new THREE.Color() }, sunDirection: { value: forest.direction } },
+      intensity: { value: 0 }, color: { value: new THREE.Color() }, sunDirection: { value: forest.direction.clone().negate() } },
     vertexShader: /* glsl */`
       ${forest.glsl}
       attribute vec4 mote; uniform float time; uniform float pixelScale; uniform float focus; uniform vec3 sunDirection;
@@ -216,9 +220,10 @@ export function createForestAtmosphere(o: Options) {
         gl_PointSize = clamp(size * pixelScale, 1., 44. * pixelScale);
         vBokeh = smoothstep(.8, 3.2, coc);
         float sun = forestCanopyOpening(p);
+        // Dust scatters forward: it glows when the viewer looks toward the sun.
         float forward = pow(max(dot(normalize(p - cameraPosition), sunDirection), 0.), 3.);
         float twinkle = .55 + .45 * sin(time * (1.3 + fract(s * 7.) * 2.6) + s * 21.);
-        vAlpha = (.12 + .88 * sun) * (.3 + .7 * forward) * twinkle / (1. + coc * coc * .35);
+        vAlpha = (.12 + .88 * sun) * (.45 + .75 * forward) * twinkle / (1. + coc * coc * .35);
       }`,
     fragmentShader: /* glsl */`
       uniform float intensity; uniform vec3 color; varying float vAlpha; varying float vBokeh;
@@ -394,28 +399,30 @@ export function createForestAtmosphere(o: Options) {
       visibility = damp(visibility, frame.visible ? 1 : 0, 7, dt);
       if (Math.abs(visibility - (frame.visible ? 1 : 0)) < .002) visibility = frame.visible ? 1 : 0;
       root.visible = visibility > 0;
-      const night = frame.night, day = 1 - night;
-      forest.uniforms.forestCanopy.value = visibility * (.95 - .25 * night);
+      const night = frame.night, day = 1 - night, clear = 1 - frame.rain;
+      // Overcast skies soften the dapples; rain washes dust and sunbeams away.
+      forest.uniforms.forestCanopy.value = visibility * (.95 - .25 * night) * (1 - .72 * frame.rain);
+      forest.uniforms.forestWetness.value = visibility * frame.wetness;
       (forest.uniforms.forestCanopyRange.value as THREE.Vector2).set(.5 + .08 * night, 1.42 - .2 * night);
       (forest.uniforms.forestCanopyShade.value as THREE.Color).setRGB(.8 + .12 * night, 1, .7 + .3 * night);
       beamMaterial.uniforms.time.value = time;
-      beamMaterial.uniforms.intensity.value = visibility * (.05 * day + .1 * night);
+      beamMaterial.uniforms.intensity.value = visibility * (.05 * day + .1 * night) * clear * clear;
       (beamMaterial.uniforms.color.value as THREE.Color).copy(beamDay).lerp(beamNight, night);
       (beamMaterial.uniforms.viewport.value as THREE.Vector2).set(frame.viewportWidth, frame.viewportHeight);
       moteMaterial.uniforms.time.value = time;
       moteMaterial.uniforms.pixelScale.value = frame.pixelRatio;
       moteMaterial.uniforms.focus.value = o.camera.position.distanceTo(FOCUS);
-      moteMaterial.uniforms.intensity.value = visibility * (.9 * day + .35 * night);
+      moteMaterial.uniforms.intensity.value = visibility * (.9 * day + .35 * night) * (1 - .85 * frame.rain);
       (moteMaterial.uniforms.color.value as THREE.Color).copy(moteDay).lerp(moteNight, night);
       fireflyMaterial.uniforms.time.value = time;
       fireflyMaterial.uniforms.pixelScale.value = frame.pixelRatio;
-      fireflyMaterial.uniforms.intensity.value = visibility * THREE.MathUtils.smoothstep(night, .25, .9);
+      fireflyMaterial.uniforms.intensity.value = visibility * THREE.MathUtils.smoothstep(night, .25, .9) * (1 - .65 * frame.rain);
       fireflyPoints.visible = night > .2;
       viewportHeight.value = frame.viewportHeight;
       leafVisibility.value = visibility;
       if (step > 0 && root.visible) stepLeaves(step);
       // Hero fireflies light the fur. Positions go to view space for the BRDF.
-      const glowStrength = visibility * THREE.MathUtils.smoothstep(night, .3, .95);
+      const glowStrength = visibility * THREE.MathUtils.smoothstep(night, .3, .95) * (1 - .65 * frame.rain);
       forest.uniforms.forestGlowActive.value = glowStrength > .001 ? 1 : 0;
       o.camera.updateMatrixWorld();
       for (let i = 0; i < FOREST_GLOWS; i++) {

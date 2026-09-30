@@ -8,11 +8,11 @@ import * as THREE from 'three';
  * under the pipeline's MSAA.
  */
 type Options = { scene: THREE.Scene; camera: THREE.PerspectiveCamera; canvas: HTMLCanvasElement; mobile: boolean };
-export type SootFrame = { animated: boolean; visible: boolean; night: number };
+export type SootFrame = { animated: boolean; visible: boolean; night: number; rain: number };
 
 const TOP = -.03, RIM = 1.93, FEET = 1.08;
 type Sprite = {
-  x: number; z: number; homeX: number; homeZ: number; radius: number; seed: number;
+  x: number; z: number; homeX: number; homeZ: number; shelterX: number; shelterZ: number; radius: number; seed: number;
   hop: number; hopDuration: number; hopHeight: number; fromX: number; fromZ: number; toX: number; toZ: number;
   height: number; squash: number; squashVelocity: number; blink: number; nextBlink: number;
   lookX: number; lookY: number; fear: number; calm: number; nextIdle: number; spin: number;
@@ -90,7 +90,10 @@ export function createSootSprites(o: Options) {
     const huddle = huddles[i % huddles.length];
     const angle = huddle[0] + (random() - .5) * .34, radius = huddle[1] + (random() - .5) * .22;
     const x = Math.sin(angle) * radius, z = Math.cos(angle) * radius;
-    sprites.push({ x, z, homeX: x, homeZ: z, radius: .11 + random() * .035, seed: random() * 10,
+    // In a shower they crowd in at Totoro's feet, under the overhang of his belly.
+    const shelterAngle = -.85 + 2.1 * (i / Math.max(1, count - 1)) + (random() - .5) * .12, shelterRadius = 1.12 + random() * .1;
+    sprites.push({ x, z, homeX: x, homeZ: z, shelterX: Math.sin(shelterAngle) * shelterRadius, shelterZ: Math.cos(shelterAngle) * shelterRadius,
+      radius: .11 + random() * .035, seed: random() * 10,
       hop: -1, hopDuration: .25, hopHeight: 0, fromX: x, fromZ: z, toX: x, toZ: z, height: 0,
       squash: 0, squashVelocity: 0, blink: 0, nextBlink: 1 + random() * 4, lookX: 0, lookY: 0,
       fear: 0, calm: 0, nextIdle: 2 + random() * 6, spin: 0, screenX: 0, screenY: 0, screenRadius: 0 });
@@ -147,7 +150,7 @@ export function createSootSprites(o: Options) {
 
   // Pointer, in CSS pixels relative to the canvas.
   let pointerX = 0, pointerY = 0, pointerActive = false, pointerDown: { x: number; y: number } | undefined;
-  let scareX = 0, scareY = 0, scare = 0, time = 0, visibility = 1;
+  let scareX = 0, scareY = 0, scare = 0, time = 0, visibility = 1, sheltering = false;
   const onMove = (event: PointerEvent) => {
     const rect = o.canvas.getBoundingClientRect();
     pointerX = event.clientX - rect.left; pointerY = event.clientY - rect.top; pointerActive = true;
@@ -219,6 +222,8 @@ export function createSootSprites(o: Options) {
       s.screenRadius = s.radius * scale / Math.max(.1, o.camera.position.distanceTo(center.set(s.x, TOP, s.z)));
     }
     if (step > 0) {
+      const shelter = frame.rain > (sheltering ? .2 : .35);
+      if (shelter !== sheltering) { sheltering = shelter; for (const s of sprites) s.nextIdle = random() * .35; }
       for (const s of sprites) {
         const reach = Math.max(55, s.screenRadius * 5);
         const near = pointerActive ? Math.hypot(s.screenX - pointerX, s.screenY - pointerY) : Infinity;
@@ -246,12 +251,13 @@ export function createSootSprites(o: Options) {
           }
         } else {
           s.nextIdle -= step;
-          const away = Math.hypot(s.homeX - s.x, s.homeZ - s.z);
-          if (s.fear < .05 && away > .08 && s.nextIdle < 0) {
+          const homeX = sheltering ? s.shelterX : s.homeX, homeZ = sheltering ? s.shelterZ : s.homeZ;
+          const away = Math.hypot(homeX - s.x, homeZ - s.z);
+          if (s.fear < .05 && away > .06 && s.nextIdle < 0) {
             const k = Math.min(1, .3 / away);
-            hop(s, s.x + (s.homeX - s.x) * k, s.z + (s.homeZ - s.z) * k, .06, .22);
-            s.nextIdle = .25 + random() * .5;
-          } else if (s.nextIdle < 0) {
+            hop(s, s.x + (homeX - s.x) * k, s.z + (homeZ - s.z) * k, .06, .22);
+            s.nextIdle = .2 + random() * .45;
+          } else if (s.nextIdle < 0 && !sheltering) {
             hop(s, s.x + (random() - .5) * .16, s.z + (random() - .5) * .16, .045 + random() * .05, .18);
             s.nextIdle = 2.5 + random() * 6;
           }
