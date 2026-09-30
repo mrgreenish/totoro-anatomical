@@ -1,13 +1,13 @@
 {
   "passed": true,
-  "sha256": "5f4f933e6955149b63a42399df196597d698eea8d3ad98fcbbabf0e8b3f439ea",
-  "compressedBytes": 4844876,
-  "triangles": 324967,
+  "sha256": "135b22bbaea4a1e961e3db6817eb0e138812cef192b2b51561c819f34d0615ea",
+  "compressedBytes": 3287412,
+  "triangles": 229227,
   "meshDraws": 57,
   "bounds": [
-    3.921605348587036,
-    5.001012467353193,
-    2.974703693356564
+    3.9686890202005656,
+    4.989097737281171,
+    3.1484030975419075
   ],
   "requiredParts": [
     "Body",
@@ -157,9 +157,9 @@
     {
       "side": "L",
       "dimensions": [
-        0.8070843245441992,
-        0.6032137531038165,
-        1.3704283672154438
+        0.8035726138338104,
+        0.6168758620076248,
+        1.362582220393468
       ],
       "soleHeight": 0.024351514370592242,
       "attachedClaws": true
@@ -167,9 +167,9 @@
     {
       "side": "R",
       "dimensions": [
-        0.8001981746485742,
-        0.6113636410613333,
-        1.3709939556897175
+        0.7990252943763211,
+        0.6229864700337276,
+        1.3585948484719288
       ],
       "soleHeight": 0.024351514370592242,
       "attachedClaws": true
@@ -195,7 +195,7 @@
       "eyeVolumePreserved": true
     }
   ],
-  "fiberTriangles": 224859,
+  "fiberTriangles": 129119,
   "parts": [
     {
       "name": "Body",
@@ -225,7 +225,7 @@
     {
       "name": "Foot_L_fibers",
       "parent": "Foot_L",
-      "triangles": 2763
+      "triangles": 1800
     },
     {
       "name": "Toe_L_claws",
@@ -250,7 +250,7 @@
     {
       "name": "Foot_R_fibers",
       "parent": "Foot_R",
-      "triangles": 2883
+      "triangles": 1803
     },
     {
       "name": "Toe_R_claws",
@@ -435,22 +435,22 @@
     {
       "name": "Fine_grey_fibers",
       "parent": "Scene",
-      "triangles": 119505
-    },
-    {
-      "name": "Fine_ivory_fibers",
-      "parent": "Scene",
-      "triangles": 20319
-    },
-    {
-      "name": "Chevron_fibers",
-      "parent": "Scene",
-      "triangles": 1527
+      "triangles": 68826
     },
     {
       "name": "Face_fibers",
       "parent": "Scene",
-      "triangles": 15162
+      "triangles": 6921
+    },
+    {
+      "name": "Fine_ivory_fibers",
+      "parent": "Scene",
+      "triangles": 13063
+    },
+    {
+      "name": "Chevron_fibers",
+      "parent": "Scene",
+      "triangles": 943
     },
     {
       "name": "Cheek_fur_tufts",
@@ -460,27 +460,27 @@
     {
       "name": "Arm_L_fibers",
       "parent": "Scene",
-      "triangles": 20400
+      "triangles": 9719
     },
     {
       "name": "Arm_R_fibers",
       "parent": "Scene",
-      "triangles": 20400
+      "triangles": 9719
     },
     {
       "name": "Ear_L_fibers",
       "parent": "Scene",
-      "triangles": 4200
+      "triangles": 3141
     },
     {
       "name": "Ear_R_fibers",
       "parent": "Scene",
-      "triangles": 4200
+      "triangles": 3132
     },
     {
       "name": "Tail_fibers",
       "parent": "Scene",
-      "triangles": 13500
+      "triangles": 10052
     }
   ],
   "scope": "Compressed glTF decoding, finite geometry, skin weights and deformed attachments, eyelid occlusion, breathing, planted paws, exposed curved teeth and initial camera framing. Browser checks are recorded separately."

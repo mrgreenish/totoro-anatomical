@@ -14,134 +14,134 @@
     {
       "pose": "rest",
       "surface": "Body",
-      "samples": 752,
-      "maxRootDistance": 0.0033648263197392225
+      "samples": 409,
+      "maxRootDistance": 0.003364865668118
     },
     {
       "pose": "rest",
       "surface": "Body",
-      "samples": 96,
-      "maxRootDistance": 0.003088166005909443
+      "samples": 42,
+      "maxRootDistance": 0.0030186467338353395
     },
     {
       "pose": "rest",
       "surface": "Cream belly",
-      "samples": 128,
-      "maxRootDistance": 0.002813408151268959
+      "samples": 78,
+      "maxRootDistance": 0.003253774717450142
     },
     {
       "pose": "rest",
       "surface": "Belly chevrons",
-      "samples": 10,
-      "maxRootDistance": 0.002026886446401477
+      "samples": 6,
+      "maxRootDistance": 0.0019289380870759487
     },
     {
       "pose": "rest",
       "surface": "Arm_L",
-      "samples": 129,
-      "maxRootDistance": 0.0010001184418797493
+      "samples": 59,
+      "maxRootDistance": 0.002112464513629675
     },
     {
       "pose": "rest",
       "surface": "Arm_R",
-      "samples": 129,
-      "maxRootDistance": 0.0010001019109040499
+      "samples": 59,
+      "maxRootDistance": 0.0020000601653009653
     },
     {
       "pose": "rest",
       "surface": "Ear_L",
-      "samples": 27,
-      "maxRootDistance": 0.000999982818029821
+      "samples": 19,
+      "maxRootDistance": 0.002004543086513877
     },
     {
       "pose": "rest",
       "surface": "Ear_R",
-      "samples": 27,
-      "maxRootDistance": 0.0010000126203522086
+      "samples": 19,
+      "maxRootDistance": 0.0020092837512493134
     },
     {
       "pose": "rest",
       "surface": "Tail",
-      "samples": 85,
-      "maxRootDistance": 0.0010000035399571061
+      "samples": 61,
+      "maxRootDistance": 0.0020898061338812113
     },
     {
       "pose": "rest",
       "surface": "Foot_L",
-      "samples": 18,
-      "maxRootDistance": 0.0010000234469771385
+      "samples": 12,
+      "maxRootDistance": 0.0020620403811335564
     },
     {
       "pose": "rest",
       "surface": "Foot_R",
-      "samples": 19,
-      "maxRootDistance": 0.0009999533649533987
+      "samples": 12,
+      "maxRootDistance": 0.0019854202400892973
     },
     {
       "pose": "motion",
       "surface": "Body",
-      "samples": 752,
-      "maxRootDistance": 0.003355790628120303
+      "samples": 409,
+      "maxRootDistance": 0.0033761337399482727
     },
     {
       "pose": "motion",
       "surface": "Body",
-      "samples": 96,
-      "maxRootDistance": 0.003088166005909443
+      "samples": 42,
+      "maxRootDistance": 0.0030186467338353395
     },
     {
       "pose": "motion",
       "surface": "Cream belly",
-      "samples": 128,
-      "maxRootDistance": 0.0028457222506403923
+      "samples": 78,
+      "maxRootDistance": 0.0032314988784492016
     },
     {
       "pose": "motion",
       "surface": "Belly chevrons",
-      "samples": 10,
-      "maxRootDistance": 0.002057513454928994
+      "samples": 6,
+      "maxRootDistance": 0.0019457335583865643
     },
     {
       "pose": "motion",
       "surface": "Arm_L",
-      "samples": 129,
-      "maxRootDistance": 0.0011138777481392026
+      "samples": 59,
+      "maxRootDistance": 0.002112381625920534
     },
     {
       "pose": "motion",
       "surface": "Arm_R",
-      "samples": 129,
-      "maxRootDistance": 0.0010972123127430677
+      "samples": 59,
+      "maxRootDistance": 0.0020609418861567974
     },
     {
       "pose": "motion",
       "surface": "Ear_L",
-      "samples": 27,
-      "maxRootDistance": 0.0011876766802743077
+      "samples": 19,
+      "maxRootDistance": 0.0020000541117042303
     },
     {
       "pose": "motion",
       "surface": "Ear_R",
-      "samples": 27,
-      "maxRootDistance": 0.0011737619061022997
+      "samples": 19,
+      "maxRootDistance": 0.0020999142434448004
     },
     {
       "pose": "motion",
       "surface": "Tail",
-      "samples": 85,
-      "maxRootDistance": 0.0013295294484123588
+      "samples": 61,
+      "maxRootDistance": 0.003007045015692711
     },
     {
       "pose": "motion",
       "surface": "Foot_L",
-      "samples": 18,
-      "maxRootDistance": 0.0010000234469771385
+      "samples": 12,
+      "maxRootDistance": 0.0020620403811335564
     },
     {
       "pose": "motion",
       "surface": "Foot_R",
-      "samples": 19,
-      "maxRootDistance": 0.0009999533649533987
+      "samples": 12,
+      "maxRootDistance": 0.0019854202400892973
     }
   ]
 }

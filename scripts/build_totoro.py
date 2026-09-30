@@ -11,7 +11,6 @@ import os
 from bisect import bisect_left
 from pathlib import Path
 from mathutils import Vector
-from mathutils.noise import noise_vector
 
 random.seed(24)
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,6 +22,25 @@ bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.delete(use_global=False)
 for data in list(bpy.data.materials):
     bpy.data.materials.remove(data)
+
+# Deterministic value noise. Blender's own noise functions are not reproducible run to run.
+def lattice(i,j,k,salt):
+    # Integer hash to [-1, 1]; pure arithmetic, so the groom is identical on every run.
+    h=(i*374761393+j*668265263+k*2147483629+salt*1274126177)&0xffffffff
+    h=((h^(h>>13))*1274126177)&0xffffffff
+    return ((h^(h>>16))&0xffff)/32767.5-1
+
+def swirl(p,salt=0):
+    """Smooth vector noise for cowlicks and whorls in the flow field."""
+    x,y,z=p.x,p.y,p.z;i,j,k=math.floor(x),math.floor(y),math.floor(z)
+    fx,fy,fz=[t*t*(3-2*t) for t in (x-i,y-j,z-k)]
+    out=[]
+    for axis in range(3):
+        c=[lattice(i+a,j+b,k+d,salt*3+axis) for a in (0,1) for b in (0,1) for d in (0,1)]
+        x0=[c[0]*(1-fz)+c[1]*fz,c[2]*(1-fz)+c[3]*fz,c[4]*(1-fz)+c[5]*fz,c[6]*(1-fz)+c[7]*fz]
+        y0=[x0[0]*(1-fy)+x0[1]*fy,x0[2]*(1-fy)+x0[3]*fy]
+        out.append(y0[0]*(1-fx)+y0[1]*fx)
+    return Vector(out)
 
 def material(name, color, roughness=.8, sheen=0, noise=False):
     mat = bpy.data.materials.new(name)
@@ -173,7 +191,7 @@ for j in range(RINGS+1):
     theta = .002 + (math.pi-.004)*j/RINGS
     for i in range(SEGMENTS):
         p, n = body_point(theta, 2*math.pi*i/SEGMENTS)
-        p += n * noise_vector(p*23).x * .0015
+        p += n * swirl(p*23).x * .0015
         verts.append(tuple(p))
 for j in range(RINGS):
     for i in range(SEGMENTS):
@@ -246,8 +264,9 @@ def ear(side):
 ear(-1); ear(1)
 
 def attach(ob,parent):
-    bpy.context.view_layer.update()
-    ob.parent=parent; ob.matrix_parent_inverse=parent.matrix_world.inverted()
+    # Parents here are unparented, so their own transform is their world transform.
+    # matrix_world can be stale right after rotation_euler is set (the tail).
+    ob.parent=parent; ob.matrix_parent_inverse=parent.matrix_basis.inverted()
     return ob
 
 def paw(side, label):
@@ -477,60 +496,229 @@ bpy.context.view_layer.update()
 for ob in leaf_parts:
     ob.parent=leaf_rig;ob.matrix_parent_inverse=leaf_rig.matrix_world.inverted()
 
-# Groomed, bent ribbons give the coat real depth and a soft silhouette. Each
-# strand is three triangles with authored surface normals and root-to-tip color.
-# Opaque geometry avoids layers of alpha overdraw in the real-time renderer.
-fiber_materials={}
-def fibers(name, points, mat, length_scale=1):
-    verts,faces,normals,colors=[],[],[],[]
-    for p,n in points:
-        guard=random.random()<.08
-        length=random.uniform(.056,.074) if guard else random.uniform(.025,.043)
-        length*=length_scale
-        # Coherent local clumps, with a gentle outward sweep around the cheeks.
+# Coat. Three layers of opaque, tapered ribbons share each part's fiber mesh:
+#   undercoat  short, fine fuzz that softens the outline
+#   locks      medium ribbons grouped into clumps whose tips converge, so the
+#              coat reads as combed locks with darker partings between them
+#   wisps      sparse long guard hairs that stand off the surface and break the
+#              silhouette
+# Roots are sampled by surface area and every layer follows one smooth flow
+# field. Strands keep authored surface normals and root-to-tip color, so they
+# shade like the skin beneath them. Opaque geometry avoids alpha overdraw in the
+# real-time renderer, and roots are embedded so no cut edge shows.
+from mathutils.kdtree import KDTree
+
+def smoothstep(a,b,x):
+    t=min(1,max(0,(x-a)/(b-a)));return t*t*(3-2*t)
+
+def rng_for(*key):
+    # Named streams keep each part's groom stable while other parts are tuned.
+    return random.Random('|'.join(str(k) for k in key))
+
+def turn(v,n,angle):
+    return v*math.cos(angle)+n.cross(v)*math.sin(angle)
+
+# Layer recipe. length and width are (min, max) in model units, lift is the
+# (root, tip) angle above the surface in radians, tone is the (root, middle,
+# tip) brightness of the ribbon and taper the width remaining at its last pair.
+LAYERS={
+    'under':dict(segments=2,length=(.024,.044),width=(.0024,.0036),lift=(.80,.15),tone=(.66,.92,1.03),taper=.48,embed=0),
+    'locks':dict(segments=2,length=(.050,.088),width=(.0055,.0095),lift=(1.05,.30),tone=(.58,.95,1.10),taper=.60,embed=.003),
+    'wisps':dict(segments=3,length=(.100,.190),width=(.0020,.0032),lift=(1.30,.70),tone=(.78,1.03,1.18),taper=.60,embed=.003),
+}
+# Strands per unit of surface area for each layer: undercoat, locks, wisps.
+DENSITY={'torso':(440,420,85),'arm':(420,400,60),'tail':(360,330,55),'ear':(560,380,60),'foot':(260,170,0)}
+CLUMP=5  # average strands per lock
+
+def coat_flow(p,n,kind):
+    if kind=='tail':d=Vector((p.x*.25,1,-.25))
+    elif kind=='ear':d=Vector((p.x*.08,.12,1))
+    else:
         sweep=.24*math.sin(p.x*2.3+p.z*1.8)
-        if 'Face' in name:sweep+=p.x*.5
-        down=Vector((sweep,.10*math.sin(p.x*3+p.y*2),-1))
-        if 'Tail' in name:down=Vector((p.x*.25,1,-.25))
-        if 'Ear' in name:down=Vector((p.x*.08,.12,1))
-        flow=down-n*down.dot(n)
-        if flow.length<.04: flow=Vector((0,-1,0))+n*n.y
-        flow.normalize()
-        across=n.cross(flow).normalized()
-        flow=(flow+across*random.uniform(-.20,.20)).normalized()
-        # A broad distribution of ribbon orientation reads as hairs at any orbit.
-        angle=random.uniform(-1.2,1.2)
-        width_axis=(across*math.cos(angle)+n*math.sin(angle)).normalized()
-        width=random.uniform(.00065,.00125)*(1.0 if guard else 1.10)
-        middle=p+n*length*.35+flow*length*.35
-        tip=p+n*length*.43+flow*length*.90
-        a=len(verts)
-        verts.extend([tuple(p-width_axis*width),tuple(p+width_axis*width),
-                      tuple(middle-width_axis*width*.48),tuple(middle+width_axis*width*.48),tuple(tip)])
-        faces.extend([(a,a+1,a+2),(a+1,a+3,a+2),(a+2,a+3,a+4)])
-        variation=random.uniform(.96,1.04)
-        base=list(mat.diffuse_color[:3])
-        if mat==belly:
-            bz=(p.z-1.62)/1.155
-            r=math.sqrt((p.x/(1.205*(1-.065*bz)))**2+bz*bz)
-            t=min(1,max(0,(r-.945)/.055));t=t*t*(3-2*t)
-            base=[base[k]*(1-t)+fur.diffuse_color[k]*t for k in range(3)]
-        for factor in [.94,.94,.98,.98,1.01]:
-            colors.append(tuple(channel*variation*factor for channel in base)+(1,))
-        normals.extend([tuple(n)]*5)
-    if mat.name not in fiber_materials:
-        fiber_material=mat.copy();fiber_material.name=mat.name+' fibers'
-        tint=fiber_material.node_tree.nodes.new('ShaderNodeVertexColor');tint.name='Coat tint';tint.layer_name='Coat tint'
-        fiber_material.node_tree.links.new(tint.outputs['Color'],fiber_material.node_tree.nodes.get('Principled BSDF').inputs['Base Color'])
-        fiber_materials[mat.name]=fiber_material
-    fiber_material=fiber_materials[mat.name]
-    ob=mesh_object(name,verts,faces,fiber_material)
-    ob.visible_shadow=False
-    ob.data.normals_split_custom_set_from_vertices(normals)
-    color=ob.data.color_attributes.new(name='Coat tint',type='FLOAT_COLOR',domain='POINT')
-    for item,value in zip(color.data,colors): item.color=value
-    # Guide roots and directions stay editable as named attributes on the mesh.
-    return ob
+        if kind=='torso' and p.y<0:
+            if p.z>2.70:sweep+=p.x*.5           # cheeks sweep outward
+            elif p.z>.4:sweep+=p.x*.22          # chest and belly fan out
+        d=Vector((sweep,.10*math.sin(p.x*3+p.y*2),-1))
+    d+=swirl(p*1.7)*.30                         # slow swirls and cowlicks
+    f=d-n*d.dot(n)
+    if f.length<.04:f=Vector((0,-1,0))+n*n.y
+    return f.normalized()
+
+def face_clearance(p):
+    # Distance to the mouth, eyes and nose: fur near them must stay short.
+    if p.y>=0 or p.z<2.70:return 9
+    bottom,top=smile_bounds(p.x)
+    d=[math.hypot(max(abs(p.x)-1.015,0),max(bottom-p.z,p.z-top,0))]
+    for side in [-1,1]:d.append(math.hypot(p.x-side*.65,p.z-3.55)-.17)
+    d.append(math.hypot(max(abs(p.x)-.30,0),max(3.33-p.z,p.z-3.51,0)))
+    return min(d)
+
+def part_scale(p,kind,group):
+    # Returns (length scale, cap on the final length, whether the coat is allowed to stand up).
+    cap=.22;tall=True;s=1.0
+    if kind=='torso':
+        s+=.55*math.exp(-((abs(p.x)-1.12)/.30)**2-((p.z-3.0)/.55)**2)   # cheek ruff
+        s+=.25*math.exp(-((p.z-2.62)/.35)**2)                            # collar under the chin
+        s+=.15*math.exp(-((p.z-1.2)/.5)**2)                              # haunches
+        s*=.55+.45*smoothstep(.3,1.1,p.z)                                 # short at the plinth
+        if p.y<0 and p.z>2.78:s*=.38+.62*smoothstep(.95,1.28,abs(p.x))   # short face keeps the grin crisp
+        if p.z>3.80 and abs(p.x)<.85 and abs(p.y+.08)<.56:s*=.3;tall=False  # under the leaf
+        if group=='belly':s*=.6;cap=.07
+        if group=='mark':s*=.6;cap=.04
+        clear=face_clearance(p)
+        cap=min(cap,max(.015,.9*(clear-.02)))
+    elif kind=='arm':s=.5+.5*smoothstep(1.25,1.70,p.z)     # claws stay clear
+    elif kind=='tail':s=1.3
+    elif kind=='ear':s=.85;cap=.12
+    elif kind=='foot':s=.7*(.5 if p.y<-.8 else 1);cap=.06
+    return s,cap,tall
+
+def base_color(mat,p):
+    base=list(mat.diffuse_color[:3])
+    if mat==belly:
+        bz=(p.z-1.62)/1.155
+        r=math.sqrt((p.x/(1.205*(1-.065*bz)))**2+bz*bz)
+        t=smoothstep(.945,1.0,r)
+        base=[base[k]*(1-t)+fur.diffuse_color[k]*t for k in range(3)]
+    return base
+
+fiber_materials={}
+class Coat:
+    """Accumulates strands for one output mesh."""
+    def __init__(self,name,mat):
+        self.name,self.mat=name,mat
+        self.verts,self.faces,self.normals,self.colors=[],[],[],[]
+
+    def add(self,layer,root,n,pts,axis,width,tone):
+        cfg=LAYERS[layer];segments=cfg['segments'];a=len(self.verts)
+        base=base_color(self.mat,root)
+        t0,t1,t2=cfg['tone']
+        if self.mat==belly:t0,t2=max(t0,.72),min(t2,1.07)
+        def factor(s):return t0+(t1-t0)*min(1,s/.5)+(t2-t1)*max(0,(s-.5)/.5)
+        line=[root]+pts
+        for k in range(segments):
+            s=k/segments
+            half=width*.5*(1-(1-cfg['taper'])*(k/max(1,segments-1)))
+            for sign in [-1,1]:
+                self.verts.append(tuple(line[k]+axis*half*sign))
+                self.colors.append(tuple(c*tone*factor(s) for c in base)+(1,))
+        self.verts.append(tuple(line[-1]))
+        self.colors.append(tuple(c*tone*factor(1) for c in base)+(1,))
+        for k in range(segments-1):
+            i=a+2*k;self.faces.extend([(i,i+1,i+2),(i+1,i+3,i+2)])
+        i=a+2*(segments-1);self.faces.append((i,i+1,a+2*segments))
+        self.normals.extend([tuple(n)]*(2*segments+1))
+
+    def build(self):
+        if self.mat.name not in fiber_materials:
+            fm=self.mat.copy();fm.name=self.mat.name+' fibers'
+            tint=fm.node_tree.nodes.new('ShaderNodeVertexColor');tint.name='Coat tint';tint.layer_name='Coat tint'
+            fm.node_tree.links.new(tint.outputs['Color'],fm.node_tree.nodes.get('Principled BSDF').inputs['Base Color'])
+            fiber_materials[self.mat.name]=fm
+        ob=mesh_object(self.name,self.verts,self.faces,fiber_materials[self.mat.name])
+        ob.visible_shadow=False
+        ob.data.normals_split_custom_set_from_vertices(self.normals)
+        color=ob.data.color_attributes.new(name='Coat tint',type='FLOAT_COLOR',domain='POINT')
+        for item,value in zip(color.data,self.colors):item.color=value
+        return ob
+
+def strand_curve(p,n,f,across,length,lift0,lift1,curl,segments):
+    pts=[];pos=p.copy()
+    for k in range(segments):
+        s=(k+.5)/segments
+        beta=lift0+(lift1-lift0)*s**.8
+        d=(f*math.cos(beta)+n*math.sin(beta)+across*curl*s).normalized()
+        pos=pos+d*(length/segments);pts.append(pos)
+    return pts
+
+def new_lock(p,n,kind,rng,layer):
+    f=coat_flow(p,n,kind)
+    spread={'under':.45,'locks':.34,'wisps':.55}[layer]
+    return dict(p=p.copy(),n=n.copy(),f=turn(f,n,rng.gauss(0,spread)),len=rng.uniform(.8,1.3),
+                lift=rng.uniform(.85,1.2),tone=rng.gauss(1,.07 if layer=='locks' else .04),
+                curl=rng.uniform(-.35,.35)*(1.7 if layer=='wisps' else 1),pull=rng.uniform(.45,.75))
+
+def lay_strand(coat,layer,p,n,lock,kind,group,rng,guide=None):
+    cfg=LAYERS[layer]
+    scale,cap,tall=part_scale(p,kind,group)
+    if not tall and layer!='under':return
+    f=lock['f']-n*lock['f'].dot(n)
+    f=f.normalized() if f.length>.05 else coat_flow(p,n,kind)
+    jitter=guide is not None or layer!='locks'
+    if jitter:f=turn(f,n,rng.gauss(0,.16 if layer=='locks' else .12))
+    across=n.cross(f).normalized()
+    length=min(cap,rng.uniform(*cfg['length'])*lock['len']*scale*rng.uniform(.88,1.12))
+    lift=lock['lift'] if tall else .5
+    pts=strand_curve(p,n,f,across,length,cfg['lift'][0]*lift,cfg['lift'][1]*lift,lock['curl'],cfg['segments'])
+    if guide is not None and guide['pts'] is not None:
+        # Pull the middle and tip toward the lock's own guide strand.
+        offset=p-guide['p']
+        for k in range(cfg['segments']):
+            last=k==cfg['segments']-1
+            target=guide['pts'][k]+offset*(.30 if last else .65)
+            amount=lock['pull']*(1 if last else .6)
+            pts[k]=pts[k]*(1-amount)+target*amount
+    root=p-n*cfg['embed']
+    angle=max(-1.3,min(1.3,rng.gauss(0,.7)))
+    axis=(across*math.cos(angle)+n*math.sin(angle)).normalized()
+    width=rng.uniform(*cfg['width'])*(.6+.4*min(1,scale))
+    tone=lock['tone']*rng.gauss(1,.03)*(.94+.12*(.5+.5*math.sin(p.x*5.1+p.z*4.3+p.y*3.7)))
+    coat.add(layer,root,n,pts,axis,width,tone)
+
+def surface_samples(ob,count,rng,kind):
+    # Sample triangles by surface area, using barycentric interpolated normals.
+    # These parts are unparented, so their own transform is their world transform.
+    # matrix_world is evaluated lazily and can still be stale here, which would
+    # sample the fur from an unrotated tail.
+    assert ob.parent is None
+    world=ob.matrix_basis.copy()
+    # Fan-triangulate canonical polygons in a fixed order. Blender's loop triangles,
+    # polygon order and each polygon's first corner can change from run to run.
+    vertices=ob.data.vertices;triangles=[];cumulative=[];area=0
+    rings=[]
+    for poly in ob.data.polygons:
+        ring=list(poly.vertices);start=ring.index(min(ring))
+        rings.append(ring[start:]+ring[:start])
+    for ring in sorted(rings):
+        for k in range(1,len(ring)-1):
+            tri=(ring[0],ring[k],ring[k+1]);triangles.append(tri)
+            area+=(vertices[tri[1]].co-vertices[tri[0]].co).cross(vertices[tri[2]].co-vertices[tri[0]].co).length/2
+            cumulative.append(area)
+    # Vertex normals from the same triangles: the cached ones go stale after vertices are edited.
+    normals=[Vector((0,0,0)) for _ in vertices]
+    for tri in triangles:
+        face=(vertices[tri[1]].co-vertices[tri[0]].co).cross(vertices[tri[2]].co-vertices[tri[0]].co)
+        for k in tri:normals[k]+=face
+    samples=[]
+    for _ in range(count):
+        tri=triangles[min(len(triangles)-1,bisect_left(cumulative,rng.random()*area))]
+        a,b,c=[vertices[k] for k in tri]
+        u,v=rng.random(),rng.random()
+        if u+v>1:u,v=1-u,1-v
+        p=world@(a.co*(1-u-v)+b.co*u+c.co*v)
+        n=(world.to_3x3()@(normals[tri[0]].normalized()*(1-u-v)+normals[tri[1]].normalized()*u+normals[tri[2]].normalized()*v)).normalized()
+        if kind=='foot' and (p.z<.07 or n.z<-.25):continue
+        samples.append((p+n*.001,n,'all'))
+    return samples
+
+def body_frame(theta,phi,displacement=0):
+    p=body_surface(theta,phi)
+    dt=body_surface(theta+.0001,phi)-body_surface(theta-.0001,phi)
+    dp=body_surface(theta,phi+.0001)-body_surface(theta,phi-.0001)
+    c=dt.cross(dp);n=c.normalized()
+    return p+n*displacement,n,c.length/4e-8
+
+_scan=[body_frame(math.acos(c/20),2*math.pi*j/48)[2]/math.sin(math.acos(c/20)) for c in range(-19,20) for j in range(48)]
+AREA_MAX=max(_scan)*1.05
+
+def torso_samples(count,rng):
+    # Uniform in cos(theta) and phi is denser at the head; accept by area element.
+    out=[]
+    while len(out)<count:
+        theta=math.acos(rng.uniform(-.99,.99));phi=rng.random()*2*math.pi
+        p,n,a=body_frame(theta,phi,.002)
+        if rng.random()*AREA_MAX<a/math.sin(theta):out.append((p,n))
+    return out
 
 def inside_polygon(x,z,polygon):
     inside=False
@@ -539,10 +727,7 @@ def inside_polygon(x,z,polygon):
         if (az>z)!=(bz>z) and x<(bx-ax)*(z-az)/(bz-az)+ax: inside=not inside
     return inside
 
-grey_points=[];cream_points=[];mark_points=[];face_points=[]
-for _ in range(54000):
-    theta=math.acos(random.uniform(-.99,.99));phi=random.random()*2*math.pi
-    p,n=body_point(theta,phi,.002)
+def torso_group(p):
     belly_z=(p.z-1.62)/1.155
     is_belly=(p.y<0 and (p.x/(1.205*(1-.065*belly_z)))**2+belly_z**2<1)
     if p.y<0 and p.z>2.78 and abs(p.x)<1.10:
@@ -550,55 +735,95 @@ for _ in range(54000):
         nose=abs(p.x)<.32 and 3.33<p.z<3.51
         bottom,top=smile_bounds(p.x)
         mouth=abs(p.x)<1.025 and bottom-.035<p.z<top+.045
-        if not (eyes or nose or mouth):face_points.append((p,n))
-    elif is_belly:
+        return None if (eyes or nose or mouth) else 'face'
+    if is_belly:
         marked=any(inside_polygon(p.x,p.z,polygon) for polygon in chevron_outlines)
         r=math.sqrt((p.x/(1.205*(1-.065*belly_z)))**2+belly_z**2)
         offset=.010*(1-min(1,max(0,(r-.95)/.05)))+.003
         p.y=front(p.x,p.z,.015 if marked else offset)
-        (mark_points if marked else cream_points).append((p,n))
-    else: grey_points.append((p,n))
-fibers('Fine grey fibers',grey_points,fur,1.05)
-fibers('Fine ivory fibers',cream_points,belly,.84)
-fibers('Chevron fibers',mark_points,markings,.60)
-fibers('Face fibers',face_points,fur,.38)
+        return 'mark' if marked else 'belly'
+    return 'grey'
+
+def lay_layer(kind,layer,samples,coats,rng):
+    """Lay one layer over (p, n, group) samples. Locks are clumped around random guides."""
+    if not samples:return
+    if layer=='locks':
+        guides=[i for i in range(len(samples)) if rng.random()<1/CLUMP] or [0]
+        tree=KDTree(len(guides))
+        for j,i in enumerate(guides):tree.insert(samples[i][0],j)
+        tree.balance()
+        radius=math.sqrt(CLUMP/(math.pi*max(1,len(samples)/max(1e-6,sample_area[kind]))))
+        records=[]
+        for i in guides:
+            p,n,group=samples[i];lock=new_lock(p,n,kind,rng,layer)
+            scale,cap,tall=part_scale(p,kind,group)
+            guide=dict(p=p,pts=None)
+            # The guide's own strand defines where the clump converges.
+            f=lock['f']-n*lock['f'].dot(n);f=f.normalized() if f.length>.05 else coat_flow(p,n,kind)
+            across=n.cross(f).normalized()
+            cfg=LAYERS['locks']
+            length=min(cap,sum(cfg['length'])/2*lock['len']*scale)
+            guide['pts']=strand_curve(p,n,f,across,length,cfg['lift'][0]*lock['lift'],cfg['lift'][1]*lock['lift'],lock['curl'],cfg['segments'])
+            records.append((lock,guide))
+        for p,n,group in samples:
+            co,j,dist=tree.find(p)
+            if dist>2.5*radius:
+                lock=new_lock(p,n,kind,rng,layer);guide=None
+            else:lock,guide=records[j]
+            lay_strand(coats[group],layer,p,n,lock,kind,group,rng,guide)
+    else:
+        for p,n,group in samples:
+            lay_strand(coats[group],layer,p,n,new_lock(p,n,kind,rng,layer),kind,group,rng)
+
+sample_area={}
+def coat_part(kind,label,area,roots,coats):
+    """roots: function(count, rng) -> list of (p, n, group)."""
+    sample_area[kind]=area
+    for layer,per_area in zip(['under','locks','wisps'],DENSITY[kind]):
+        count=int(per_area*area)
+        if count<=0:continue
+        rng=rng_for('coat',label,layer)
+        lay_layer(kind,layer,roots(count,rng),coats,rng)
+
+# Torso: grey coat, short face fur, ivory belly and the seven dark chevrons.
+torso_coats={'grey':Coat('Fine grey fibers',fur),'face':Coat('Face fibers',fur),
+             'belly':Coat('Fine ivory fibers',belly),'mark':Coat('Chevron fibers',markings)}
+def torso_roots(count,rng):
+    out=[]
+    for p,n in torso_samples(count,rng):
+        group=torso_group(p)
+        if group:out.append((p,n,group))
+    return out
+# Area of the analytic surface, not the noisy Body mesh, so strand counts never change.
+body_area=sum(body_frame(math.pi*(j+.5)/120,2*math.pi*(i+.5)/160)[2]*(math.pi/120)*(2*math.pi/160) for j in range(120) for i in range(160))
+coat_part('torso','torso',body_area,torso_roots,torso_coats)
+for coat in torso_coats.values():coat.build()
 
 # Larger tapered locks interrupt the outline at cheeks and shoulders. Roots sit
 # inside the body; the locks point with the fur flow instead of radiating spikes.
+tuft_rng=rng_for('coat','cheek tufts')
 tuft_verts,tuft_faces=[],[]
 for side in [-1,1]:
     for k in range(18):
         z=2.77+k*.050
         theta=math.acos((z-2.11)/1.955)
-        phi=(-.28 if side>0 else math.pi+.28)+random.uniform(-.12,.12)
+        phi=(-.28 if side>0 else math.pi+.28)+tuft_rng.uniform(-.12,.12)
         p,n=body_point(theta,phi,-.020)
-        tangent=Vector((0,0,1));w=random.uniform(.018,.030)
-        tip=p+Vector((side*random.uniform(.040,.060),-.012,-.04))
+        tangent=Vector((0,0,1));w=tuft_rng.uniform(.018,.030)
+        tip=p+Vector((side*tuft_rng.uniform(.040,.060),-.012,-.04))
         a=len(tuft_verts)
         tuft_verts.extend([tuple(p-tangent*w),tuple(p+tangent*w),tuple(p+n*.023),tuple(tip)])
         tuft_faces.extend([(a,a+2,a+3),(a+2,a+1,a+3)])
 mesh_object('Cheek fur tufts',tuft_verts,tuft_faces,fur)
 
-# Sample triangles by surface area, using barycentric interpolated normals.
-# Uniform polygon sampling caused bare regions and clumps on the old appendages.
-for name in ['Arm_L','Arm_R','Ear_L','Ear_R','Tail','Foot_L','Foot_R']:
+# Appendages sample their own triangles, then follow the same recipe.
+for name,kind in [('Arm_L','arm'),('Arm_R','arm'),('Ear_L','ear'),('Ear_R','ear'),('Tail','tail'),('Foot_L','foot'),('Foot_R','foot')]:
     ob=bpy.data.objects[name];bpy.context.view_layer.update()
-    ob.data.calc_loop_triangles()
-    triangles=list(ob.data.loop_triangles);cumulative=[];area=0
-    for triangle in triangles:
-        area+=triangle.area;cumulative.append(area)
-    samples=[]
-    count=6800 if name.startswith('Arm') else 4500 if name=='Tail' else 1400 if name.startswith('Ear') else 1600
-    for _ in range(count):
-        tri=triangles[min(len(triangles)-1,bisect_left(cumulative,random.random()*area))]
-        a,b,c=[ob.data.vertices[k] for k in tri.vertices]
-        u,v=random.random(),random.random()
-        if u+v>1:u,v=1-u,1-v
-        p=ob.matrix_world@(a.co*(1-u-v)+b.co*u+c.co*v)
-        n=(ob.matrix_world.to_3x3()@(a.normal*(1-u-v)+b.normal*u+c.normal*v)).normalized()
-        if name.startswith('Foot') and (p.z<.07 or n.z<-.25):continue
-        samples.append((p+n*.001,n))
-    attach(fibers(name+' fibers',samples,fur,.75 if name.startswith('Foot') else 1.0),ob)
+    area=sum(poly.area for poly in ob.data.polygons)
+    coat=Coat(name+' fibers',fur)
+    coat_part(kind,name,area,lambda count,rng,ob=ob,kind=kind:surface_samples(ob,count,rng,kind),{'all':coat})
+    attach(coat.build(),ob)
+
 
 # Convert curves once; export only the sculpture, not the render stage.
 bpy.ops.object.select_all(action='DESELECT')

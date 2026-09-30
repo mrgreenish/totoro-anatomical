@@ -27,7 +27,14 @@ for pose in ['rest','motion']:
         evaluated=fiber.evaluated_get(deps);mesh=evaluated.to_mesh()
         tree=BVHTree.FromObject(surface,deps)
         distances=[]
-        for index in range(0,len(mesh.vertices)-4,5*53):
+        # Every 53rd strand. Strands are runs of consecutive vertices and polygons whose
+        # first two vertices form the root pair, whatever their segment count.
+        starts=[];top=-1
+        for poly in mesh.polygons:
+            low=min(poly.vertices)
+            if low>top:starts.append(low)
+            top=max(top,max(poly.vertices))
+        for index in starts[::53]:
             world=evaluated.matrix_world@((mesh.vertices[index].co+mesh.vertices[index+1].co)/2)
             local=surface.matrix_world.inverted()@world
             hit=tree.find_nearest(local)
