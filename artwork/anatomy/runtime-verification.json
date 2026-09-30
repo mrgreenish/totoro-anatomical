@@ -1,9 +1,10 @@
 {
   "passed": true,
-  "assertions": 119,
+  "assertions": 139,
   "coverage": [
     "cut coordinates and reverse",
     "conservative split culling",
+    "nested brain section depth and layering on all axes",
     "system membership",
     "GLTF metadata loading",
     "visibility",

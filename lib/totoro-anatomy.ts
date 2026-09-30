@@ -129,6 +129,7 @@ export function createAnatomyExplorer(o: Options) {
   let selectedMaterials: THREE.MeshStandardMaterial[] = [];
   const parts: Part[] = [], caps: Cap[] = [];
   const capsByPart = new Map<Part, Cap[]>();
+  const brainSectionBounds = new THREE.Box3(), brainSectionBox = new THREE.Box3();
   const materials = new Set<THREE.Material>();
   const planes = [new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0)];
   const plane = planes[0], capRoot = new THREE.Group(); o.scene.add(capRoot);
@@ -468,7 +469,9 @@ export function createAnatomyExplorer(o: Options) {
       heartPart = parts.find(part => part.id === 'heart');
       model.updateMatrixWorld(true);
       let capIndex = 0;
-      for (const part of parts) for (const mesh of part.meshes) makeCaps(part, mesh, capIndex++);
+      // The inner white matter is a nested section: draw it over the cortex.
+      const capParts = [...parts].sort((a, b) => Number(a.id === 'brain_white_matter') - Number(b.id === 'brain_white_matter'));
+      for (const part of capParts) for (const mesh of part.meshes) makeCaps(part, mesh, capIndex++);
       capRoot.visible = false;
       state.parts = parts.map(({ id, label, systems, description, variant }) => ({ id, label, systems, description, variant }));
       state.status = 'ready';
@@ -571,7 +574,11 @@ export function createAnatomyExplorer(o: Options) {
     cap.cap.position.copy(plane.normal).multiplyScalar(-plane.constant);
     capNormal.copy(plane.normal).negate();
     cap.cap.quaternion.setFromUnitVectors(capForward, capNormal);
-    fitSectionCap(cap.cap, cap.box);
+    // Nested brain sections need identical quad vertices. Separately bounded
+    // coplanar triangles interpolate slightly different depths and flicker as
+    // the cut moves, even with renderOrder and a shared polygon offset.
+    const brainSection = cap.part.id === 'brain' || cap.part.id === 'brain_white_matter';
+    fitSectionCap(cap.cap, brainSection && !brainSectionBounds.isEmpty() ? brainSectionBounds : cap.box);
   }
   function updateMovingPart(part: Part) {
     shadowRevision++;
@@ -584,6 +591,13 @@ export function createAnatomyExplorer(o: Options) {
     for (const part of parts) part.node.position.copy(part.rest).addScaledVector(part.offset, expansion[part.phase]);
     o.exterior.position.set(COAT_OFFSET[0] * expansion[0], COAT_OFFSET[1] * expansion[0], COAT_OFFSET[2] * expansion[0]);
     model?.updateMatrixWorld(true); o.exterior.updateMatrixWorld(true);
+    brainSectionBounds.makeEmpty();
+    for (const part of parts) if (part.id === 'brain' || part.id === 'brain_white_matter') {
+      for (const mesh of part.meshes) {
+        brainSectionBox.copy(mesh.geometry.boundingBox!).applyMatrix4(mesh.matrixWorld);
+        brainSectionBounds.union(brainSectionBox);
+      }
+    }
     const split = state.mode === 'split';
     for (const cap of caps) updateCap(cap, split);
     capRoot.visible = state.mode === 'split'; dirty = false;

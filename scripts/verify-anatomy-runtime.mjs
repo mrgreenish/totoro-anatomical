@@ -33,8 +33,9 @@ globalThis.document={createElement:()=>new Element()};
 
 const doc=new Document();const buffer=doc.createBuffer();
 for(const [i,id,system,offset,variant] of [[0,'heart','organs',[1,0,2]],[1,'bone','bones',[0,0,0]],
-  [0,'male_part','reproductive',[.3,0,1],'male'],[0,'female_part','reproductive',[-.3,0,1],'female'],[1,'muscle','muscles',[2,0,0]]]){
-  const geometry=new THREE.BoxGeometry(.5,.8,.5);
+  [0,'male_part','reproductive',[.3,0,1],'male'],[0,'female_part','reproductive',[-.3,0,1],'female'],[1,'muscle','muscles',[2,0,0]],
+  [.5,'brain_white_matter','organs',[0,0,0]],[.5,'brain','organs',[0,0,0]]]){
+  const geometry=id==='brain'?new THREE.BoxGeometry(1.2,1.2,1.2):new THREE.BoxGeometry(.5,.8,.5);
   const pos=doc.createAccessor().setType('VEC3').setArray(geometry.attributes.position.array).setBuffer(buffer);
   const idx=doc.createAccessor().setType('SCALAR').setArray(geometry.index.array).setBuffer(buffer);
   const normal=doc.createAccessor().setType('VEC3').setArray(geometry.attributes.normal.array).setBuffer(buffer);
@@ -60,12 +61,12 @@ function fixture(){
 const f=fixture();
 await f.api.setMode('split');f.api.update(.1);
 check(f.api.active&&f.api.state.status==='ready','Anatomy loads and activates');
-check(f.api.state.parts.length===5,'Exported identities become selectable parts');
+check(f.api.state.parts.length===7,'Exported identities become selectable parts');
 check(f.api.state.variant==='male','Male is the initial anatomical variant');
 const plane=f.material.clippingPlanes[0];
 const stencilVolumes=[];
 f.scene.traverse(node=>{if(node.isMesh&&node.material.stencilWrite&&!node.material.colorWrite)stencilVolumes.push(node);});
-check(stencilVolumes.length===10,'Both stencil passes are present for each fixture mesh');
+check(stencilVolumes.length===14,'Both stencil passes are present for each fixture mesh');
 const clippedHeart=f.scene.getObjectByName('heart'),clippedBone=f.scene.getObjectByName('bone');
 check(clippedHeart.visible&&!clippedBone.visible,'Split culling skips a mesh wholly behind the retained half');
 f.api.setCut({axis:'x',flipped:true,position:.5});f.api.update(.016);
@@ -75,6 +76,27 @@ for(const axis of ['x','y','z']) for(const flipped of [false,true]) for(const po
   f.api.setCut({axis,flipped,position});f.api.update(.016);
   check(stencilVolumes.every(node=>node.material.clippingPlanes[0]===plane),
     `${axis}/${flipped}/${position}: section masks track the same live plane as the visible tissue`);
+}
+// Nested brain tissues have different bounds and are exported inner-first.
+// Their section quads must nevertheless produce exactly the same depth,
+// with the white matter consistently composited over the outer cortex.
+const sectionCaps=[];
+f.scene.traverse(node=>{if(node.isMesh&&node.material.userData.sectionCap)sectionCaps.push(node);});
+const capFor=id=>{
+ const source=f.scene.getObjectByName(id);
+ const back=stencilVolumes.find(node=>node.geometry===source.geometry&&node.material.side===THREE.BackSide);
+ return sectionCaps.find(node=>node.renderOrder===back.renderOrder+2);
+};
+const cortexCap=capFor('brain'),whiteCap=capFor('brain_white_matter');
+check(whiteCap.renderOrder>cortexCap.renderOrder,'Inner brain tissue renders after the cortex regardless of export order');
+check([cortexCap,whiteCap].every(cap=>cap.material.depthTest&&cap.material.depthWrite),'Section layering preserves foreground occlusion and depth writes');
+for(const axis of ['x','y','z']) for(const flipped of [false,true]) for(const offset of [-.1,0,.1]) {
+ const [lo,hi]=state.CUT_BOUNDS[axis],coordinate=(axis==='y'?2.5:0)+offset;
+ f.api.setCut({axis,flipped,position:(coordinate-lo)/(hi-lo)});f.api.update(.016);
+ check(cortexCap.visible&&whiteCap.visible&&
+   cortexCap.matrix.equals(whiteCap.matrix)&&
+   cortexCap.geometry.attributes.position.array.every((v,i)=>v===whiteCap.geometry.attributes.position.array[i]),
+   `${axis}/${flipped}/${offset}: overlapping brain sections have identical triangles and depth interpolation`);
 }
 f.api.setCut({axis:'x',flipped:false,position:.5});f.api.update(.016);
 check(plane.distanceToPoint(new THREE.Vector3(-1,2,0))>0,'Default cut retains negative X');
@@ -259,6 +281,6 @@ globalThis.window.matchMedia=()=>({matches:true});
 const still=fixture();await still.api.setMode('split');still.api.update(.13);
 check(still.scene.getObjectByName('heart').scale.equals(restScale),'Reduced motion leaves the heart at rest');still.api.dispose();
 
-const report={passed:true,assertions,coverage:['cut coordinates and reverse','conservative split culling','system membership','GLTF metadata loading','visibility','exact reassembly','selection','reset','keyboard handle','perspective slice alignment and pointer dragging on all axes','failed loading and retry','stale load cancellation','resource cleanup','desktop/mobile framing','heartbeat and section synchronization','pause and reduced motion','animated explosion','staged reveal phases','slider retarget continuity','camera interruption','mode cancellation','30/60/120 Hz reveal consistency'],scope:'Node integration with the real Three.js GLTF loader and a DOM event fixture. GPU rendering and browser layout are separate checks.'};
+const report={passed:true,assertions,coverage:['cut coordinates and reverse','conservative split culling','nested brain section depth and layering on all axes','system membership','GLTF metadata loading','visibility','exact reassembly','selection','reset','keyboard handle','perspective slice alignment and pointer dragging on all axes','failed loading and retry','stale load cancellation','resource cleanup','desktop/mobile framing','heartbeat and section synchronization','pause and reduced motion','animated explosion','staged reveal phases','slider retarget continuity','camera interruption','mode cancellation','30/60/120 Hz reveal consistency'],scope:'Node integration with the real Three.js GLTF loader and a DOM event fixture. GPU rendering and browser layout are separate checks.'};
 await writeFile('artwork/anatomy/runtime-verification.json',JSON.stringify(report,null,2));
 console.log(JSON.stringify(report,null,2));
