@@ -19,7 +19,9 @@ The sculpt has a wide crescent grin with ten individually curved enamel crowns, 
 
 ## Interaction
 
-Drag to orbit, scroll or pinch to zoom. With the canvas focused, arrow keys rotate, plus/minus zoom, and Home resets the camera. The toolbar controls auto-rotation, character motion, resetting, and fullscreen. Daylight switches to moonlight. The character breathes and blinks. Orbit release glides, and angular velocity drives damped springs in the torso, ears, leaf and arms. Paws, toe claws and paw fur remain planted while the torso settles. Pause clears secondary momentum; reduced-motion preferences disable it initially.
+Drag to orbit, scroll or pinch to zoom. With the canvas focused, arrow keys rotate, plus/minus zoom, and Home resets the camera. The toolbar controls auto-rotation, character motion, resetting, and fullscreen. Daylight switches to moonlight, and Rain brings a passing shower in either light. The character breathes and blinks. Orbit release glides, and angular velocity drives damped springs in the torso, ears, leaf and arms. Paws, toe claws and paw fur remain planted while the torso settles. Pause clears secondary momentum; reduced-motion preferences disable it initially.
+
+Tap Totoro to say hello: he blinks with a springy squash, his ears and leaf hat bounce, and a gust shakes a flurry of leaves loose from the canopy. Soot sprites live on the plinth. They blink, watch the pointer, scatter in squash-and-stretch hops when it comes close, startle at a nearby tap, and crowd in at Totoro's feet while it rains.
 
 ## Rendering
 
@@ -28,6 +30,27 @@ Drag to orbit, scroll or pinch to zoom. With the canvas focused, arrow keys rota
 Both eyelids have a Blink shape key that closes over unchanged eyeballs. Seven bones deform breathing, shoulders, ears and tail; their fur, claws and belly markings share the corresponding skin weights. The head keeps its proportions, and the paws remain planted. Body poles and ear openings are closed. Regional strand parameters, shape keys, UVs and armature modifiers remain editable in the native source. The chosen coat uses fewer mesh strands plus subtle runtime microdetail; baked texture maps and simulated hair were not added.
 
 Animation stays outside React state. Orbit damping and character animation use delta time. Pixel ratio is capped at 1.8 and decreases after sustained slow frames. Rendering stops in hidden tabs, and stops after settling when motion is paused. GPU resources and listeners are released on unmount. Reduced-motion preferences disable initial idle animation.
+
+## Living forest
+
+The gallery renders through a small HDR pipeline (`lib/render-pipeline.ts`). The scene draws into a 4× multisampled half-float target with depth and stencil, so the anatomy section caps keep working. A six-level bloom chain (13-tap Karis-averaged downsample, tent upsample) and a single composite pass follow. The composite applies AgX tone mapping, a grade for each scene (day, night, rain, anatomy and each organ study) that eases between presets, vignette, lens fringing in the organ studies, grain and dithering. The canvas stays transparent. Covered pixels and the bloom that spills past them are tone mapped separately, so glow falls on the page as additive light and fades out before the canvas edge. Shaders are warmed for the HDR target up front. Devices without float render targets fall back to direct rendering.
+
+Komorebi (`lib/forest-light.ts`): the shadow-casting key light passes through two swaying canopy layers. They are projected along the light direction like a gobo, with green-tinted shade where sun filters through leaves. The same patch adds two firefly glows, evaluated with each exterior material's own BRDF, and rain wetness that darkens and slicks sky-facing surfaces. The canopy is a 256-pixel procedural mask, and each fragment reads it twice.
+
+The atmosphere (`lib/forest-atmosphere.ts`):
+- Sunbeams, turning to moonbeams at night. Their paths avoid the sculpture and fade before every canvas edge.
+- Depth-of-field dust. It sparkles only where the canopy is open and forward-scatters toward the light.
+- Camphor leaves (green, amber and red) with glide-and-flutter falls that flow around the body and settle on the plinth.
+- Night fireflies, with a shared GPU/CPU motion model so the glow light follows the visible insect.
+- A breeze with gusts that drives the dapple speed, leaf drift and the ear and leaf-hat flutter.
+
+The plinth (`lib/camphor-plinth.ts`) is a procedural slice of the great camphor tree: wandering growth rings, heartwood, medullary rays, drying checks, an irregular bark rim, moss and an oiled end-grain coat. After dark a few moss specks glow. The soot sprites (`lib/soot-sprites.ts`) are camera-facing cards whose fuzz, eyes and fake-sphere shading are drawn in the fragment shader; alpha-to-coverage keeps them order-independent under MSAA.
+
+Rain (`lib/forest-rain.ts`) is a single instanced draw. Each drop is a pixel-wide motion-blurred streak that becomes a splash crown where it lands, on the plinth or on Totoro's crown, never through him. The shower dims the sun, softens the dappling and washes out beams, dust and most fireflies. It soaks the wood under a glossy water film with procedural raindrop ripples, and dampens sky-facing fur. Surfaces soak quickly and dry slowly.
+
+In Split, tissue that meets the cutting plane carries a thin warm rim, sized in pixels from the live clipping plane (`lib/section-light.ts`). Section caps gain fine cellular mottling and a moist sheen.
+
+Everything runs on the character clock, so Pause freezes the moment and reduced motion starts it still. The atmosphere, rain and sprites fade out in the anatomy views and never enter the organ studies. The effects add one full-resolution composite, small bloom passes and a handful of instanced draws. In headless Chromium with SwiftShader (a CPU renderer), exterior frame rate fell from 1.9 to 1.35 fps and Split from 0.20 to 0.15 fps. Those runs are relative checks only; hardware GPU cost has not been measured. Before/after captures, the measurements and the review checklist are in `artwork/living-forest/`.
 
 ## Development
 

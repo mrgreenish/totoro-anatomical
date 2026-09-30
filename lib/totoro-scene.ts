@@ -10,11 +10,18 @@ import type { HeartViewOptions } from './heart-detail';
 import type { EyeViewOptions } from './eye-optics';
 import type { LungSnapshot, LungViewOptions } from './lung-physiology';
 import { createSplitShadowCache } from './split-shadow-cache';
+import { createRenderPipeline, probeHdrSupport, type GradeName } from './render-pipeline';
+import { createForestLight } from './forest-light';
+import { createForestAtmosphere } from './forest-atmosphere';
+import { createCamphorPlinth } from './camphor-plinth';
+import { createSootSprites } from './soot-sprites';
+import { createForestRain } from './forest-rain';
 
 export type SculptureController = {
   setRotate(value: boolean): void;
   setAnimate(value: boolean): void;
   setNight(value: boolean): void;
+  setRain(value: boolean): void;
   setMode(value: AnatomyMode): Promise<void>;
   setCut(value: Partial<AnatomyState['cut']>): void;
   setExplosion(value: number): void;
@@ -40,7 +47,11 @@ type Options = { signal: AbortSignal; animate: boolean; onReady(): void; onError
 const damp = THREE.MathUtils.damp;
 
 export async function createSculpture(canvas: HTMLCanvasElement, options: Options): Promise<SculptureController> {
-  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, stencil: true, powerPreference: 'high-performance' });
+  // The HDR pipeline owns multisampling, so the default framebuffer only
+  // receives the final composite. Browsers without float targets keep
+  // native antialiasing for direct rendering.
+  const hdr = probeHdrSupport();
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: !hdr, stencil: true, powerPreference: 'high-performance' });
   const collectRenderStats = process.env.NODE_ENV !== 'production';
   // Keep the normal renderer fast in production. Development diagnostics use
   // manual resets so the counters include the shadow pass as well as the main
@@ -55,6 +66,12 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   const splitShadowCache = createSplitShadowCache(renderer.shadowMap);
   // PCF avoids variance-shadow light leaks through thin ribs and close tissue.
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  const createdPipeline = hdr ? createRenderPipeline(renderer) : undefined;
+  const pipeline = createdPipeline?.supported ? createdPipeline : undefined;
+  if (!pipeline) createdPipeline?.dispose();
+  canvas.dataset.pipeline = pipeline ? 'hdr' : 'direct';
+  // The forest wakes gently: exposure rises once the sculpture is ready.
+  pipeline?.setExposureScale(options.animate ? .3 : 1, true);
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(30, 1, .1, 100);
   const cameraRadius = Math.hypot(3.5, 12.4), cameraAzimuth = THREE.MathUtils.degToRad(25);
@@ -91,17 +108,15 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   key.shadow.bias = -.00015; key.shadow.normalBias = .018;
   key.shadow.radius = 4; key.shadow.blurSamples = 8;
   key.target.position.set(0, 2, 0); scene.add(key, key.target);
+  // Komorebi: the key light reaches the exterior through a swaying canopy.
+  const forest = createForestLight(key.position, key.target.position);
   const fill = new THREE.DirectionalLight(0xc7deef, .48);
   fill.position.set(5, 4, 2); scene.add(fill);
   const rim = new THREE.DirectionalLight(0xddeafa, 3.0);
   rim.position.set(2, 5, -4); scene.add(rim);
 
-  const plinthMaterial = new THREE.MeshPhysicalMaterial({ color: 0xdbdfcf, roughness: .82, metalness: 0, clearcoat: .08, clearcoatRoughness: .7 });
-  const plinth = new THREE.Mesh(new THREE.CylinderGeometry(2.13, 2.13, .13, 112), plinthMaterial);
-  plinth.position.y = -.095; plinth.receiveShadow = true; scene.add(plinth);
-  const edgeMaterial = new THREE.MeshStandardMaterial({ color: 0xd6ddc9, roughness: .6 });
-  const lip = new THREE.Mesh(new THREE.TorusGeometry(2.095, .036, 8, 112), edgeMaterial);
-  lip.rotation.x = Math.PI / 2; lip.position.y = -.033; scene.add(lip);
+  const plinth = createCamphorPlinth(forest);
+  scene.add(plinth.mesh);
   const shadowCanvas = document.createElement('canvas');
   shadowCanvas.width = shadowCanvas.height = 128;
   const ctx = shadowCanvas.getContext('2d')!;
@@ -116,23 +131,13 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   const contact = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 2.4), new THREE.MeshBasicMaterial({ map: shadowTexture, transparent: true, depthWrite: false, opacity: .65 }));
   contact.rotation.x = -Math.PI / 2; contact.position.set(0, -.024, .04); scene.add(contact);
 
-  const particleGeometry = new THREE.BufferGeometry();
-  const particlePositions = new Float32Array(30 * 3);
   let seed = 21;
   const random = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
-  for (let i = 0; i < 30; i++) {
-    particlePositions[i * 3] = (random() - .5) * 7;
-    particlePositions[i * 3 + 1] = random() * 5.5;
-    particlePositions[i * 3 + 2] = (random() - .5) * 4;
-  }
-  particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-  const particleMaterial = new THREE.ShaderMaterial({
-    uniforms: { time: { value: 0 }, opacity: { value: .15 }, size: { value: 1 }, tint: { value: new THREE.Color(0xc4d394) } },
-    vertexShader: 'uniform float time; uniform float size; void main(){ vec3 p=position; p.x+=sin(time*.3+position.y*2.)*.16; p.y+=sin(time*.24+position.x)*.18; vec4 mv=modelViewMatrix*vec4(p,1.); gl_Position=projectionMatrix*mv; gl_PointSize=clamp(32./-mv.z,1.5,4.)*size; }',
-    fragmentShader: 'uniform float opacity; uniform vec3 tint; void main(){float d=length(gl_PointCoord-.5); gl_FragColor=vec4(tint,smoothstep(.5,.06,d)*opacity);}',
-    transparent: true, depthWrite: false,
-  });
-  scene.add(new THREE.Points(particleGeometry, particleMaterial));
+  const mobile = window.matchMedia('(pointer: coarse)').matches || Math.min(window.innerWidth, window.innerHeight) < 600;
+  const atmosphere = createForestAtmosphere({ scene, camera, forest, mobile });
+  const soot = createSootSprites({ scene, camera, canvas, mobile });
+  const rain = createForestRain({ scene, camera, mobile, lightDirection: forest.direction });
+  let raining = false;
   const root = new THREE.Group(); scene.add(root);
   let model: THREE.Group | null = null;
   let anatomy: AnatomyExplorer | undefined;
@@ -164,11 +169,10 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       : anatomy?.state.heartView.status === 'open' ? 'heart-study-1'
       : anatomy?.state.brainView.status === 'open' ? 'brain-detail-1' : 'refinement-1';
   }
-  let nextBlink = 3.4, blinkStart = -10;
+  let nextBlink = 3.4, blinkStart = -10, pokeTime = -10, leafRestY = 0;
   let pixelRatio = Math.min(window.devicePixelRatio || 1, 1.8), slowFrames = 0;
-  const dayStage = new THREE.Color(0xdbdfcf), nightStage = new THREE.Color(0x3c5054);
   const dayKey = new THREE.Color(0xfff4de), nightKey = new THREE.Color(0xbddeff);
-  const dayRim = new THREE.Color(0xddeafa), nightRim = new THREE.Color(0xc3df9b);
+  const dayRim = new THREE.Color(0xddeafa), nightRim = new THREE.Color(0xc3df9b), rainKey = new THREE.Color(0xd9e4ee);
 
   let viewportWidth = 0, viewportHeight = 0;
   function resize() {
@@ -181,7 +185,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     if (viewportChanged || previousPixelRatio !== pixelRatio) resetFrameStats();
     camera.aspect = width / height;
     camera.fov = camera.aspect < .8 ? 30 + (.8 - camera.aspect) * 21 : 30;
-    camera.updateProjectionMatrix(); particleMaterial.uniforms.size.value = pixelRatio;
+    camera.updateProjectionMatrix();
     if (viewportChanged) anatomy?.resize();
     wake();
   }
@@ -192,7 +196,8 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   function tick(now: number) {
     if (disposed) return;
     const frameStart = performance.now();
-    const rawDt = (now - lastTime) / 1000, dt = Math.min(rawDt, .05); lastTime = now;
+    // A frame timestamp can precede the wake time under load; never step backwards.
+    const rawDt = (now - lastTime) / 1000, dt = THREE.MathUtils.clamp(rawDt, 0, .05); lastTime = now;
     const movingCharacter = animated && !anatomy?.active;
     if (movingCharacter) elapsed += dt;
     if (resetting) {
@@ -214,15 +219,21 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     if (model) {
       model.rotation.set(motion.pitch.position, motion.yaw.position, motion.lean.position);
     }
-    if (breathBone) breathBone.scale.set(1 + breath * .013, 1 + breath * .004, 1 + breath * .016);
-    bend(earLeft, motion.ears.position + (movingCharacter ? Math.sin(elapsed * 1.8) * .016 : 0));
-    bend(earRight, motion.ears.position * 1.13 + (movingCharacter ? Math.sin(elapsed * 1.8 + .6) * .019 : 0));
+    // A poke answers with a springy squash that settles within a second.
+    const pokeAge = elapsed - pokeTime;
+    const boing = movingCharacter && pokeAge >= 0 && pokeAge < 1.8 ? Math.exp(-pokeAge * 4.2) * Math.sin(pokeAge * 17) : 0;
+    if (breathBone) breathBone.scale.set(1 + breath * .013 - boing * .016, 1 + breath * .004 + boing * .022, 1 + breath * .016 - boing * .016);
+    if (leaf) leaf.position.y = leafRestY + (boing ? Math.max(0, Math.sin(pokeAge * 8.5)) * Math.exp(-pokeAge * 3.2) * .05 : 0);
+    // Gusts from the forest lean the ears and flutter the leaf hat.
+    const gust = movingCharacter ? atmosphere.wind - .45 : 0;
+    bend(earLeft, motion.ears.position + (movingCharacter ? Math.sin(elapsed * 1.8) * .016 : 0) + gust * (.012 + .006 * Math.sin(elapsed * 3.1)));
+    bend(earRight, motion.ears.position * 1.13 + (movingCharacter ? Math.sin(elapsed * 1.8 + .6) * .019 : 0) + gust * (.014 + .006 * Math.sin(elapsed * 2.7 + 1)));
     if (leaf && restRotations.has(leaf)) {
       // Keep the hat attached: flutter around its authored pose, with enough
       // clearance and bounded tilt to keep the blade out of the crown.
       leafTilt.set(
         THREE.MathUtils.clamp(-motion.pitch.position * .45 + (movingCharacter ? Math.sin(elapsed * 1.2) * .009 : 0), -.025, .025),
-        0, THREE.MathUtils.clamp(motion.leaf.position * .3 + (movingCharacter ? Math.sin(elapsed * 1.6) * .012 : 0), -.035, .035));
+        0, THREE.MathUtils.clamp(motion.leaf.position * .3 + (movingCharacter ? Math.sin(elapsed * 1.6) * .012 : 0) + gust * .012 * Math.sin(elapsed * 4.7), -.035, .035));
       leaf.quaternion.copy(restRotations.get(leaf)!).multiply(localRotation.setFromEuler(leafTilt));
     }
     bend(armLeft, (movingCharacter ? Math.sin(elapsed * 1.45) * .017 : 0) + motion.arms.position);
@@ -235,14 +246,21 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       : blinkTime < .09 ? THREE.MathUtils.smoothstep(blinkTime, 0, .09)
       : blinkTime < .12 ? 1 : 1 - THREE.MathUtils.smoothstep(blinkTime, .12, .28);
     for (const lid of eyelids) lid.mesh.morphTargetInfluences![lid.index] = blink;
-    particleMaterial.uniforms.time.value = elapsed;
     night = damp(night, nightTarget, 3, dt);
     key.color.copy(dayKey).lerp(nightKey, night); key.intensity = THREE.MathUtils.lerp(2.7, 2.2, night);
     ambient.intensity = THREE.MathUtils.lerp(.45, .25, night);
     rim.color.copy(dayRim).lerp(nightRim, night); rim.intensity = THREE.MathUtils.lerp(3.0, 4.5, night);
     fill.intensity = THREE.MathUtils.lerp(.48, .4, night); scene.environmentIntensity = THREE.MathUtils.lerp(.48, .28, night);
-    plinthMaterial.color.copy(dayStage).lerp(nightStage, night); edgeMaterial.color.copy(plinthMaterial.color);
-    particleMaterial.uniforms.opacity.value = anatomy?.active ? 0 : THREE.MathUtils.lerp(.15, .62, night);
+    plinth.setNight(night);
+    const rainSettling = rain.update(dt, { animated: movingCharacter, raining, visible: !anatomy?.active, night,
+      wind: atmosphere.wind, viewportWidth: canvas.width, viewportHeight: canvas.height });
+    // Overcast: the sun hides behind cloud and the sky does more of the lighting.
+    const overcast = rain.level;
+    key.intensity *= 1 - .55 * overcast; key.color.lerp(rainKey, overcast * .5);
+    ambient.intensity += .2 * overcast * (1 - .5 * night);
+    rim.intensity *= 1 - .35 * overcast;
+    scene.environmentIntensity += .1 * overcast * (1 - night);
+    plinth.setWeather(rain.wetness, rain.level, rain.time);
     const anatomySettling = anatomy?.update(dt, animated) ?? false;
     if (anatomy?.active) {
       // Neutral studio light preserves red/brown tissue separation. A lower
@@ -270,9 +288,18 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     const splitShadowsEligible = anatomy?.state.mode === 'split'
       && !anatomy.detailScene;
     splitShadowCache.update(splitShadowsEligible, changed);
+    const study = anatomy?.state.brainView.status === 'open' ? 'brain' : anatomy?.state.heartView.status === 'open' ? 'heart'
+      : anatomy?.state.eyeView.status === 'open' ? 'eye' : anatomy?.state.lungView.status === 'open' ? 'lung' : undefined;
+    const grade: GradeName = study ?? (anatomy?.active ? 'anatomy' : night > .5 ? 'night' : rain.level > .5 ? 'rain' : 'day');
+    pipeline?.setGrade(grade);
+    const grading = pipeline?.update(dt) ?? false;
+    const atmosphereSettling = atmosphere.update(dt, { animated: movingCharacter, night, visible: !anatomy?.active,
+      pixelRatio: renderer.getPixelRatio(), viewportWidth: canvas.width, viewportHeight: canvas.height,
+      rain: rain.level, wetness: rain.wetness });
+    const sootSettling = soot.update(dt, { animated: movingCharacter, visible: !anatomy?.active, night, rain: rain.level });
     const renderStart = performance.now();
     if (collectRenderStats) renderer.info.reset();
-    renderer.render(anatomy?.detailScene ?? scene, camera);
+    renderFrame(anatomy?.detailScene ?? scene);
     const renderMs = performance.now() - renderStart;
     const updateMs = renderStart - frameStart;
     if (collectRenderStats && model && rawDt > 0 && rawDt < .2) {
@@ -300,8 +327,13 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     // Adapt only after sustained slow frames, preserving crispness on capable devices.
     if (rawDt > .025 && rawDt < .2 && model) slowFrames++; else slowFrames = Math.max(0, slowFrames - 1);
     if (slowFrames > 100 && pixelRatio > 1.1) { pixelRatio = Math.max(1, pixelRatio - .25); slowFrames = 0; resize(); }
-    const settling = Math.abs(night - nightTarget) > .001 || motion.settling || resetting || anatomySettling;
+    else if (slowFrames > 100 && pipeline?.reduceQuality()) { slowFrames = 0; resetFrameStats(); }
+    const settling = Math.abs(night - nightTarget) > .001 || motion.settling || resetting || anatomySettling || grading || atmosphereSettling || sootSettling || rainSettling;
     if (movingCharacter || (rotating && !anatomy?.active) || changed || settling) frame = requestAnimationFrame(tick); else running = false;
+  }
+  function renderFrame(target: THREE.Scene) {
+    if (pipeline) pipeline.render(target, camera);
+    else renderer.render(target, camera);
   }
   const onStart = () => {
     interactionUntil = Infinity;
@@ -318,6 +350,31 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     wake();
   };
   controls.addEventListener('start', onStart); controls.addEventListener('end', onEnd); controls.addEventListener('change', wake);
+  // Tap Totoro to say hello: he blinks and bounces, and the forest answers.
+  const pokeRay = new THREE.Raycaster(), pokePointer = new THREE.Vector2();
+  const bodyCenter = new THREE.Vector3(0, 1.95, .05), bodyRadii = new THREE.Vector3(1.2, 2.05, 1.1);
+  const rayOrigin = new THREE.Vector3(), rayDirection = new THREE.Vector3();
+  let pokeStart: { x: number; y: number; time: number; id: number } | undefined;
+  const onPokeDown = (event: PointerEvent) => { if (event.isPrimary) pokeStart = { x: event.clientX, y: event.clientY, time: performance.now(), id: event.pointerId }; };
+  const onPokeUp = (event: PointerEvent) => {
+    const start = pokeStart; pokeStart = undefined;
+    if (!start || start.id !== event.pointerId || !animated || anatomy?.active || !model) return;
+    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 6 || performance.now() - start.time > 500) return;
+    const rect = canvas.getBoundingClientRect();
+    pokePointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
+    pokeRay.setFromCamera(pokePointer, camera);
+    // Ray against an ellipsoid hugging the body and head.
+    rayOrigin.copy(pokeRay.ray.origin).sub(bodyCenter).divide(bodyRadii);
+    rayDirection.copy(pokeRay.ray.direction).divide(bodyRadii);
+    const a = rayDirection.lengthSq(), b = 2 * rayOrigin.dot(rayDirection), c = rayOrigin.lengthSq() - 1;
+    if (b * b - 4 * a * c < 0 || -b + Math.sqrt(b * b - 4 * a * c) < 0) return;
+    pokeTime = elapsed; blinkStart = elapsed; nextBlink = elapsed + 2.8;
+    motion.ears.velocity += 2.4; motion.leaf.velocity += 1.8; motion.arms.velocity -= .9; motion.pitch.velocity -= .3;
+    atmosphere.poke();
+    wake();
+  };
+  canvas.addEventListener('pointerdown', onPokeDown, { passive: true });
+  canvas.addEventListener('pointerup', onPokeUp, { passive: true });
   const onVisibility = () => { if (document.hidden) { cancelAnimationFrame(frame); running = false; } else wake(); };
   const onContextLost = (event: Event) => { event.preventDefault(); cancelAnimationFrame(frame); running = false; options.onError(); };
   canvas.addEventListener('webglcontextlost', onContextLost); document.addEventListener('visibilitychange', onVisibility);
@@ -327,6 +384,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     setRotate(value) { rotating = value; interactionUntil = 0; wake(); },
     setAnimate(value) { animated = value; anatomy?.setAnimate(value); if (!value) motion.reset(); wake(); },
     setNight(value) { nightTarget = value ? 1 : 0; wake(); },
+    setRain(value) { raining = value; wake(); },
     async setMode(value) { resetting = false; motion.reset(); resetFrameStats(); await anatomy?.setMode(value); wake(); },
     setCut(value) { resetFrameStats(); anatomy?.setCut(value); },
     setExplosion(value) { resetFrameStats(); anatomy?.setExplosion(value); },
@@ -350,7 +408,9 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       if (disposed) return;
       disposed = true; cancelAnimationFrame(frame); resizeObserver.disconnect(); controls.dispose();
       anatomy?.dispose();
+      atmosphere.dispose(); soot.dispose(); rain.dispose(); plinth.dispose(); forest.dispose();
       document.removeEventListener('visibilitychange', onVisibility); canvas.removeEventListener('webglcontextlost', onContextLost); canvas.removeEventListener('keydown', onKey);
+      canvas.removeEventListener('pointerdown', onPokeDown); canvas.removeEventListener('pointerup', onPokeUp);
       const geometries = new Set<THREE.BufferGeometry>(), materials = new Set<THREE.Material>();
       const skeletons = new Set<THREE.Skeleton>();
       scene.traverse(object => { if (object instanceof THREE.Mesh || object instanceof THREE.Points) {
@@ -361,6 +421,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       skeletons.forEach(s => s.dispose());
       environment.dispose(); shadowTexture.dispose(); key.shadow.dispose();
       splitShadowCache.dispose();
+      pipeline?.dispose();
       renderer.dispose();
     },
   };
@@ -444,6 +505,14 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       }
     });
     replacedMaterials.forEach(material => material.dispose());
+    // Every lit exterior surface shares the canopy light and firefly glow.
+    const forestMaterials = new Set<THREE.Material>();
+    model.traverse(object => {
+      if (!(object instanceof THREE.Mesh)) return;
+      for (const material of Array.isArray(object.material) ? object.material : [object.material]) {
+        if (material instanceof THREE.MeshStandardMaterial && !forestMaterials.has(material)) { forestMaterials.add(material); forest.patch(material); }
+      }
+    });
     root.add(model); root.updateMatrixWorld(true);
     // Paws and their claws/fur stay on the plinth while the heavy torso settles.
     for (const name of ['Foot_L', 'Foot_R']) {
@@ -456,7 +525,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       if (object) restRotations.set(object, object.quaternion.clone());
     }
     leaf = model.getObjectByName('Leaf');
-    if (leaf) { restRotations.set(leaf, leaf.quaternion.clone()); leaf.position.y += .10; }
+    if (leaf) { restRotations.set(leaf, leaf.quaternion.clone()); leaf.position.y += .10; leafRestY = leaf.position.y; }
     for (const name of ['Eyelids_L', 'Eyelids_R']) {
       const object = model.getObjectByName(name);
       if (object instanceof THREE.Mesh && object.morphTargetDictionary?.Blink !== undefined) {
@@ -466,8 +535,10 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     }
     anatomy = createAnatomyExplorer({ canvas, renderer, scene, camera, controls, exterior: root,
       signal: options.signal, animate: animated, wake, onState: state => options.onAnatomyState?.(state), onMode: () => motion.reset() });
-    await renderer.compileAsync(scene, camera);
-    if (!options.signal.aborted && !disposed) { renderer.render(scene, camera); options.onReady(); wake(); } else controller.dispose();
+    // Warm the rain and firefly shaders too, so the first shower or night does not hitch.
+    atmosphere.prepareCompile(); rain.prepareCompile();
+    await (pipeline ? pipeline.compile(scene, camera) : renderer.compileAsync(scene, camera));
+    if (!options.signal.aborted && !disposed) { renderFrame(scene); pipeline?.setExposureScale(1); options.onReady(); wake(); } else controller.dispose();
   } catch (error) {
     if (!options.signal.aborted) {
       if (process.env.NODE_ENV !== 'production') console.error('Sculpture loading failed', error);
