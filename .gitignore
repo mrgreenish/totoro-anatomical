@@ -44,3 +44,4 @@ __pycache__/
 /.img2threejs/references/
 /.img2threejs/reviews/*.png
 /.img2threejs/reviews/before-fur/
+.env*.local

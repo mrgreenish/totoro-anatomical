@@ -3,8 +3,15 @@ import * as THREE from 'three';
 type Options = { canvas: HTMLCanvasElement; camera: THREE.Camera; root: THREE.Group; wake(): void; reduced: boolean };
 type Shader = { uniforms: Record<string, THREE.IUniform>; vertexShader: string; fragmentShader: string };
 
+// GLSL pow(x, 2.) is undefined for negative x. Pulses cross zero as they
+// travel, so square by multiplication to keep the emitted light finite.
+export const BRAIN_GAUSSIAN_GLSL = `
+  float brainGaussian(float x) { return exp(-x*x); }
+`;
+
 /** Surface-bound emission: no overlay sprites can shine through the back of the brain. */
 export const NEURON_GLSL = `
+  ${BRAIN_GAUSSIAN_GLSL}
   uniform vec3 brainHoverPoint;
   uniform vec3 brainHoverNormal;
   uniform float brainHoverLevel;
@@ -16,10 +23,10 @@ export const NEURON_GLSL = `
     vec2 ab=b-a;
     float t=clamp(dot(p-a,ab)/max(dot(ab,ab),.000001),0.,1.);
     float d=length(p-a-ab*t);
-    float pulse=exp(-pow((start+t*length(ab)-travel)/.018,2.));
+    float pulse=brainGaussian((start+t*length(ab)-travel)/.018);
     pulse=mix(pulse,.38,brainStillActivity);
-    float core=exp(-pow(d/width,2.));
-    float halo=exp(-pow(d/.009,2.));
+    float core=brainGaussian(d/width);
+    float halo=brainGaussian(d/.009);
     return vec2(core*pulse,halo*pulse);
   }
   vec3 firingNeurons(vec3 p) {
@@ -51,9 +58,9 @@ export const NEURON_GLSL = `
         vec2 e=b+direction*.021+side*signBranch*.045;
         light+=neuralFilament(uv,c,d,travel,ab+bc,.0008);
         light+=neuralFilament(uv,b,e,travel,ab,.00085);
-        float synapse=exp(-pow((ab+bc+length(d-c)-travel)/.025,2.));
+        float synapse=brainGaussian((ab+bc+length(d-c)-travel)/.025);
         synapse=mix(synapse,.2,brainStillActivity);
-        light+=vec2(exp(-pow(length(uv-d)/.0025,2.)),exp(-pow(length(uv-d)/.014,2.)))*synapse;
+        light+=vec2(brainGaussian(length(uv-d)/.0025),brainGaussian(length(uv-d)/.014))*synapse;
       }
     }
     float soma=mix(pow(.5+.5*sin(brainActivityTime*2.1),5.),.3,brainStillActivity);

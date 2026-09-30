@@ -4,7 +4,8 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { clamp01, cutCoordinate, CUT_BOUNDS, defaultAnatomyState, fitDistance, partVisible } from './anatomy-state';
 import type { AnatomyMode, AnatomyPart, AnatomyState, AnatomySystem, AnatomyVariant } from './anatomy-state';
-import { brainProximity, createBrainDetail, isBrainOccluder, probeBrainVisibility, type BrainDetail } from './brain-detail';
+import type { BrainDetail } from './brain-detail';
+import { brainProximity, isBrainOccluder, probeBrainVisibility } from './organ-visibility';
 import type { HeartDetail, HeartViewOptions } from './heart-detail';
 import type { EyeDetail } from './eye-detail';
 import type { EyeViewOptions } from './eye-optics';
@@ -14,6 +15,7 @@ import type { OrganStudy } from './anatomy-state';
 import { COAT_OFFSET, REVEAL_DURATION, museumEase, presentationOffset, presentationPhase, revealProgress, type PresentationPhase } from './anatomy-presentation';
 import { applyTissuePreset, BRAIN_SURFACE, createHeartTissueMaterial, sectionTint } from './tissue-materials';
 import { applySectionCapDetail, applySectionRim } from './section-light';
+import { fitSectionCap } from './section-cap';
 
 type Part = AnatomyPart & { node: THREE.Object3D; active: boolean; rest: THREE.Vector3; restScale: THREE.Vector3; offset: THREE.Vector3; phase: PresentationPhase; meshes: THREE.Mesh[] };
 // Textured glTF materials use a white color factor. Section faces need the
@@ -24,7 +26,7 @@ const tissueSectionColors: Record<string, number> = {
   kidney: 0x843b34, spleen: 0x69384d, glands: 0xc79b65,
   muscle: 0x873e35, cortical_bone: 0xcaba98, tendon: 0xd4c9af,
 };
-type Cap = { source: THREE.Mesh; part: Part; back: THREE.Mesh; front: THREE.Mesh; cap: THREE.Mesh; box: THREE.Box3 };
+type Cap = { source: THREE.Mesh; part: Part; back: THREE.Mesh; front: THREE.Mesh; cap: THREE.Mesh<THREE.PlaneGeometry>; box: THREE.Box3 };
 type Options = {
   canvas: HTMLCanvasElement; renderer: THREE.WebGLRenderer; scene: THREE.Scene; camera: THREE.PerspectiveCamera;
   controls: OrbitControls; exterior: THREE.Group; signal: AbortSignal; wake(): void;
@@ -116,6 +118,7 @@ export function createAnatomyExplorer(o: Options) {
   let state = defaultAnatomyState();
   let model: THREE.Group | undefined, loadPromise: Promise<void> | undefined;
   let disposed = false, revision = 0, dirty = true, fitting = false;
+  let shadowRevision = 0;
   let heartPart: Part | undefined;
   let animationEnabled = o.animate ?? true;
   const expansion = [0, 0, 0], expansionFrom = [0, 0, 0];
@@ -129,7 +132,6 @@ export function createAnatomyExplorer(o: Options) {
   const materials = new Set<THREE.Material>();
   const planes = [new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0)];
   const plane = planes[0], capRoot = new THREE.Group(); o.scene.add(capRoot);
-  const capGeometry = new THREE.PlaneGeometry(20, 20);
   const capForward = new THREE.Vector3(0, 0, 1), capNormal = new THREE.Vector3();
   const initialPosition = o.camera.position.clone(), initialTarget = o.controls.target.clone();
   const targetPosition = initialPosition.clone(), targetLook = initialTarget.clone();
@@ -187,7 +189,14 @@ export function createAnatomyExplorer(o: Options) {
   async function organAsset(kind: OrganStudy) {
     const options = { renderer: o.renderer, environment: o.scene.environment, signal: o.signal,
       canvas:o.canvas, camera:o.camera, controls:o.controls, wake:()=>o.wake(), reduced };
-    if(kind === 'brain')return brainDetail ??= createBrainDetail(options);
+    if(kind === 'brain') {
+      if(!brainDetail) {
+        const {createBrainDetail}=await import('./brain-detail');
+        if(disposed||o.signal.aborted)throw new Error('Disposed');
+        brainDetail=createBrainDetail(options);
+      }
+      return brainDetail;
+    }
     if(kind === 'lung') {
       if(!lungDetail) {
         const {createLungDetail}=await import('./lung-detail');
@@ -249,7 +258,13 @@ export function createAnatomyExplorer(o: Options) {
       if(!valid())return;
       await asset.load(o.canvas.clientWidth);
       if (!valid()) { asset.unload(); return; }
-      await o.renderer.compileAsync?.(asset.scene, o.camera);
+      const compilation = o.renderer.compileAsync?.(asset.scene, o.camera);
+      // Paused scenes have no next animation frame to submit WebGL commands.
+      // Flush and wake one frame so browser compositors also submit the work;
+      // animation remains paused while compileAsync observes readiness.
+      o.renderer.getContext?.().flush();
+      o.wake();
+      await compilation;
       if (!valid()) { asset.unload(); return; }
       detail = asset;
       fitting = false; discardInertia();
@@ -384,7 +399,9 @@ export function createAnatomyExplorer(o: Options) {
     applySectionCapDetail(capMat);
     const back = new THREE.Mesh(mesh.geometry, backMat), front = new THREE.Mesh(mesh.geometry, frontMat);
     for (const volume of [back, front]) { volume.matrixAutoUpdate = false; volume.frustumCulled = false; }
-    const cap = new THREE.Mesh(capGeometry, capMat); cap.frustumCulled = false;
+    const geometry = new THREE.PlaneGeometry(1, 1);
+    (geometry.getAttribute('position') as THREE.BufferAttribute).setUsage(THREE.DynamicDrawUsage);
+    const cap = new THREE.Mesh(geometry, capMat); cap.frustumCulled = false;
     back.renderOrder = 100 + index * 3; front.renderOrder = back.renderOrder + 1; cap.renderOrder = back.renderOrder + 2;
     cap.onAfterRender = renderer => renderer.clearStencil();
     capRoot.add(back, front, cap); materials.add(backMat); materials.add(frontMat); materials.add(capMat);
@@ -460,6 +477,7 @@ export function createAnatomyExplorer(o: Options) {
     try { await loadPromise; } catch (error) {
       removeModel();
       for (const material of materials) material.dispose();
+      for (const entry of caps) entry.cap.geometry.dispose();
       materials.clear(); caps.length = 0; capsByPart.clear(); parts.length = 0; heartPart = undefined; capRoot.clear();
       state.status = 'error'; emit();
       throw error;
@@ -553,13 +571,16 @@ export function createAnatomyExplorer(o: Options) {
     cap.cap.position.copy(plane.normal).multiplyScalar(-plane.constant);
     capNormal.copy(plane.normal).negate();
     cap.cap.quaternion.setFromUnitVectors(capForward, capNormal);
+    fitSectionCap(cap.cap, cap.box);
   }
   function updateMovingPart(part: Part) {
+    shadowRevision++;
     part.node.updateMatrixWorld(true);
     if (state.mode !== 'split') return;
     for (const cap of capsByPart.get(part) ?? []) updateCap(cap, true);
   }
   function updateLayout() {
+    shadowRevision++;
     for (const part of parts) part.node.position.copy(part.rest).addScaledVector(part.offset, expansion[part.phase]);
     o.exterior.position.set(COAT_OFFSET[0] * expansion[0], COAT_OFFSET[1] * expansion[0], COAT_OFFSET[2] * expansion[0]);
     model?.updateMatrixWorld(true); o.exterior.updateMatrixWorld(true);
@@ -742,6 +763,7 @@ export function createAnatomyExplorer(o: Options) {
   emit();
   return {
     get active() { return !!model && state.mode !== 'exterior'; },
+    get shadowRevision() { return shadowRevision; },
     get state() { return state; },
     get detailScene() { return studyOpen() ? detail?.scene : undefined; },
     setMode, setCut, selectPart, update,
@@ -806,7 +828,9 @@ export function createAnatomyExplorer(o: Options) {
       loadAbort.abort();o.signal.removeEventListener('abort',abortLoad);
       o.canvas.removeEventListener('pointerdown',onDown);o.canvas.removeEventListener('pointerup',onUp);
       if(model){disposeObject(model);model.removeFromParent();}
-      for(const m of materials)m.dispose();capGeometry.dispose();capRoot.removeFromParent();
+      for(const m of materials)m.dispose();
+      for(const entry of caps)entry.cap.geometry.dispose();
+      capRoot.removeFromParent();
       for(const m of externalMaterials)setClipping(m,false);
       parts.length=0;caps.length=0;capsByPart.clear();heartPart=undefined;
     },

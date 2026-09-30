@@ -340,12 +340,6 @@ export function createRenderPipeline(renderer: THREE.WebGLRenderer, options: Opt
     get settling() { return settling; },
     get grade() { return gradeName; },
     setGrade(name: GradeName) { gradeName = name; },
-    /** Halves multisampling once, for devices still slow at the lowest pixel ratio. */
-    reduceQuality() {
-      if (target.samples <= 2) return false;
-      target.samples = 2; target.dispose();
-      return true;
-    },
     /** Scales exposure on top of the renderer's, for light-up transitions. */
     setExposureScale(value: number, immediate = false) { exposureTarget = value; if (immediate) exposureScale = value; },
     update,

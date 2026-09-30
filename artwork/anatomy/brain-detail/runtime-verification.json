@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "assertions": 107,
+  "assertions": 114,
   "coverage": [
     "proximity hysteresis",
     "occlusion and clipping",

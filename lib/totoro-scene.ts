@@ -103,6 +103,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   scene.add(ambient);
   const key = new THREE.DirectionalLight(0xfff4de, 2.7);
   key.position.set(-3.5, 7, 5); key.castShadow = true;
+  key.shadow.autoUpdate = false; key.shadow.needsUpdate = true;
   key.shadow.mapSize.set(2048, 2048);
   Object.assign(key.shadow.camera, { left: -4, right: 4, top: 6, bottom: -3, near: .5, far: 20 });
   key.shadow.bias = -.00015; key.shadow.normalBias = .018;
@@ -141,6 +142,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   const root = new THREE.Group(); scene.add(root);
   let model: THREE.Group | null = null;
   let anatomy: AnatomyExplorer | undefined;
+  let lastShadowRevision = -1, exteriorWasMoving = false;
   let animated = options.animate, rotating = false, disposed = false, running = false;
   let night = 0, nightTarget = 0, frame = 0, lastTime = 0, elapsed = 0;
   let lastAzimuth = controls.getAzimuthalAngle(), interactionUntil = 0, resetting = false;
@@ -162,7 +164,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   type FrameSample = { frameMs: number; updateMs: number; renderMs: number; drawCalls: number; triangles: number };
   const frameSamples: FrameSample[] = [];
   let statsAsset: string | undefined;
-  function resetFrameStats() { frameSamples.length = 0; statsAsset = undefined; }
+  function resetFrameStats() { frameSamples.length = 0; statsAsset = undefined; delete canvas.dataset.renderStats; }
   function currentAsset() {
     return anatomy?.state.lungView.status === 'open' ? 'lung-study-1'
       : anatomy?.state.eyeView.status === 'open' ? 'eye-study-1'
@@ -170,7 +172,9 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       : anatomy?.state.brainView.status === 'open' ? 'brain-detail-1' : 'refinement-1';
   }
   let nextBlink = 3.4, blinkStart = -10, pokeTime = -10, leafRestY = 0;
-  let pixelRatio = Math.min(window.devicePixelRatio || 1, 1.8), slowFrames = 0;
+  // Preserve the gallery's sharpness target even under load. Optimize repeated
+  // work instead of silently reducing resolution or HDR multisampling.
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.8);
   const dayKey = new THREE.Color(0xfff4de), nightKey = new THREE.Color(0xbddeff);
   const dayRim = new THREE.Color(0xddeafa), nightRim = new THREE.Color(0xc3df9b), rainKey = new THREE.Color(0xd9e4ee);
 
@@ -284,7 +288,15 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     if (key.shadow.camera.right !== shadowExtent) {
       key.shadow.camera.left = -shadowExtent; key.shadow.camera.right = shadowExtent;
       key.shadow.camera.updateProjectionMatrix();
+      key.shadow.needsUpdate = true;
     }
+    // Camera motion and color/exposure changes do not change light-space
+    // depth. Keep full-resolution shadows until an actual caster pose, cut,
+    // filter or layout changes; include the final frame as motion settles.
+    const exteriorMoving = movingCharacter || motion.settling;
+    const shadowRevision = anatomy?.shadowRevision ?? 0;
+    if (exteriorMoving || exteriorWasMoving || shadowRevision !== lastShadowRevision) key.shadow.needsUpdate = true;
+    exteriorWasMoving = exteriorMoving; lastShadowRevision = shadowRevision;
     const splitShadowsEligible = anatomy?.state.mode === 'split'
       && !anatomy.detailScene;
     splitShadowCache.update(splitShadowsEligible, changed);
@@ -302,7 +314,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     renderFrame(anatomy?.detailScene ?? scene);
     const renderMs = performance.now() - renderStart;
     const updateMs = renderStart - frameStart;
-    if (collectRenderStats && model && rawDt > 0 && rawDt < .2) {
+    if (collectRenderStats && model && rawDt > 0) {
       const asset = currentAsset();
       if (statsAsset !== asset) resetFrameStats();
       statsAsset = asset;
@@ -317,6 +329,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
           updateMedianMs: sortedUpdates[90].updateMs, updateP95Ms: sortedUpdates[171].updateMs,
           renderMedianMs: sortedRenders[90].renderMs, renderP95Ms: sortedRenders[171].renderMs,
           triangles: last.triangles, drawCalls: last.drawCalls, shadowIncluded: true,
+          pixelRatio: renderer.getPixelRatio(), samples: pipeline?.target.samples ?? 0, mode: anatomy?.state.mode,
           studyMode: anatomy?.state.lungView.status === 'open' ? anatomy.getLungSnapshot()?.mode : undefined,
           width: canvas.clientWidth, height: canvas.clientHeight, eyelids: eyelids.length,
           rig: !!breathBone, asset });
@@ -324,10 +337,6 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       }
     }
     if (collectRenderStats) renderer.info.reset();
-    // Adapt only after sustained slow frames, preserving crispness on capable devices.
-    if (rawDt > .025 && rawDt < .2 && model) slowFrames++; else slowFrames = Math.max(0, slowFrames - 1);
-    if (slowFrames > 100 && pixelRatio > 1.1) { pixelRatio = Math.max(1, pixelRatio - .25); slowFrames = 0; resize(); }
-    else if (slowFrames > 100 && pipeline?.reduceQuality()) { slowFrames = 0; resetFrameStats(); }
     const settling = Math.abs(night - nightTarget) > .001 || motion.settling || resetting || anatomySettling || grading || atmosphereSettling || sootSettling || rainSettling;
     if (movingCharacter || (rotating && !anatomy?.active) || changed || settling) frame = requestAnimationFrame(tick); else running = false;
   }
@@ -513,7 +522,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
         if (material instanceof THREE.MeshStandardMaterial && !forestMaterials.has(material)) { forestMaterials.add(material); forest.patch(material); }
       }
     });
-    root.add(model); root.updateMatrixWorld(true);
+    root.add(model); root.updateMatrixWorld(true); key.shadow.needsUpdate = true;
     // Paws and their claws/fur stay on the plinth while the heavy torso settles.
     for (const name of ['Foot_L', 'Foot_R']) {
       const foot = model.getObjectByName(name); if (foot) root.attach(foot);
@@ -537,7 +546,9 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       signal: options.signal, animate: animated, wake, onState: state => options.onAnatomyState?.(state), onMode: () => motion.reset() });
     // Warm the rain and firefly shaders too, so the first shower or night does not hitch.
     atmosphere.prepareCompile(); rain.prepareCompile();
-    await (pipeline ? pipeline.compile(scene, camera) : renderer.compileAsync(scene, camera));
+    const compilation = pipeline ? pipeline.compile(scene, camera) : renderer.compileAsync(scene, camera);
+    renderer.getContext().flush(); wake();
+    await compilation;
     if (!options.signal.aborted && !disposed) { renderFrame(scene); pipeline?.setExposureScale(1); options.onReady(); wake(); } else controller.dispose();
   } catch (error) {
     if (!options.signal.aborted) {

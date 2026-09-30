@@ -1,0 +1,60 @@
+{
+  "date": "2026-09-30",
+  "scope": "Local Codex in-app Chromium preview. Desktop viewport 1280x900; mobile layout emulated at 390x844. Renderer counters include shadow, transmission and post-processing passes. These are not physical-phone or GPU-time benchmarks.",
+  "brainStudy": {
+    "canvasPixels": [986, 650],
+    "before": { "drawCalls": 195, "triangleSubmissions": 662832 },
+    "after": { "drawCalls": 132, "triangleSubmissions": 363556, "pixelRatio": 1, "msaaSamples": 4 },
+    "savedPerFrame": { "drawCalls": 63, "triangleSubmissions": 299276 },
+    "condition": "Playing neural animation with resting tissue. Shadow geometry refreshes when the touch field changes. All 299276 model triangles are retained.",
+    "timingCaveat": "Frame intervals varied substantially during the session; the baseline did not expose its automatic MSAA setting. No FPS improvement or equal-quality timing comparison is claimed. Draw counts and submitted geometry are independent of that setting."
+  },
+  "exterior": {
+    "observedAnimatedDrawCalls": 124,
+    "observedPausedCameraRotationDrawCalls": 78,
+    "pausedRotationTriangleSubmissions": 328067,
+    "afterQuality": { "pixelRatio": 1, "msaaSamples": 4 },
+    "condition": "Paused character with auto-rotation. Light-space depth is unchanged by the viewing camera. The animated-character observation is a separate workload, not an FPS baseline."
+  },
+  "split": {
+    "observedDrawCalls": 913,
+    "change": "Section quads bound to tissue instead of 20x20 planes. Stencil passes, tissue coordinates, cut coverage and render order retained.",
+    "verifiedGeometryCases": 24,
+    "timingCaveat": "No isolated GPU-time improvement measured for bounded section quads."
+  },
+  "loading": {
+    "deferredBrainChunkBytes": 21567,
+    "deferredBrainChunkGzipBytes": 7435,
+    "pausedStudyEntry": "Passed in the browser: open brain after pausing and settling Split; study appears without pressing Play or moving the camera. Shader preparation flushes commands and requests one frame."
+  },
+  "quality": {
+    "modelAndTextureAssetsChanged": false,
+    "materialAndLightingShadersChanged": false,
+    "bloomAndGradingChanged": false,
+    "resolutionAndMsaaAutomaticDowngradesRemoved": true,
+    "existingPixelRatioCap": 1.8
+  },
+  "browserChecks": [
+    "Exterior rendering and paused auto-rotation",
+    "Split section appearance compared with the original at the same viewport",
+    "Brain appearance compared with the original at the same viewport",
+    "Paused brain entry, tissue drag and release",
+    "390x844 brain layout: document width 390, no horizontal overflow",
+    "Back to anatomy and Exterior restores the viewer",
+    "No browser console errors"
+  ],
+  "checksPassed": [
+    "TypeScript",
+    "Production static-export build",
+    "24 section-cap geometry combinations",
+    "119 anatomy runtime assertions",
+    "114 brain view assertions, including shader submission and shadow invalidation",
+    "26 brain touch assertions",
+    "24 brain activity checks",
+    "Existing split-shadow cache checks",
+    "7941 heart view assertions",
+    "71 eye view assertions",
+    "437 lung view assertions",
+    "git diff --check"
+  ]
+}

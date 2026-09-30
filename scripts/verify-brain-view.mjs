@@ -56,10 +56,22 @@ function fixture(){
   const canvas=new Element();new Element().appendChild(canvas);
   const camera=new THREE.PerspectiveCamera(30,4/3,.1,100);camera.position.set(3.5,4,12.4);
   const controls={target:new THREE.Vector3(0,2.3,0),enabled:true,enableDamping:true,autoRotate:false,update(){}};
-  const renderer={capabilities:{getMaxAnisotropy:()=>8,maxTextureSize:8192}};
+  let submitCompile, flushed=false;
+  const renderer={
+    capabilities:{getMaxAnisotropy:()=>8,maxTextureSize:8192}, flushes:0,
+    compileAsync(){
+      flushed=false;
+      return new Promise((resolve,reject)=>{
+        const timeout=setTimeout(()=>reject(new Error('Paused shader compilation was never submitted')),1000);
+        submitCompile=()=>{clearTimeout(timeout);resolve();};
+      });
+    },
+    getContext(){return {flush(){renderer.flushes++;flushed=true;}};},
+  };
   const scene=new THREE.Scene(),exterior=new THREE.Group();scene.add(exterior);
   const events=[],abort=new AbortController();
-  const api=createAnatomyExplorer({canvas,camera,controls,renderer,scene,exterior,signal:abort.signal,wake(){},onState:s=>events.push(s)});
+  const api=createAnatomyExplorer({canvas,camera,controls,renderer,scene,exterior,signal:abort.signal,
+    wake(){if(flushed&&submitCompile){submitCompile();submitCompile=undefined;}},onState:s=>events.push(s)});
   return {canvas,camera,controls,renderer,scene,exterior,api,events,abort};
 }
 async function focus(f,systems=['organs']) {
@@ -76,8 +88,18 @@ await focus(f);
 const original={position:f.camera.position.clone(),target:f.controls.target.clone(),near:f.camera.near,fov:f.camera.fov,selected:f.api.state.selectedId,cut:{...f.api.state.cut},explosion:f.api.state.explosion,systems:[...f.api.state.visibleSystems]};
 await f.api.openBrainView();
 check(f.api.state.brainView.status==='open'&&f.api.detailScene,'Click opens an isolated scene');
+check(f.renderer.flushes===1,'Shader preparation submits without requiring the paused render loop');
 check(f.controls.minPolarAngle<.05&&f.controls.maxPolarAngle>3,'Full orbit in the detailed view');
 const detailScene=f.api.detailScene;
+const shadow = detailScene.children.find(node => node.isDirectionalLight && node.castShadow).shadow;
+check(!shadow.autoUpdate && shadow.needsUpdate,'Detailed brain requests an initial full-resolution shadow');
+shadow.needsUpdate=false;
+f.api.update(.05,false);
+check(!shadow.needsUpdate,'Resting tissue reuses its existing shadow');
+const shadowCameraPosition=f.camera.position.clone();
+f.camera.position.x+=.1;f.api.update(.05,false);
+check(!shadow.needsUpdate,'Orbiting the camera does not invalidate light-space shadows');
+f.camera.position.copy(shadowCameraPosition);
 const tissueMaterials=new Set(),pulseMaterials=[];
 detailScene.traverse(node=>{
   if(!node.isMesh)return;
@@ -95,6 +117,15 @@ for(const material of tissueMaterials){
   check(shader.fragmentShader.includes('#define RE_Direct RE_Direct_Brain')&&shader.fragmentShader.includes('light.color*tissue.diffuseColor*transport'),'Subsurface scattering is attached to actual direct-light transport');
 }
 const time=pulseMaterials[0].uniforms.brainTime.value;
+const shadowShader={uniforms:{},vertexShader:THREE.ShaderLib.physical.vertexShader,fragmentShader:THREE.ShaderLib.physical.fragmentShader};
+[...tissueMaterials][0].onBeforeCompile(shadowShader);
+shadowShader.uniforms.tissueTouchOffsets.value[0].set(.04,0,0);
+f.api.update(0,false);
+check(shadow.needsUpdate,'Direct tissue deformation invalidates the cached shadow while paused');
+shadow.needsUpdate=false;
+shadowShader.uniforms.tissueTouchOffsets.value[0].set(0,0,0);
+f.api.update(0,false);
+check(shadow.needsUpdate,'The exact resting pose refreshes shadows after cancellation or settling');
 f.api.update(.5,true);check(pulseMaterials[0].uniforms.brainTime.value===time,'Reduced motion freezes pulses');
 const eventCount=f.events.length;f.api.update(.5);check(f.events.length===eventCount,'No per-frame React notifications');
 f.camera.position.set(1,1,1);f.api.resize();check(f.camera.position.length()>1.5,'Detail resize keeps the brain framed');
@@ -183,7 +214,10 @@ for(let i=0;i<90;i++)animated.api.update(.05);
 meshProto.raycast=origRaycast;
 check(heartbeatRays===0,'A resting camera does not rerun occlusion during heartbeat');
 await animated.api.openBrainView();const pulses=[];animated.api.detailScene.traverse(n=>{if(n.isMesh&&n.material.isShaderMaterial)pulses.push(n.material);});
+const animatedShadow=animated.api.detailScene.children.find(n=>n.isDirectionalLight&&n.castShadow).shadow;
+animatedShadow.needsUpdate=false;
 animated.api.update(.5,true);const animatedTime=pulses[0].uniforms.brainTime.value;check(animatedTime>0,'Neural activity advances while playing');
+check(!animatedShadow.needsUpdate,'Neural animation does not redraw unchanged depth geometry');
 animated.api.update(.5,false);check(pulses[0].uniforms.brainTime.value===animatedTime,'Pause freezes neural activity');animated.api.dispose();
 check(createdBitmaps===closedBitmaps,'Decoded images released exactly once');
 const report={passed:true,assertions:count,coverage:['proximity hysteresis','occlusion and clipping','selection and filters','explicit opening','camera and settings restoration','responsive framing','texture choices and bindings','shader hooks','cached reopening','failure and retry','stale opening cancellation','pause and reduced motion','resource disposal','no proximity preload','split-view occlusion cost','heartbeat does not retrigger occlusion','shortcut with hidden and clipped brain in both modes','shortcut cancellation on reset/mode/filter/variant/disposal','cancel-and-reopen race','shortcut retry and restoration'],scope:'Node integration with real detail GLB and texture files, a DOM fixture, and a stub image decoder. Browser shader compilation and interaction are checked separately.'};

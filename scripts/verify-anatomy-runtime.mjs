@@ -198,12 +198,21 @@ for(let frame=0;frame<8;frame++) {
 }
 const beatingHeart=beating.scene.getObjectByName('heart');
 const restScale=beatingHeart.scale.clone();
+const restingShadow=beating.api.shadowRevision;
+beating.camera.position.x+=.1;beating.api.update(0,false);
+check(beating.api.shadowRevision===restingShadow,'Camera motion does not invalidate unchanged anatomy shadows');
 check(beating.api.update((60/72)*.16),'Heartbeat keeps the render loop awake');
+check(beating.api.shadowRevision>restingShadow,'Beating tissue invalidates its shadow every frame');
 check(beatingHeart.scale.x<restScale.x*.94&&beatingHeart.scale.y>restScale.y,'Heart contracts across its width and lengthens during systole');
 const volume=beating.scene.children.flatMap(n=>n.children).find(n=>n.geometry===beatingHeart.geometry&&n.matrixAutoUpdate===false);
 check(volume.matrix.equals(beatingHeart.matrixWorld),'Cut stencil follows the deformed heart');
 beating.api.update(.01,false);
 check(beatingHeart.scale.equals(restScale),'Pausing restores the resting heart and section');
+const settledShadow=beating.api.shadowRevision;
+beating.api.update(.1,false);
+check(beating.api.shadowRevision===settledShadow,'Paused anatomy keeps its cached shadow');
+beating.api.setCut({position:.39});beating.api.update(0,false);
+check(beating.api.shadowRevision>settledShadow,'Changing a cut invalidates the shadow before rendering');
 beating.api.setAnimate(true);
 await beating.api.setMode('exploded');
 check(beatingHeart.position.distanceTo(new THREE.Vector3(-.5,2.5,0))<1e-9,'Exploded reveal starts assembled');

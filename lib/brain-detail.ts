@@ -5,7 +5,7 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { applyTissueTouch, createBrainTouch, TOUCH_GLSL } from './brain-touch';
-import { createBrainActivity } from './brain-activity';
+import { BRAIN_GAUSSIAN_GLSL, createBrainActivity } from './brain-activity';
 
 const BASE = '/models/brain-detail/';
 type NeuralPath = { points: number[][]; phase: number; depth: number };
@@ -17,52 +17,9 @@ type Cache = {
   size: number; bytes: ArrayBuffer; paths: NeuralPath[];
   color: Blob; normal: Blob; surface: Blob; membrane: Blob; height: Blob;
 };
-const _point = new THREE.Vector3(), _projected = new THREE.Vector3(), _ndc = new THREE.Vector2();
-const _origin = new THREE.Vector3(), _sphere = new THREE.Sphere();
-export const BRAIN_VISIBILITY_SAMPLES = 8;
-
-export function isBrainOccluder(mesh: THREE.Mesh) {
-  return mesh.visible && !mesh.name.includes('fibers') && !mesh.userData.sectionCap;
-}
-
-/** Closest-hit probe that skips fur fibers and section caps. */
-export function probeBrainVisibility(
-  camera: THREE.Camera,
-  brainMeshes: THREE.Mesh[], occluders: THREE.Mesh[], raycaster: THREE.Raycaster, clipPlane: THREE.Plane | null,
-) {
-  camera.getWorldPosition(_origin);
-  for (const mesh of brainMeshes) {
-    const positions = mesh.geometry.attributes.position;
-    if (!positions) continue;
-    const stride = Math.max(1, Math.floor(positions.count / BRAIN_VISIBILITY_SAMPLES));
-    for (let i = 0; i < positions.count; i += stride) {
-      _point.fromBufferAttribute(positions, i).applyMatrix4(mesh.matrixWorld);
-      if (clipPlane && clipPlane.distanceToPoint(_point) < -.001) continue;
-      _projected.copy(_point).project(camera);
-      if (Math.abs(_projected.x) > .94 || Math.abs(_projected.y) > .94 || Math.abs(_projected.z) > 1) continue;
-      _ndc.set(_projected.x, _projected.y);
-      raycaster.setFromCamera(_ndc, camera);
-      const brainHit = firstUnclippedHit(raycaster.intersectObjects(brainMeshes, false), clipPlane);
-      if (!brainHit) continue;
-      const limit = brainHit.distance - 1e-4;
-      let blocked = false;
-      for (const other of occluders) {
-        if (other === mesh || brainMeshes.includes(other) || !isBrainOccluder(other)) continue;
-        if (!other.geometry.boundingSphere) other.geometry.computeBoundingSphere();
-        _sphere.copy(other.geometry.boundingSphere!).applyMatrix4(other.matrixWorld);
-        if (_origin.distanceTo(_sphere.center) - _sphere.radius > limit) continue;
-        const hit = firstUnclippedHit(raycaster.intersectObject(other, false), clipPlane);
-        if (hit && hit.distance < brainHit.distance) { blocked = true; break; }
-      }
-      if (!blocked) return true;
-    }
-  }
-  return false;
-}
-
-function firstUnclippedHit(hits: THREE.Intersection[], clipPlane: THREE.Plane | null) {
-  return clipPlane ? hits.find(h => clipPlane.distanceToPoint(h.point) >= -.0001) : hits[0];
-}
+// Keep these exports available to existing consumers without loading this
+// detailed study from the anatomy overview.
+export { brainProximity, isBrainOccluder, probeBrainVisibility, BRAIN_VISIBILITY_SAMPLES } from './organ-visibility';
 
 export function detailTextureSize(width: number, maxTextureSize: number) {
   return width < 768 || maxTextureSize < 4096 ? 2048 : 4096;
@@ -76,6 +33,7 @@ export function createBrainDetail(o: Options) {
   const ambient = new THREE.HemisphereLight(0xe8e6e2, 0x332a2c, .24);
   const key = new THREE.DirectionalLight(0xfff4ec, 2.7); key.position.set(-2, 3, 2);
   key.castShadow = true; key.shadow.mapSize.set(2048, 2048);
+  key.shadow.autoUpdate = false; key.shadow.needsUpdate = true;
   Object.assign(key.shadow.camera, { left: -.9, right: .9, top: .9, bottom: -.9, near: .1, far: 8 });
   key.shadow.bias = -.00008; key.shadow.normalBias = .0006;
   const fill = new THREE.DirectionalLight(0xd9e6f4, .38); fill.position.set(2, .5, 2);
@@ -84,6 +42,11 @@ export function createBrainDetail(o: Options) {
   const root = new THREE.Group(); scene.add(root);
   const activity = createBrainActivity({ canvas:o.canvas, camera:o.camera, root, wake:()=>o.wake(), reduced:o.reduced });
   const touch = createBrainTouch({ canvas:o.canvas, camera:o.camera, controls:o.controls, root, wake:()=>o.wake(), reduced:o.reduced });
+  // The depth shader depends on the touch field, not neural time or the
+  // viewing camera. Compare the actual field so a cancelled or settled grab
+  // also refreshes the final shadow, even when its spring reports no motion.
+  const shadowField = [...touch.springs.centers, ...touch.springs.offsets]
+    .map(value => ({ value, previous: value.clone() }));
   const textures = new Set<THREE.Texture>();
   const materials = new Set<THREE.Material>();
   const geometries = new Set<THREE.BufferGeometry>();
@@ -232,7 +195,7 @@ export function createBrainDetail(o: Options) {
         const compileTissue = material.onBeforeCompile.bind(material);
         const cacheKey = material.customProgramCacheKey();
         material.onBeforeCompile = (shader, renderer) => { compileTissue(shader,renderer); applyTissueTouch(shader,touch.springs); if(material.map)activity.apply(shader); };
-        material.customProgramCacheKey = () => `${cacheKey}-squash-hover-neurons-v2`;
+        material.customProgramCacheKey = () => `${cacheKey}-squash-hover-neurons-v3`;
         const depth = new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking});
         depth.onBeforeCompile = shader => applyTissueTouch(shader,touch.springs);
         depth.customProgramCacheKey = () => 'brain-squash-shadow-v1';
@@ -261,11 +224,12 @@ export function createBrainDetail(o: Options) {
             varying vec2 vUv; varying float vPhase; varying float vDepth;
             void main() { vUv=uv; vPhase=phase; vDepth=tissueDepth;
               gl_Position=projectionMatrix*viewMatrix*vec4(softTissuePosition((modelMatrix*vec4(position,1.0)).xyz),1.0); }`,
-          fragmentShader: `uniform float brainTime; uniform float brainHoverLevel; varying vec2 vUv; varying float vPhase; varying float vDepth;
+          fragmentShader: `${BRAIN_GAUSSIAN_GLSL}\nuniform float brainTime; uniform float brainHoverLevel; varying vec2 vUv; varying float vPhase; varying float vDepth;
             void main() {
               float head = mod(brainTime*.16+vPhase,1.65)-.25;
-              float impulse=exp(-pow((vUv.x-head)/.048,2.0));
-              float softEdge=pow(sin(vUv.y*3.14159265),2.0);
+              float impulse=brainGaussian((vUv.x-head)/.048);
+              float edge=sin(vUv.y*3.14159265);
+              float softEdge=edge*edge;
               float alpha=impulse*softEdge*exp(-vDepth*1.8)*.38*brainHoverLevel;
               gl_FragColor=vec4(vec3(1.0,.81,.60),alpha);
               #include <tonemapping_fragment>
@@ -275,7 +239,7 @@ export function createBrainDetail(o: Options) {
         materials.add(material); root.add(new THREE.Mesh(geometry, material));
       }
       if (disposed || o.signal.aborted) throw new Error('Disposed');
-      root.updateMatrixWorld(true); ready = true;
+      root.updateMatrixWorld(true); key.shadow.needsUpdate = true; ready = true;
     })();
     promise = thisPromise;
     try { await thisPromise; } catch (error) { release(); throw error; }
@@ -286,7 +250,17 @@ export function createBrainDetail(o: Options) {
     get ready() { return ready; },
     setInteractive(value: boolean) { activity.setEnabled(value); touch.setEnabled(value); },
     unload() { if (!disposed && ready) release(); },
-    update(dt: number, animated: boolean) { if (animated) time.value += dt; const active=activity.update(dt,animated); return touch.update(dt) || active || animated; },
+    update(dt: number, animated: boolean) {
+      if (animated) time.value += dt;
+      const active = activity.update(dt, animated), deforming = touch.update(dt);
+      for (const field of shadowField) {
+        if (!field.value.equals(field.previous)) {
+          key.shadow.needsUpdate = true;
+          field.previous.copy(field.value);
+        }
+      }
+      return deforming || active || animated;
+    },
     dispose() {
       if (disposed) return;
       disposed = true; cache = undefined; abort.abort(); o.signal.removeEventListener('abort', abortParent); release();
@@ -295,11 +269,6 @@ export function createBrainDetail(o: Options) {
       key.shadow.dispose();
     },
   };
-}
-
-/** Projected size with hysteresis; visibility is checked separately by raycast. */
-export function brainProximity(size: number, visible: boolean, wasAvailable: boolean) {
-  return visible && Number.isFinite(size) && size >= (wasAvailable ? .22 : .30);
 }
 
 export type BrainDetail = ReturnType<typeof createBrainDetail>;

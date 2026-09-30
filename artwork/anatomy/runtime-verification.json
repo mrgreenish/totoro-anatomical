@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "assertions": 115,
+  "assertions": 119,
   "coverage": [
     "cut coordinates and reverse",
     "conservative split culling",
