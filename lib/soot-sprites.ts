@@ -15,7 +15,7 @@ type Sprite = {
   x: number; z: number; homeX: number; homeZ: number; shelterX: number; shelterZ: number; radius: number; seed: number;
   hop: number; hopDuration: number; hopHeight: number; fromX: number; fromZ: number; toX: number; toZ: number;
   height: number; squash: number; squashVelocity: number; blink: number; nextBlink: number;
-  lookX: number; lookY: number; fear: number; calm: number; nextIdle: number; spin: number;
+  lookX: number; lookY: number; fear: number; nextIdle: number;
   screenX: number; screenY: number; screenRadius: number;
 };
 
@@ -76,6 +76,8 @@ const FRAGMENT = /* glsl */`
     color = mix(color, vec3(.004), pupil * whites);
     color += vec3(1.4) * glint * whites * (1. - pupil);
     gl_FragColor = vec4(color, alpha);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
   }
 `;
 
@@ -96,7 +98,7 @@ export function createSootSprites(o: Options) {
       radius: .11 + random() * .035, seed: random() * 10,
       hop: -1, hopDuration: .25, hopHeight: 0, fromX: x, fromZ: z, toX: x, toZ: z, height: 0,
       squash: 0, squashVelocity: 0, blink: 0, nextBlink: 1 + random() * 4, lookX: 0, lookY: 0,
-      fear: 0, calm: 0, nextIdle: 2 + random() * 6, spin: 0, screenX: 0, screenY: 0, screenRadius: 0 });
+      fear: 0, nextIdle: 2 + random() * 6, screenX: 0, screenY: 0, screenRadius: 0 });
   }
 
   const quad = new THREE.PlaneGeometry(1, 1);
@@ -110,7 +112,8 @@ export function createSootSprites(o: Options) {
   geometry.setAttribute('spriteState', stateAttribute);
   geometry.setAttribute('spriteLook', lookAttribute);
   geometry.instanceCount = count;
-  const lightDirection = new THREE.Vector3();
+  // A fixed upper-left light in view space keeps the fuzz readable from any orbit.
+  const lightDirection = new THREE.Vector3(-.45, .75, .5).normalize();
   const material = new THREE.ShaderMaterial({ name: 'Soot sprites', vertexShader: VERTEX, fragmentShader: FRAGMENT,
     uniforms: { time: { value: 0 }, night: { value: 0 }, lightDirection: { value: lightDirection } }, alphaToCoverage: true });
   const mesh = new THREE.Mesh(geometry, material);
@@ -139,6 +142,8 @@ export function createSootSprites(o: Options) {
       void main() {
         float shade = exp(-dot(vLocal, vLocal) * 3.2) * .55 / (1. + vLift * 1.4);
         gl_FragColor = vec4(vec3(.015, .01, .008), shade);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
       }`,
   });
   const shadows = new THREE.Mesh(shadowGeometry, shadowMaterial);
@@ -200,7 +205,6 @@ export function createSootSprites(o: Options) {
     const angle = (random() - .5) * .9, distance = .22 + .28 * strength + random() * .15;
     const cos = Math.cos(angle), sin = Math.sin(angle);
     hop(s, s.x + (dx * cos - dz * sin) * distance, s.z + (dx * sin + dz * cos) * distance, .1 + .16 * strength, .2 + .08 * random());
-    s.spin = (random() - .5) * strength * 2;
   }
 
   function update(dt: number, frame: SootFrame) {
@@ -213,7 +217,6 @@ export function createSootSprites(o: Options) {
     time += step;
     material.uniforms.time.value = time;
     o.camera.updateMatrixWorld();
-    lightDirection.set(-.45, .75, .5).normalize();
     const rect = o.canvas.getBoundingClientRect();
     const scale = rect.height / (2 * Math.tan(THREE.MathUtils.degToRad(o.camera.fov) / 2));
     for (const s of sprites) {

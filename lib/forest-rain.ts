@@ -77,6 +77,8 @@ const FRAGMENT = /* glsl */`
     alpha *= vFade * frame * intensity;
     if (alpha < .004) discard;
     gl_FragColor = vec4(color * vLight, min(alpha, 1.));
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
   }
 `;
 

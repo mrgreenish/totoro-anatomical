@@ -10,7 +10,7 @@ import type { HeartViewOptions } from './heart-detail';
 import type { EyeViewOptions } from './eye-optics';
 import type { LungSnapshot, LungViewOptions } from './lung-physiology';
 import { createSplitShadowCache } from './split-shadow-cache';
-import { createRenderPipeline, type GradeName } from './render-pipeline';
+import { createRenderPipeline, probeHdrSupport, type GradeName } from './render-pipeline';
 import { createForestLight } from './forest-light';
 import { createForestAtmosphere } from './forest-atmosphere';
 import { createCamphorPlinth } from './camphor-plinth';
@@ -48,8 +48,10 @@ const damp = THREE.MathUtils.damp;
 
 export async function createSculpture(canvas: HTMLCanvasElement, options: Options): Promise<SculptureController> {
   // The HDR pipeline owns multisampling, so the default framebuffer only
-  // receives the final composite.
-  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, stencil: true, powerPreference: 'high-performance' });
+  // receives the final composite. Browsers without float targets keep
+  // native antialiasing for direct rendering.
+  const hdr = probeHdrSupport();
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: !hdr, stencil: true, powerPreference: 'high-performance' });
   const collectRenderStats = process.env.NODE_ENV !== 'production';
   // Keep the normal renderer fast in production. Development diagnostics use
   // manual resets so the counters include the shadow pass as well as the main
@@ -64,9 +66,9 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
   const splitShadowCache = createSplitShadowCache(renderer.shadowMap);
   // PCF avoids variance-shadow light leaks through thin ribs and close tissue.
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  const createdPipeline = createRenderPipeline(renderer);
-  const pipeline = createdPipeline.supported ? createdPipeline : undefined;
-  if (!pipeline) createdPipeline.dispose();
+  const createdPipeline = hdr ? createRenderPipeline(renderer) : undefined;
+  const pipeline = createdPipeline?.supported ? createdPipeline : undefined;
+  if (!pipeline) createdPipeline?.dispose();
   canvas.dataset.pipeline = pipeline ? 'hdr' : 'direct';
   // The forest wakes gently: exposure rises once the sculpture is ready.
   pipeline?.setExposureScale(options.animate ? .3 : 1, true);

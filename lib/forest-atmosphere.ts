@@ -182,6 +182,8 @@ export function createForestAtmosphere(o: Options) {
         float alpha = across * along * frame * breathe * (.55 + .45 * dust) * intensity;
         if (alpha < .002) discard;
         gl_FragColor = vec4(color, alpha);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
       }`,
   });
   materials.push(beamMaterial);
@@ -236,6 +238,8 @@ export function createForestAtmosphere(o: Options) {
         float alpha = mix(soft, disc * .4, vBokeh) * vAlpha * intensity;
         if (alpha < .003) discard;
         gl_FragColor = vec4(color, min(alpha, 1.));
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
       }`,
   });
   materials.push(moteMaterial);
@@ -277,6 +281,8 @@ export function createForestAtmosphere(o: Options) {
         if (alpha < .003) discard;
         // HDR core so the bloom chain turns each flash into a soft lantern.
         gl_FragColor = vec4(vec3(1., .86, .38) * (1.4 + core * 14. * vFlash), min(alpha, 1.));
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
       }`,
   });
   materials.push(fireflyMaterial);

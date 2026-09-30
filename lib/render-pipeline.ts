@@ -172,6 +172,21 @@ const COMPOSITE = /* glsl */`
 
 type Options = { maxBloomLevels?: number };
 
+/**
+ * Whether this browser can likely render to half-float targets, checked on a
+ * throwaway context so the real renderer can keep native antialiasing when
+ * the pipeline will not run.
+ */
+export function probeHdrSupport() {
+  try {
+    const probe = document.createElement('canvas').getContext('webgl2');
+    if (!probe) return false;
+    const supported = !!probe.getExtension('EXT_color_buffer_float') || !!probe.getExtension('EXT_color_buffer_half_float');
+    probe.getExtension('WEBGL_lose_context')?.loseContext();
+    return supported;
+  } catch { return false; }
+}
+
 export function createRenderPipeline(renderer: THREE.WebGLRenderer, options: Options = {}) {
   const extensions = renderer.extensions;
   const floatTargets = extensions.has('EXT_color_buffer_float') || extensions.has('EXT_color_buffer_half_float');
