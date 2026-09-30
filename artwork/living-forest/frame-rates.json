@@ -1,0 +1,13 @@
+{
+  "scope": "Headless Chromium 141 (Playwright chromium-1194) with ANGLE SwiftShader, a CPU software renderer, in a Linux container without a GPU. 1440 x 900 viewport, DPR 1, daylight, animation enabled, default camera. Frames were counted with requestAnimationFrame over a fixed window after the scene settled. These are relative checks between the original commit and this branch in the same environment; they are not GPU frame rates.",
+  "baseline": "4f1e6ca (original HEAD, served from an isolated worktree)",
+  "measurements": [
+    { "scene": "exterior", "windowSeconds": 10, "before": { "frames": 20, "fps": 1.909 }, "after": { "frames": 14, "fps": 1.347 } },
+    { "scene": "split", "windowSeconds": 40, "before": { "frames": 8, "fps": 0.197 }, "after": { "frames": 6, "fps": 0.147 } }
+  ],
+  "notes": [
+    "The 'after' exterior figure was taken with the HDR pipeline, forest light, plinth and atmosphere enabled, before soot sprites and rain were added; sprites add one small instanced draw and rain is off by default.",
+    "SwiftShader emulates 4x MSAA and half-float targets on the CPU, so their relative cost is far higher than on graphics hardware.",
+    "Hardware GPU cost has not been measured. The existing adaptive pixel ratio still lowers resolution after sustained slow frames, and the pipeline now halves multisampling once if frames stay slow at the lowest ratio."
+  ]
+}

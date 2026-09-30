@@ -50,7 +50,7 @@ Rain (`lib/forest-rain.ts`) is a single instanced draw. Each drop is a pixel-wid
 
 In Split, tissue that meets the cutting plane carries a thin warm rim, sized in pixels from the live clipping plane (`lib/section-light.ts`). Section caps gain fine cellular mottling and a moist sheen.
 
-Everything runs on the character clock, so Pause freezes the moment and reduced motion starts it still. The atmosphere, rain and sprites fade out in the anatomy views and never enter the organ studies. The effects add one full-resolution composite, small bloom passes and a handful of instanced draws. In headless Chromium with SwiftShader (a CPU renderer), exterior frame rate fell from 1.9 to 1.35 fps and Split from 0.20 to 0.15 fps. Those runs are relative checks only; hardware GPU cost has not been measured.
+Everything runs on the character clock, so Pause freezes the moment and reduced motion starts it still. The atmosphere, rain and sprites fade out in the anatomy views and never enter the organ studies. The effects add one full-resolution composite, small bloom passes and a handful of instanced draws. In headless Chromium with SwiftShader (a CPU renderer), exterior frame rate fell from 1.9 to 1.35 fps and Split from 0.20 to 0.15 fps. Those runs are relative checks only; hardware GPU cost has not been measured. Before/after captures, the measurements and the review checklist are in `artwork/living-forest/`.
 
 ## Development
 
