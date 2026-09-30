@@ -535,6 +535,8 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     }
     anatomy = createAnatomyExplorer({ canvas, renderer, scene, camera, controls, exterior: root,
       signal: options.signal, animate: animated, wake, onState: state => options.onAnatomyState?.(state), onMode: () => motion.reset() });
+    // Warm the rain and firefly shaders too, so the first shower or night does not hitch.
+    atmosphere.prepareCompile(); rain.prepareCompile();
     await (pipeline ? pipeline.compile(scene, camera) : renderer.compileAsync(scene, camera));
     if (!options.signal.aborted && !disposed) { renderFrame(scene); pipeline?.setExposureScale(1); options.onReady(); wake(); } else controller.dispose();
   } catch (error) {

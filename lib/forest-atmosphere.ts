@@ -412,7 +412,8 @@ export function createForestAtmosphere(o: Options) {
       let loosened = 0;
       for (const leaf of leaves) if (leaf.parked && loosened < reserveLeaves * .7) { spawn(leaf, false, true); loosened++; }
     },
-    get time() { return time; },
+    /** Shows every effect for one shader warm-up; the next update restores visibility. */
+    prepareCompile() { root.visible = true; fireflyPoints.visible = true; },
     update(dt: number, frame: AtmosphereFrame) {
       const step = frame.animated ? dt : 0;
       time += step;
@@ -430,7 +431,7 @@ export function createForestAtmosphere(o: Options) {
       (forest.uniforms.forestCanopyRange.value as THREE.Vector2).set(.5 + .08 * night, 1.42 - .2 * night);
       (forest.uniforms.forestCanopyShade.value as THREE.Color).setRGB(.8 + .12 * night, 1, .7 + .3 * night);
       beamMaterial.uniforms.time.value = time;
-      beamMaterial.uniforms.intensity.value = visibility * (.05 * day + .1 * night) * clear * clear;
+      beamMaterial.uniforms.intensity.value = visibility * (.085 * day + .1 * night) * clear * clear;
       (beamMaterial.uniforms.color.value as THREE.Color).copy(beamDay).lerp(beamNight, night);
       (beamMaterial.uniforms.viewport.value as THREE.Vector2).set(frame.viewportWidth, frame.viewportHeight);
       moteMaterial.uniforms.time.value = time;

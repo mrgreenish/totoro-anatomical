@@ -126,6 +126,8 @@ export function createForestRain(o: Options) {
     /** Surface water, which lingers after the shower. */
     get wetness() { return wetness * visibility; },
     get time() { return time; },
+    /** Shows the shower for one shader warm-up; the next update restores visibility. */
+    prepareCompile() { mesh.visible = true; },
     update(dt: number, frame: RainFrame) {
       const step = frame.animated ? dt : 0;
       time += step;
