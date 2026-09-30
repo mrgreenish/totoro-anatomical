@@ -28,7 +28,7 @@ for ob in list(bpy.data.collections['ANATOMY'].all_objects):
                 if abs(v.co.x)>1.3 and v.co.z<1.85:
                     weight=min(1,max(0,(1.85-v.co.z)/.60));v.co.z+=.17*weight;v.co.y-=.08*weight
     # The ocular surface intentionally reaches the exterior eye opening.
-    if pid.startswith(('eye_','lens_','retina_')):continue
+    if pid.startswith(('eye_','pupil_','lens_','retina_')):continue
     changed=0;maximum=0;inverse=ob.matrix_world.inverted()
     for v in ob.data.vertices:
         point=ob.matrix_world@v.co;closest=None;inside=False

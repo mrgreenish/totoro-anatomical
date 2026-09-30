@@ -468,6 +468,22 @@ export function createAnatomyExplorer(o: Options) {
       }
       heartPart = parts.find(part => part.id === 'heart');
       model.updateMatrixWorld(true);
+      // Older exports put the dark pupils inside the opaque sclera. Keep
+      // their shallow caps on the ocular surface and update their rest poses
+      // before building section masks, so cuts and reassembly use the same pose.
+      const eyeBox = new THREE.Box3(), pupilBox = new THREE.Box3(), pupilPosition = new THREE.Vector3();
+      for (const side of ['L', 'R']) {
+        const eye = parts.find(part => part.id === `eye_${side}`);
+        const pupil = parts.find(part => part.id === `pupil_${side}`);
+        if (!eye || !pupil) continue;
+        eyeBox.setFromObject(eye.node); pupilBox.setFromObject(pupil.node);
+        const surface = eyeBox.max.z + (pupilBox.max.z - pupilBox.min.z) * .25;
+        const shift = Math.max(0, surface - (pupilBox.min.z + pupilBox.max.z) * .5);
+        pupil.node.getWorldPosition(pupilPosition); pupilPosition.z += shift;
+        pupil.node.position.copy(pupil.node.parent ? pupil.node.parent.worldToLocal(pupilPosition) : pupilPosition);
+        pupil.rest.copy(pupil.node.position);
+      }
+      model.updateMatrixWorld(true);
       let capIndex = 0;
       // The inner white matter is a nested section: draw it over the cortex.
       const capParts = [...parts].sort((a, b) => Number(a.id === 'brain_white_matter') - Number(b.id === 'brain_white_matter'));

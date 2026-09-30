@@ -514,7 +514,9 @@ def build_details():
         organ('lens_'+side,side+' eye lens',(s*.62,-.658,3.53),(.087,.038,.087),CART,eyeoff)
         # The exposed half of split view uses the anatomy asset rather than
         # the exterior sculpt, so it needs the same readable dark pupil.
-        organ('pupil_'+side,side+' pupil',(s*.62,-.708,3.53),(.061,.014,.067),PUPIL,eyeoff)
+        # The globe reaches -.730: embed the pupil's back in the sclera while
+        # keeping its dark front visible instead of burying the entire cap.
+        organ('pupil_'+side,side+' pupil',(s*.62,-.737,3.53),(.061,.014,.067),PUPIL,eyeoff)
         organ('retina_'+side,side+' retina',(s*.62,-.465,3.53),(.147,.164,.147),LIVER,eyeoff,wall=.075)
     organ('pineal','Pineal gland',(0,.24,3.38),(.037,.045,.03),GLAND,(.55,.45,2.4))
     organ('thymus','Thymus',(0,-.55,2.77),(.16,.06,.16),GLAND,(.45,.2,3.0),shape=lambda q,t,p:(q.x*(.65+.35*q.z),q.y,q.z))
