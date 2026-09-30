@@ -99,6 +99,8 @@ function leafGeometry() {
 type Leaf = {
   x: number; y: number; z: number; t: number; phase: number; amp: number; freq: number; fall: number;
   heading: number; spin: number; size: number; landed: number; rest: number; fade: number; tilt: number;
+  /** Reserve leaves wait, hidden, for a gust to shake them loose. */
+  reserve: boolean; parked: boolean;
 };
 
 export function createForestAtmosphere(o: Options) {
@@ -108,7 +110,7 @@ export function createForestAtmosphere(o: Options) {
   o.scene.add(root);
   let seed = 7;
   const random = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
-  let time = 0, visibility = 1, wind = windAt(0);
+  let time = 0, visibility = 1, wind = windAt(0), gust = 0;
   const geometries: THREE.BufferGeometry[] = [], materials: THREE.Material[] = [];
 
   // --- Sunbeams: camera-facing ribbons along the key light direction. ---
@@ -283,7 +285,7 @@ export function createForestAtmosphere(o: Options) {
   root.add(fireflyPoints);
 
   // --- Falling camphor leaves. ---
-  const leafCount = o.mobile ? 8 : 14;
+  const ambientLeaves = o.mobile ? 8 : 14, reserveLeaves = o.mobile ? 6 : 10, leafCount = ambientLeaves + reserveLeaves;
   const leafGeo = leafGeometry();
   geometries.push(leafGeo);
   const fade = new THREE.InstancedBufferAttribute(new Float32Array(leafCount), 1);
@@ -324,16 +326,21 @@ export function createForestAtmosphere(o: Options) {
   // Camphor sheds old leaves in red and amber alongside the green.
   const palette = [0x557d33, 0x6f913b, 0x9aa441, 0xc88a2e, 0xb8542c, 0x49702d].map(c => new THREE.Color(c));
   const leaves: Leaf[] = [];
-  function spawn(leaf: Leaf, initial: boolean) {
-    const angle = random() * Math.PI * 2, radius = 1.45 + random() * 1.75;
+  function spawn(leaf: Leaf, initial: boolean, shaken = false) {
+    const angle = random() * Math.PI * 2, radius = 1.45 + random() * (shaken ? 1.35 : 1.75);
     Object.assign(leaf, { x: Math.cos(angle) * radius, z: Math.sin(angle) * radius,
-      y: initial ? .6 + random() * 5.6 : 6.3 + random() * 1.6, t: random() * 10, phase: random() * Math.PI * 2,
+      y: initial ? .6 + random() * 5.6 : shaken ? 5.5 + random() * 1.2 : 6.3 + random() * 1.6, t: random() * 10, phase: random() * Math.PI * 2,
       amp: .16 + random() * .2, freq: 1.2 + random() * .9, fall: .3 + random() * .2, heading: random() * Math.PI * 2,
-      spin: (random() - .5) * .9, size: .21 + random() * .1, landed: -1, rest: 4 + random() * 5, fade: initial ? 1 : 0,
-      tilt: (random() - .5) * .3 });
+      spin: (random() - .5) * (shaken ? 2.2 : .9), size: .21 + random() * .1, landed: -1, rest: 4 + random() * 5, fade: initial ? 1 : 0,
+      tilt: (random() - .5) * .3, parked: false });
+  }
+  function retire(leaf: Leaf) {
+    if (leaf.reserve) { leaf.parked = true; leaf.fade = 0; } else spawn(leaf, false);
   }
   for (let i = 0; i < leafCount; i++) {
-    const leaf = {} as Leaf; spawn(leaf, true); leaves.push(leaf);
+    const leaf = { reserve: i >= ambientLeaves } as Leaf; spawn(leaf, true);
+    if (leaf.reserve) { leaf.parked = true; leaf.fade = 0; }
+    leaves.push(leaf);
     leafMesh.setColorAt(i, palette[Math.floor(random() * palette.length)]);
   }
   const dummy = new THREE.Object3D(), yaw = new THREE.Quaternion(), flatten = new THREE.Quaternion(), bank = new THREE.Quaternion();
@@ -343,6 +350,10 @@ export function createForestAtmosphere(o: Options) {
     for (let i = 0; i < leafCount; i++) {
       const leaf = leaves[i];
       let swing = 0;
+      if (leaf.parked) {
+        dummy.scale.setScalar(0); dummy.updateMatrix(); leafMesh.setMatrixAt(i, dummy.matrix); fade.setX(i, 0);
+        continue;
+      }
       if (leaf.landed < 0) {
         leaf.t += dt;
         const w = leaf.freq * leaf.t + leaf.phase;
@@ -358,10 +369,10 @@ export function createForestAtmosphere(o: Options) {
         if (r < clearance) { const k = clearance / Math.max(r, 1e-3); leaf.x *= k; leaf.z *= k; }
         leaf.fade = Math.min(1, leaf.fade + dt * 1.6);
         if (leaf.y <= PLINTH_TOP + .012 && r < PLINTH_RADIUS) { leaf.y = PLINTH_TOP + .012; leaf.landed = 0; }
-        else if (leaf.y < -1.8) spawn(leaf, false);
+        else if (leaf.y < -1.8) retire(leaf);
       } else {
         leaf.landed += dt;
-        if (leaf.landed > leaf.rest) { leaf.fade -= dt * .7; if (leaf.fade <= 0) spawn(leaf, false); }
+        if (leaf.landed > leaf.rest) { leaf.fade -= dt * .7; if (leaf.fade <= 0) retire(leaf); }
       }
       const settle = leaf.landed < 0 ? 0 : Math.min(1, leaf.landed * 3);
       const w = leaf.freq * leaf.t + leaf.phase;
@@ -389,11 +400,18 @@ export function createForestAtmosphere(o: Options) {
     root,
     /** Current breeze, for the ears and the leaf hat. */
     get wind() { return wind; },
+    /** A shake of the tree: a gust races through the canopy and loosens leaves. */
+    poke() {
+      gust = Math.max(gust, 1.35);
+      let loosened = 0;
+      for (const leaf of leaves) if (leaf.parked && loosened < reserveLeaves * .7) { spawn(leaf, false, true); loosened++; }
+    },
     get time() { return time; },
     update(dt: number, frame: AtmosphereFrame) {
       const step = frame.animated ? dt : 0;
       time += step;
-      wind = windAt(time);
+      gust *= Math.exp(-step * .75);
+      wind = windAt(time) + gust;
       // Gusts quicken the canopy, so the dappled light dances with the breeze.
       forest.uniforms.forestTime.value += step * (.55 + .45 * wind);
       visibility = damp(visibility, frame.visible ? 1 : 0, 7, dt);

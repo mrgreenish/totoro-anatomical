@@ -167,7 +167,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       : anatomy?.state.heartView.status === 'open' ? 'heart-study-1'
       : anatomy?.state.brainView.status === 'open' ? 'brain-detail-1' : 'refinement-1';
   }
-  let nextBlink = 3.4, blinkStart = -10;
+  let nextBlink = 3.4, blinkStart = -10, pokeTime = -10, leafRestY = 0;
   let pixelRatio = Math.min(window.devicePixelRatio || 1, 1.8), slowFrames = 0;
   const dayKey = new THREE.Color(0xfff4de), nightKey = new THREE.Color(0xbddeff);
   const dayRim = new THREE.Color(0xddeafa), nightRim = new THREE.Color(0xc3df9b), rainKey = new THREE.Color(0xd9e4ee);
@@ -217,7 +217,11 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     if (model) {
       model.rotation.set(motion.pitch.position, motion.yaw.position, motion.lean.position);
     }
-    if (breathBone) breathBone.scale.set(1 + breath * .013, 1 + breath * .004, 1 + breath * .016);
+    // A poke answers with a springy squash that settles within a second.
+    const pokeAge = elapsed - pokeTime;
+    const boing = movingCharacter && pokeAge >= 0 && pokeAge < 1.8 ? Math.exp(-pokeAge * 4.2) * Math.sin(pokeAge * 17) : 0;
+    if (breathBone) breathBone.scale.set(1 + breath * .013 - boing * .016, 1 + breath * .004 + boing * .022, 1 + breath * .016 - boing * .016);
+    if (leaf) leaf.position.y = leafRestY + (boing ? Math.max(0, Math.sin(pokeAge * 8.5)) * Math.exp(-pokeAge * 3.2) * .05 : 0);
     // Gusts from the forest lean the ears and flutter the leaf hat.
     const gust = movingCharacter ? atmosphere.wind - .45 : 0;
     bend(earLeft, motion.ears.position + (movingCharacter ? Math.sin(elapsed * 1.8) * .016 : 0) + gust * (.012 + .006 * Math.sin(elapsed * 3.1)));
@@ -343,6 +347,31 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     wake();
   };
   controls.addEventListener('start', onStart); controls.addEventListener('end', onEnd); controls.addEventListener('change', wake);
+  // Tap Totoro to say hello: he blinks and bounces, and the forest answers.
+  const pokeRay = new THREE.Raycaster(), pokePointer = new THREE.Vector2();
+  const bodyCenter = new THREE.Vector3(0, 1.95, .05), bodyRadii = new THREE.Vector3(1.2, 2.05, 1.1);
+  const rayOrigin = new THREE.Vector3(), rayDirection = new THREE.Vector3();
+  let pokeStart: { x: number; y: number; time: number; id: number } | undefined;
+  const onPokeDown = (event: PointerEvent) => { if (event.isPrimary) pokeStart = { x: event.clientX, y: event.clientY, time: performance.now(), id: event.pointerId }; };
+  const onPokeUp = (event: PointerEvent) => {
+    const start = pokeStart; pokeStart = undefined;
+    if (!start || start.id !== event.pointerId || !animated || anatomy?.active || !model) return;
+    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 6 || performance.now() - start.time > 500) return;
+    const rect = canvas.getBoundingClientRect();
+    pokePointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
+    pokeRay.setFromCamera(pokePointer, camera);
+    // Ray against an ellipsoid hugging the body and head.
+    rayOrigin.copy(pokeRay.ray.origin).sub(bodyCenter).divide(bodyRadii);
+    rayDirection.copy(pokeRay.ray.direction).divide(bodyRadii);
+    const a = rayDirection.lengthSq(), b = 2 * rayOrigin.dot(rayDirection), c = rayOrigin.lengthSq() - 1;
+    if (b * b - 4 * a * c < 0 || -b + Math.sqrt(b * b - 4 * a * c) < 0) return;
+    pokeTime = elapsed; blinkStart = elapsed; nextBlink = elapsed + 2.8;
+    motion.ears.velocity += 2.4; motion.leaf.velocity += 1.8; motion.arms.velocity -= .9; motion.pitch.velocity -= .3;
+    atmosphere.poke();
+    wake();
+  };
+  canvas.addEventListener('pointerdown', onPokeDown, { passive: true });
+  canvas.addEventListener('pointerup', onPokeUp, { passive: true });
   const onVisibility = () => { if (document.hidden) { cancelAnimationFrame(frame); running = false; } else wake(); };
   const onContextLost = (event: Event) => { event.preventDefault(); cancelAnimationFrame(frame); running = false; options.onError(); };
   canvas.addEventListener('webglcontextlost', onContextLost); document.addEventListener('visibilitychange', onVisibility);
@@ -378,6 +407,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       anatomy?.dispose();
       atmosphere.dispose(); soot.dispose(); rain.dispose(); plinth.dispose(); forest.dispose();
       document.removeEventListener('visibilitychange', onVisibility); canvas.removeEventListener('webglcontextlost', onContextLost); canvas.removeEventListener('keydown', onKey);
+      canvas.removeEventListener('pointerdown', onPokeDown); canvas.removeEventListener('pointerup', onPokeUp);
       const geometries = new Set<THREE.BufferGeometry>(), materials = new Set<THREE.Material>();
       const skeletons = new Set<THREE.Skeleton>();
       scene.traverse(object => { if (object instanceof THREE.Mesh || object instanceof THREE.Points) {
@@ -492,7 +522,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
       if (object) restRotations.set(object, object.quaternion.clone());
     }
     leaf = model.getObjectByName('Leaf');
-    if (leaf) { restRotations.set(leaf, leaf.quaternion.clone()); leaf.position.y += .10; }
+    if (leaf) { restRotations.set(leaf, leaf.quaternion.clone()); leaf.position.y += .10; leafRestY = leaf.position.y; }
     for (const name of ['Eyelids_L', 'Eyelids_R']) {
       const object = model.getObjectByName(name);
       if (object instanceof THREE.Mesh && object.morphTargetDictionary?.Blink !== undefined) {
