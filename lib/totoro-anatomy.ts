@@ -13,6 +13,7 @@ import type { LungViewOptions } from './lung-physiology';
 import type { OrganStudy } from './anatomy-state';
 import { COAT_OFFSET, REVEAL_DURATION, museumEase, presentationOffset, presentationPhase, revealProgress, type PresentationPhase } from './anatomy-presentation';
 import { applyTissuePreset, BRAIN_SURFACE, createHeartTissueMaterial, sectionTint } from './tissue-materials';
+import { applySectionCapDetail, applySectionRim } from './section-light';
 
 type Part = AnatomyPart & { node: THREE.Object3D; active: boolean; rest: THREE.Vector3; restScale: THREE.Vector3; offset: THREE.Vector3; phase: PresentationPhase; meshes: THREE.Mesh[] };
 // Textured glTF materials use a white color factor. Section faces need the
@@ -167,6 +168,8 @@ export function createAnatomyExplorer(o: Options) {
   const screenBounds = new THREE.Box2(), screenPoint = new THREE.Vector2(), corner = new THREE.Vector3();
   const externalMaterials = new Set<THREE.Material>();
   o.exterior.traverse(ob => { if (ob instanceof THREE.Mesh) for (const m of (Array.isArray(ob.material) ? ob.material : [ob.material])) externalMaterials.add(m); });
+  // Patch before the gallery warms its shaders, so the cut coat needs no extra variant.
+  for (const m of externalMaterials) applySectionRim(m);
 
   const handle = document.createElement('button');
   handle.className = 'cut-plane-handle'; handle.type = 'button'; handle.hidden = true;
@@ -378,6 +381,7 @@ export function createAnatomyExplorer(o: Options) {
       polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
     capMat.color.multiply(new THREE.Color(sectionTint(sourceMaterial.name)));
     capMat.userData.sectionCap = true;
+    applySectionCapDetail(capMat);
     const back = new THREE.Mesh(mesh.geometry, backMat), front = new THREE.Mesh(mesh.geometry, frontMat);
     for (const volume of [back, front]) { volume.matrixAutoUpdate = false; volume.frustumCulled = false; }
     const cap = new THREE.Mesh(capGeometry, capMat); cap.frustumCulled = false;
@@ -429,6 +433,7 @@ export function createAnatomyExplorer(o: Options) {
                 if (texture) texture.anisotropy = Math.min(8, o.renderer.capabilities?.getMaxAnisotropy() ?? 1);
               }
             }
+            applySectionRim(clone);
             materials.add(clone); return clone;
           });
           child.material = multiple ? clones : clones[0];

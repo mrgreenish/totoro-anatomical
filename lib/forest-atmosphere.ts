@@ -286,9 +286,10 @@ export function createForestAtmosphere(o: Options) {
   leafGeo.setAttribute('leafFade', fade);
   const leafMaterial = new THREE.MeshStandardMaterial({ name: 'Camphor leaves', roughness: .5, metalness: 0,
     side: THREE.DoubleSide, transparent: true, envMapIntensity: .8 });
-  const viewportHeight = { value: 1 };
+  const viewportHeight = { value: 1 }, leafVisibility = { value: 1 };
   forest.patch(leafMaterial, shader => {
     shader.uniforms.forestViewportHeight = viewportHeight;
+    shader.uniforms.forestLeafVisibility = leafVisibility;
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nattribute float leafFade; varying float vLeafFade; varying vec2 vLeafUv; uniform float forestTime;')
       .replace('#include <begin_vertex>', `#include <begin_vertex>
@@ -296,12 +297,12 @@ export function createForestAtmosphere(o: Options) {
         // Fine flutter along the blade on top of the tumbling motion.
         transformed.z += sin(forestTime * 9. + float(gl_InstanceID) * 1.7 + position.y * 5.) * .045 * (position.y + .5);`);
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying float vLeafFade; varying vec2 vLeafUv; uniform float forestViewportHeight;')
+      .replace('#include <common>', '#include <common>\nvarying float vLeafFade; varying vec2 vLeafUv; uniform float forestViewportHeight; uniform float forestLeafVisibility;')
       .replace('#include <color_fragment>', `#include <color_fragment>
         float leafVein = 1. - smoothstep(.0, .035, abs(vLeafUv.x - .5));
         float sideVeins = smoothstep(.9, 1., sin((vLeafUv.y * 2.2 - abs(vLeafUv.x - .5)) * 38.)) * (1. - leafVein);
         diffuseColor.rgb *= 1. + leafVein * .32 + sideVeins * .1 - (1. - vLeafUv.y) * .08;
-        diffuseColor.a *= vLeafFade * (1. - smoothstep(.86, .99, gl_FragCoord.y / forestViewportHeight));`)
+        diffuseColor.a *= vLeafFade * forestLeafVisibility * (1. - smoothstep(.86, .99, gl_FragCoord.y / forestViewportHeight));`)
       .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
         #if NUM_DIR_LIGHTS > 0
           // Sun shining through the blade from behind.
@@ -411,6 +412,7 @@ export function createForestAtmosphere(o: Options) {
       fireflyMaterial.uniforms.intensity.value = visibility * THREE.MathUtils.smoothstep(night, .25, .9);
       fireflyPoints.visible = night > .2;
       viewportHeight.value = frame.viewportHeight;
+      leafVisibility.value = visibility;
       if (step > 0 && root.visible) stepLeaves(step);
       // Hero fireflies light the fur. Positions go to view space for the BRDF.
       const glowStrength = visibility * THREE.MathUtils.smoothstep(night, .3, .95);
