@@ -38,8 +38,8 @@ export const GRADES: Record<GradeName, Grade> = {
   anatomy: { bloom: .2, threshold: 1.3, knee: .6, radius: .75, spill: .2, saturation: 1.03, contrast: .08,
     lift: [.004, .004, .004], gain: [1, 1, 1], shadows: [1, 1, 1], highlights: [1, 1, 1],
     vignette: .08, aberration: 0, grain: .008 },
-  brain: { bloom: .55, threshold: .8, knee: .6, radius: .85, spill: 1, saturation: 1.04, contrast: .14,
-    lift: [.010, .006, .008], gain: [1.02, 1, .985], shadows: [1.02, .98, 1.0], highlights: [1.02, 1, .97],
+  brain: { bloom: .55, threshold: .8, knee: .6, radius: .85, spill: 1, saturation: 1.01, contrast: .12,
+    lift: [.006, .005, .006], gain: [1.008, 1, .995], shadows: [1.0, .99, 1.0], highlights: [1.01, 1, .99],
     vignette: .3, aberration: .5, grain: .016 },
   heart: { bloom: .5, threshold: .85, knee: .6, radius: .85, spill: 1, saturation: 1.05, contrast: .14,
     lift: [.012, .005, .007], gain: [1.02, .99, .98], shadows: [1.03, .97, .99], highlights: [1.02, .995, .97],
@@ -174,7 +174,7 @@ type Options = { maxBloomLevels?: number };
 
 export function createRenderPipeline(renderer: THREE.WebGLRenderer, options: Options = {}) {
   const extensions = renderer.extensions;
-  const supported = extensions.has('EXT_color_buffer_float') || extensions.has('EXT_color_buffer_half_float');
+  const floatTargets = extensions.has('EXT_color_buffer_float') || extensions.has('EXT_color_buffer_half_float');
   const drawing = new THREE.Vector2();
   const target = new THREE.WebGLRenderTarget(1, 1, {
     type: THREE.HalfFloatType, format: THREE.RGBAFormat, depthBuffer: true, stencilBuffer: true,
@@ -185,6 +185,15 @@ export function createRenderPipeline(renderer: THREE.WebGLRenderer, options: Opt
     minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter,
   });
   target.texture.name = 'Gallery HDR';
+  // Some drivers cannot multisample a half-float target. Check the real
+  // framebuffer so those devices fall back to direct rendering, not black.
+  const supported = floatTargets && (() => {
+    const gl = renderer.getContext(), previous = renderer.getRenderTarget();
+    renderer.setRenderTarget(target);
+    const complete = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+    renderer.setRenderTarget(previous);
+    return complete;
+  })();
   const mips: THREE.WebGLRenderTarget[] = [];
   const maxLevels = options.maxBloomLevels ?? 6;
 
@@ -316,6 +325,12 @@ export function createRenderPipeline(renderer: THREE.WebGLRenderer, options: Opt
     get settling() { return settling; },
     get grade() { return gradeName; },
     setGrade(name: GradeName) { gradeName = name; },
+    /** Halves multisampling once, for devices still slow at the lowest pixel ratio. */
+    reduceQuality() {
+      if (target.samples <= 2) return false;
+      target.samples = 2; target.dispose();
+      return true;
+    },
     /** Scales exposure on top of the renderer's, for light-up transitions. */
     setExposureScale(value: number, immediate = false) { exposureTarget = value; if (immediate) exposureScale = value; },
     update,

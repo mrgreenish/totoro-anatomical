@@ -325,6 +325,7 @@ export async function createSculpture(canvas: HTMLCanvasElement, options: Option
     // Adapt only after sustained slow frames, preserving crispness on capable devices.
     if (rawDt > .025 && rawDt < .2 && model) slowFrames++; else slowFrames = Math.max(0, slowFrames - 1);
     if (slowFrames > 100 && pixelRatio > 1.1) { pixelRatio = Math.max(1, pixelRatio - .25); slowFrames = 0; resize(); }
+    else if (slowFrames > 100 && pipeline?.reduceQuality()) { slowFrames = 0; resetFrameStats(); }
     const settling = Math.abs(night - nightTarget) > .001 || motion.settling || resetting || anatomySettling || grading || atmosphereSettling || sootSettling || rainSettling;
     if (movingCharacter || (rotating && !anatomy?.active) || changed || settling) frame = requestAnimationFrame(tick); else running = false;
   }
