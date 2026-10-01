@@ -565,7 +565,11 @@ export function createAnatomyExplorer(o: Options) {
     invalidate(); emit();
   }
   const clippedEpsilon = .0001;
-  function updateCap(cap: Cap, split: boolean) {
+  // Coplanar caps of nested tissue differ by a few depth ulps after interpolation, so a shared polygon
+  // offset lets them z-fight and shimmer as the cut slides or the camera orbits. Every cap that is showing
+  // sits a clear step nearer than the ones drawn before it, so draw order alone decides which tissue shows.
+  const capDepthStep = 4;
+  function updateCap(cap: Cap, split: boolean, rank?: number) {
     const partVisible = cap.part.active;
     if (!split) {
       cap.source.visible = partVisible;
@@ -586,6 +590,7 @@ export function createAnatomyExplorer(o: Options) {
     const visible = partVisible && intersects;
     cap.back.visible = cap.front.visible = cap.cap.visible = visible;
     if (!visible) return;
+    if (rank !== undefined) (cap.cap.material as THREE.Material).polygonOffsetUnits = -1 - rank * capDepthStep;
     cap.back.matrix.copy(cap.source.matrixWorld); cap.front.matrix.copy(cap.source.matrixWorld);
     cap.cap.position.copy(plane.normal).multiplyScalar(-plane.constant);
     capNormal.copy(plane.normal).negate();
@@ -615,7 +620,9 @@ export function createAnatomyExplorer(o: Options) {
       }
     }
     const split = state.mode === 'split';
-    for (const cap of caps) updateCap(cap, split);
+    // Caps are stored in draw order.
+    let rank = 0;
+    for (const cap of caps) { updateCap(cap, split, rank); if (cap.cap.visible) rank++; }
     capRoot.visible = state.mode === 'split'; dirty = false;
   }
   function handleEndpoints() {
