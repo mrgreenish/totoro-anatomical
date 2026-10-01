@@ -377,6 +377,7 @@ export function createAnatomyExplorer(o: Options) {
     o.controls.minDistance = active ? 1.1 : 7.3; o.controls.maxDistance = active ? 52 : 18;
     o.controls.minPolarAngle = active ? .10 : .45; o.controls.maxPolarAngle = active ? Math.PI - .15 : Math.PI / 2.03;
   }
+  const capDepthStep = 4;
   function makeCaps(part: Part, mesh: THREE.Mesh, index: number) {
     if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
     const base = new THREE.MeshBasicMaterial({ depthWrite: false, depthTest: false, colorWrite: false,
@@ -394,7 +395,10 @@ export function createAnatomyExplorer(o: Options) {
     const capMat = new THREE.MeshStandardMaterial({ color: tissueSectionColors[tissue] ?? sourceMaterial.color, roughness: .64, side: THREE.DoubleSide,
       stencilWrite: true, stencilRef: 0, stencilFunc: THREE.NotEqualStencilFunc,
       stencilFail: THREE.ReplaceStencilOp, stencilZFail: THREE.ReplaceStencilOp, stencilZPass: THREE.ReplaceStencilOp,
-      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+      // Coplanar caps of nested tissue differ by a few depth ulps after interpolation, so a shared offset
+      // lets them z-fight and shimmer as the cut slides or the camera orbits. Each later cap sits a clear
+      // step nearer than the ones drawn before it, so draw order alone decides which tissue shows.
+      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 - Math.min(index, 255) * capDepthStep });
     capMat.color.multiply(new THREE.Color(sectionTint(sourceMaterial.name)));
     capMat.userData.sectionCap = true;
     applySectionCapDetail(capMat);
